@@ -1,0 +1,79 @@
+<section
+  id="gestionUsuarios"
+  class="modulo-panel gestion-usuarios-modulo"
+  style="display: none"
+>
+  <button
+    type="button"
+    class="gestion-submodulo-volver"
+    onclick="volverModuloGestion()"
+  >
+    ↑ Volver a opciones
+  </button>
+
+  <div class="gestion-usuarios-encabezado">
+    <div class="gestion-usuarios-icono">👥</div>
+
+    <div>
+      <h3>Gestión de usuarios</h3>
+
+      <p>Administra los usuarios y supervisores del sistema.</p>
+    </div>
+  </div>
+
+  <div class="gestion-usuarios-opciones">
+    <!-- VER PERFIL SUPERVISOR -->
+
+    <button
+      type="button"
+      class="gestion-usuario-opcion"
+      onclick="verPerfilSupervisor()"
+    >
+      <span class="gestion-usuario-icono"> 👤 </span>
+
+      <span class="gestion-usuario-texto">
+        <strong> Ver perfil de supervisor </strong>
+
+        <small> Consulta la información del supervisor. </small>
+      </span>
+
+      <span class="gestion-usuario-flecha"> › </span>
+    </button>
+
+    <!-- CREAR USUARIO -->
+
+    <button
+      type="button"
+      class="gestion-usuario-opcion"
+      onclick="crearUsuarioAdministracion()"
+    >
+      <span class="gestion-usuario-icono"> ➕ </span>
+
+      <span class="gestion-usuario-texto">
+        <strong> Crear usuario </strong>
+
+        <small> Registra un nuevo usuario en el sistema. </small>
+      </span>
+
+      <span class="gestion-usuario-flecha"> › </span>
+    </button>
+
+    <!-- BORRAR USUARIO -->
+
+    <button
+      type="button"
+      class="gestion-usuario-opcion"
+      onclick="borrarUsuarioAdministracion()"
+    >
+      <span class="gestion-usuario-icono"> 🗑️ </span>
+
+      <span class="gestion-usuario-texto">
+        <strong> Borrar usuario </strong>
+
+        <small> Elimina un usuario existente del sistema. </small>
+      </span>
+
+      <span class="gestion-usuario-flecha"> › </span>
+    </button>
+  </div>
+</section>

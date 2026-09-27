@@ -1,0 +1,1310 @@
+<script>
+  /* =====================================================
+   MÓDULO INVENTARIO
+===================================================== */
+
+  let inventarioBusquedaActiva = false;
+  let inventarioTextoBusqueda = "";
+  let inventarioVehiculosFiltrados = [];
+  let inventarioVehiculoSeleccionado = null;
+  let inventarioBuscadorConfigurado = false;
+
+  /* =====================================================
+   ABRIR INVENTARIO
+===================================================== */
+
+  function abrirModuloInventario() {
+    mostrarModuloPanel("moduloInventario");
+
+    inventarioBusquedaActiva = false;
+    inventarioTextoBusqueda = "";
+    inventarioVehiculoSeleccionado = null;
+
+    mostrarVistaPrincipalInventario();
+
+    configurarBuscadorInventario();
+    actualizarListaInventario();
+  }
+
+  /* =====================================================
+   MOSTRAR VISTA PRINCIPAL
+===================================================== */
+
+  function mostrarVistaPrincipalInventario() {
+    const vistaPrincipal = document.getElementById("vistaPrincipalInventario");
+
+    const detalle = document.getElementById("detalleVehiculoInventario");
+
+    const editor = document.getElementById("editorVehiculoInventario");
+
+    const resultado = document.getElementById(
+      "resultadoGuardadoVehiculoInventario",
+    );
+
+    if (vistaPrincipal) {
+      vistaPrincipal.style.display = "block";
+    }
+
+    if (detalle) {
+      detalle.style.display = "none";
+    }
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (resultado) {
+      resultado.style.display = "none";
+    }
+  }
+
+  /* =====================================================
+   ACTUALIZAR INVENTARIO
+===================================================== */
+
+  function actualizarListaInventario(vehiculosFiltrados) {
+    const contenedor = document.getElementById("listaVehiculosInventario");
+
+    if (!contenedor) {
+      return;
+    }
+
+    if (
+      !Array.isArray(vehiculosAdministracion) ||
+      !vehiculosAdministracion.length
+    ) {
+      mostrarEstadoCargaInventario();
+      return;
+    }
+
+    const lista = Array.isArray(vehiculosFiltrados)
+      ? vehiculosFiltrados
+      : vehiculosAdministracion;
+
+    inventarioVehiculosFiltrados = lista;
+
+    actualizarResumenInventario(vehiculosAdministracion);
+
+    actualizarContadorInventario(lista.length);
+
+    if (!lista.length) {
+      mostrarSinResultadosInventario();
+      return;
+    }
+
+    ocultarSinResultadosInventario();
+
+    contenedor.innerHTML = lista
+      .map(function (vehiculo) {
+        return crearTarjetaInventario(vehiculo);
+      })
+      .join("");
+  }
+
+  /* =====================================================
+   ESTADO DE CARGA
+===================================================== */
+
+  function mostrarEstadoCargaInventario() {
+    const contenedor = document.getElementById("listaVehiculosInventario");
+
+    const loading = document.getElementById("inventarioLoading");
+
+    if (loading) {
+      loading.style.display = "flex";
+    }
+
+    if (contenedor) {
+      contenedor.innerHTML = `
+      <div class="inventario-estado inventario-estado-cargando">
+
+        <div class="inventario-estado-icono">
+          🚗
+        </div>
+
+        <strong>
+          Cargando inventario...
+        </strong>
+
+        <p>
+          Por favor espera un momento.
+        </p>
+
+      </div>
+    `;
+    }
+  }
+
+  /* =====================================================
+   ACTUALIZAR RESUMEN
+===================================================== */
+
+  function actualizarResumenInventario(lista) {
+    const total = document.getElementById("inventarioTotalVehiculos");
+
+    const ubicados = document.getElementById("inventarioVehiculosUbicados");
+
+    if (total) {
+      total.textContent = Array.isArray(lista) ? lista.length : 0;
+    }
+
+    if (ubicados) {
+      const cantidadUbicados = Array.isArray(lista)
+        ? lista.filter(function (vehiculo) {
+            return String(vehiculo.ubicacion || "").trim() !== "";
+          }).length
+        : 0;
+
+      ubicados.textContent = cantidadUbicados;
+    }
+  }
+
+  /* =====================================================
+   ACTUALIZAR CONTADOR
+===================================================== */
+
+  function actualizarContadorInventario(cantidad) {
+    const contador = document.getElementById("inventarioContadorResultados");
+
+    if (contador) {
+      contador.textContent = cantidad || 0;
+    }
+  }
+
+  /* =====================================================
+   CONFIGURAR BUSCADOR
+===================================================== */
+
+  function configurarBuscadorInventario() {
+    const buscador = document.getElementById("buscadorVehiculosInventario");
+
+    if (!buscador) {
+      return;
+    }
+
+    if (inventarioBuscadorConfigurado) {
+      return;
+    }
+
+    inventarioBuscadorConfigurado = true;
+
+    buscador.addEventListener("input", function () {
+      inventarioTextoBusqueda = buscador.value.trim();
+
+      inventarioBusquedaActiva = inventarioTextoBusqueda.length > 0;
+
+      actualizarEstadoBusquedaInventario();
+
+      filtrarInventario(inventarioTextoBusqueda);
+    });
+  }
+
+  /* =====================================================
+   ACTUALIZAR ESTADO DE BÚSQUEDA
+===================================================== */
+
+  function actualizarEstadoBusquedaInventario() {
+    const estado = document.getElementById("estadoBusquedaInventario");
+
+    const texto = document.getElementById("textoBusquedaInventario");
+
+    if (!estado) {
+      return;
+    }
+
+    if (!inventarioBusquedaActiva) {
+      estado.style.display = "none";
+
+      return;
+    }
+
+    estado.style.display = "flex";
+
+    if (texto) {
+      texto.textContent = `Resultados para "${inventarioTextoBusqueda}"`;
+    }
+  }
+
+  /* =====================================================
+   FILTRAR INVENTARIO
+===================================================== */
+
+  function filtrarInventario(texto) {
+    const busqueda = String(texto || "")
+      .trim()
+      .toLowerCase();
+
+    if (!busqueda) {
+      inventarioVehiculosFiltrados = vehiculosAdministracion;
+
+      actualizarListaInventario(vehiculosAdministracion);
+
+      return;
+    }
+
+    const resultados = vehiculosAdministracion.filter(function (vehiculo) {
+      const nombre = String(vehiculo.nombre || "").toLowerCase();
+
+      const placa = String(vehiculo.placa || "").toLowerCase();
+
+      const ubicacion = String(vehiculo.ubicacion || "").toLowerCase();
+
+      const puesto = String(vehiculo.puesto || "").toLowerCase();
+
+      return (
+        nombre.includes(busqueda) ||
+        placa.includes(busqueda) ||
+        ubicacion.includes(busqueda) ||
+        puesto.includes(busqueda)
+      );
+    });
+
+    inventarioVehiculosFiltrados = resultados;
+
+    actualizarListaInventario(resultados);
+  }
+
+  /* =====================================================
+   CREAR TARJETA
+===================================================== */
+
+  function crearTarjetaInventario(vehiculo) {
+    const nombre = escaparHTML(vehiculo.nombre || "Vehículo");
+
+    const placa = escaparHTML(vehiculo.placa || "-");
+
+    const precio = formatearPrecioInventario(vehiculo.precio);
+
+    const kilometraje = formatearKilometrajeInventario(vehiculo.kilometraje);
+
+    const ubicacion = vehiculo.ubicacion
+      ? escaparHTML(vehiculo.ubicacion)
+      : "Sin ubicación asignada";
+
+    const transito = vehiculo.transito
+      ? escaparHTML(vehiculo.transito)
+      : "Sin tránsito registrado";
+
+    const puesto = vehiculo.puesto ? escaparHTML(vehiculo.puesto) : "";
+
+    const placaSegura = escaparHTML(vehiculo.placa || "");
+
+    const filaVehiculo = Number(vehiculo.fila || 0);
+
+    return `
+    <article
+      class="inventario-vehiculo-card"
+      data-placa="${placaSegura}">
+
+      <div class="inventario-vehiculo-imagen">
+        🚗
+      </div>
+
+
+      <div class="inventario-vehiculo-info">
+
+        <strong>
+          ${nombre}
+        </strong>
+
+        <small>
+          Placa: ${placa}
+        </small>
+
+        <small>
+          Transito: ${transito}
+        </small>
+
+        <div class="inventario-vehiculo-precio">
+          ${precio}
+        </div>
+
+        <div class="inventario-vehiculo-meta">
+          ${kilometraje}
+        </div>
+
+        <div class="inventario-vehiculo-ubicacion">
+
+          <span>
+            📍
+          </span>
+
+          ${ubicacion}
+
+        </div>
+
+      </div>
+
+
+      <div class="inventario-vehiculo-acciones">
+
+        <button
+          type="button"
+          class="inventario-vehiculo-boton-detalle"
+          onclick="abrirDetalleVehiculoInventario('${placaSegura}')">
+
+          Ver
+
+        </button>
+
+
+  ${
+    usuarioPanel &&
+    usuarioPanel.rol &&
+    usuarioPanel.rol.toString().trim().toUpperCase() === "ADMINISTRADOR"
+      ? `
+    <button
+      type="button"
+      class="inventario-vehiculo-boton-editar"
+      onclick="editarVehiculoDesdeInventario('${placaSegura}')">
+
+      Editar
+
+    </button>
+
+    <button
+      type="button"
+      class="inventario-vehiculo-boton-eliminar"
+      onclick="abrirConfirmacionEliminarVehiculo(
+        ${filaVehiculo},
+        '${placaSegura}'
+      )">
+
+      🗑️ Eliminar
+
+    </button>
+  `
+      : ""
+  }
+
+      </div>
+
+    </article>
+  `;
+  }
+
+  /* =====================================================
+   ABRIR CONFIRMACIÓN ELIMINAR VEHÍCULO
+===================================================== */
+
+  function abrirConfirmacionEliminarVehiculo(fila, placa) {
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return Number(item.fila || 0) === Number(fila || 0);
+    });
+
+    if (!vehiculo) {
+      mostrarAlerta(
+        "⚠️",
+        "Vehículo no encontrado",
+        "<p>No fue posible encontrar el vehículo seleccionado.</p>",
+      );
+
+      return;
+    }
+
+    const modal = document.getElementById("modalEliminarVehiculoInventario");
+
+    const nombre = document.getElementById("nombreVehiculoEliminarInventario");
+
+    const placaElemento = document.getElementById(
+      "placaVehiculoEliminarInventario",
+    );
+
+    if (!modal) {
+      console.error("No existe modalEliminarVehiculoInventario");
+
+      return;
+    }
+
+    if (nombre) {
+      nombre.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (placaElemento) {
+      placaElemento.textContent = vehiculo.placa
+        ? "Placa: " + vehiculo.placa
+        : "Sin placa registrada";
+    }
+
+    modal.dataset.fila = String(vehiculo.fila || fila || "");
+
+    modal.dataset.placa = String(vehiculo.placa || placa || "");
+
+    modal.style.display = "flex";
+  }
+
+  function cerrarConfirmacionEliminarVehiculo() {
+    const modal = document.getElementById("modalEliminarVehiculoInventario");
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "none";
+
+    delete modal.dataset.fila;
+    delete modal.dataset.placa;
+  }
+
+  /* =====================================================
+   CONFIRMAR ELIMINACIÓN DEL VEHÍCULO
+===================================================== */
+
+  function confirmarEliminarVehiculoInventario() {
+    const modal = document.getElementById("modalEliminarVehiculoInventario");
+
+    const boton = document.getElementById(
+      "btnConfirmarEliminarVehiculoInventario",
+    );
+
+    if (!modal) {
+      return;
+    }
+
+    const fila = Number(modal.dataset.fila || 0);
+
+    const placa = modal.dataset.placa || "";
+
+    if (!fila) {
+      mostrarAlerta(
+        "⚠️",
+        "No se pudo eliminar",
+        "<p>No se encontró la fila del vehículo.</p>",
+      );
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Eliminando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🗑️ Eliminar vehículo";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo eliminar",
+            "<p>" +
+              escaparHTML(
+                respuesta && respuesta.mensaje
+                  ? respuesta.mensaje
+                  : "Ocurrió un error al eliminar el vehículo.",
+              ) +
+              "</p>",
+          );
+
+          return;
+        }
+
+        cerrarConfirmacionEliminarVehiculo();
+
+        vehiculosAdministracion = vehiculosAdministracion.filter(
+          function (vehiculo) {
+            return Number(vehiculo.fila || 0) !== fila;
+          },
+        );
+
+        renderizarVehiculosInventario(vehiculosAdministracion);
+
+        mostrarAlerta(
+          "✓",
+          "Vehículo eliminado",
+          "<p>El vehículo fue eliminado correctamente.</p>",
+        );
+      })
+
+      .withFailureHandler(function (error) {
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🗑️ Eliminar vehículo";
+        }
+
+        mostrarAlerta(
+          "⚠️",
+          "Error al eliminar",
+          "<p>" +
+            escaparHTML(
+              error && error.message
+                ? error.message
+                : "Ocurrió un error inesperado.",
+            ) +
+            "</p>",
+        );
+      })
+
+      .eliminarVehiculoAdministracion(tokenSesion, fila, placa);
+  }
+
+  /* =====================================================
+   ABRIR DETALLE
+===================================================== */
+
+  function abrirDetalleVehiculoInventario(placa) {
+    const vehiculo = buscarVehiculoInventario(placa);
+
+    if (!vehiculo) {
+      return;
+    }
+
+    inventarioVehiculoSeleccionado = vehiculo;
+
+    const vistaPrincipal = document.getElementById("vistaPrincipalInventario");
+
+    const detalle = document.getElementById("detalleVehiculoInventario");
+
+    if (vistaPrincipal) {
+      vistaPrincipal.style.display = "none";
+    }
+
+    if (detalle) {
+      detalle.style.display = "block";
+    }
+
+    cargarDetalleInventario(vehiculo);
+
+    const botonEditar = document.getElementById("btnEditarVehiculoInventario");
+
+    const rolUsuario =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (botonEditar) {
+      botonEditar.style.display =
+        rolUsuario === "ADMINISTRADOR" ? "flex" : "none";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   BUSCAR VEHÍCULO
+===================================================== */
+
+  function buscarVehiculoInventario(placa) {
+    const objetivo = String(placa || "")
+      .trim()
+      .toUpperCase();
+
+    return (
+      vehiculosAdministracion.find(function (vehiculo) {
+        return (
+          String(vehiculo.placa || "")
+            .trim()
+            .toUpperCase() === objetivo
+        );
+      }) || null
+    );
+  }
+
+  /* =====================================================
+   CARGAR DETALLE
+===================================================== */
+
+  function cargarDetalleInventario(vehiculo) {
+    const nombre = document.getElementById("detalleInventarioNombre");
+
+    const placa = document.getElementById("detalleInventarioPlaca");
+
+    const precio = document.getElementById("detalleInventarioPrecio");
+
+    const kilometraje = document.getElementById("detalleInventarioKilometraje");
+
+    const soat = document.getElementById("detalleInventarioSoat");
+
+    const tecnomecanica = document.getElementById(
+      "detalleInventarioTecnomecanica",
+    );
+
+    const picoYPlaca = document.getElementById("detalleInventarioPicoYPlaca");
+
+    const transito = document.getElementById("detalleInventarioTransito");
+
+    const ubicacion = document.getElementById("detalleInventarioUbicacion");
+
+    const puesto = document.getElementById("detalleInventarioPuesto");
+
+    const detalles = document.getElementById("detalleInventarioDetalles");
+
+    if (nombre) {
+      nombre.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (placa) {
+      placa.textContent = `Placa: ${vehiculo.placa || "-"}`;
+    }
+
+    if (precio) {
+      precio.textContent = formatearPrecioInventario(vehiculo.precio);
+    }
+
+    if (kilometraje) {
+      kilometraje.textContent = formatearKilometrajeInventario(
+        vehiculo.kilometraje,
+      );
+    }
+
+    if (soat) {
+      soat.textContent = vehiculo.soat || "Sin fecha";
+    }
+
+    if (tecnomecanica) {
+      tecnomecanica.textContent = vehiculo.tecnomecanica || "Sin fecha";
+    }
+
+    if (picoYPlaca) {
+      picoYPlaca.textContent = vehiculo.picoYPlaca || "Sin información";
+    }
+
+    if (transito) {
+      transito.textContent = vehiculo.transito || "Sin tránsito registrado";
+    }
+
+    if (ubicacion) {
+      ubicacion.textContent = vehiculo.ubicacion || "Sin ubicación asignada";
+    }
+
+    if (puesto) {
+      puesto.textContent = vehiculo.puesto || "Sin puesto asignado";
+    }
+
+    if (detalles) {
+      detalles.textContent = vehiculo.detalles || "Sin detalles registrados.";
+    }
+  }
+
+  /* =====================================================
+   CERRAR DETALLE
+===================================================== */
+
+  function cerrarDetalleVehiculoInventario() {
+    inventarioVehiculoSeleccionado = null;
+
+    const detalle = document.getElementById("detalleVehiculoInventario");
+
+    const vistaPrincipal = document.getElementById("vistaPrincipalInventario");
+
+    if (detalle) {
+      detalle.style.display = "none";
+    }
+
+    if (vistaPrincipal) {
+      vistaPrincipal.style.display = "block";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   EDITAR DESDE TARJETA
+===================================================== */
+
+  function editarVehiculoDesdeInventario(placa) {
+    const vehiculo = buscarVehiculoInventario(placa);
+
+    if (!vehiculo) {
+      return;
+    }
+
+    inventarioVehiculoSeleccionado = vehiculo;
+
+    mostrarEditorVehiculoInventario(vehiculo);
+  }
+
+  /* =====================================================
+   EDITAR DESDE DETALLE
+===================================================== */
+
+  function abrirEditorVehiculoInventario() {
+    if (!inventarioVehiculoSeleccionado) {
+      return;
+    }
+
+    mostrarEditorVehiculoInventario(inventarioVehiculoSeleccionado);
+  }
+
+  /* =====================================================
+   MOSTRAR EDITOR
+===================================================== */
+
+  function mostrarEditorVehiculoInventario(vehiculo) {
+    const vistaPrincipal = document.getElementById("vistaPrincipalInventario");
+
+    const detalle = document.getElementById("detalleVehiculoInventario");
+
+    const editor = document.getElementById("editorVehiculoInventario");
+
+    if (vistaPrincipal) {
+      vistaPrincipal.style.display = "none";
+    }
+
+    if (detalle) {
+      detalle.style.display = "none";
+    }
+
+    if (editor) {
+      editor.style.display = "block";
+    }
+
+    cargarFormularioInventario(vehiculo);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   CARGAR FORMULARIO
+===================================================== */
+
+  function cargarFormularioInventario(vehiculo) {
+    const titulo = document.getElementById("editorInventarioTituloVehiculo");
+
+    const subtitulo = document.getElementById(
+      "editorInventarioSubtituloVehiculo",
+    );
+
+    if (titulo) {
+      titulo.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (subtitulo) {
+      subtitulo.textContent = `Placa: ${vehiculo.placa || "-"}`;
+    }
+
+    establecerValorInventario("editarInventarioNombre", vehiculo.nombre);
+
+    establecerValorInventario("editarInventarioPlaca", vehiculo.placa);
+
+    establecerValorInventario(
+      "editarInventarioSoat",
+      normalizarFechaInventario(vehiculo.soat),
+    );
+
+    establecerValorInventario(
+      "editarInventarioTecnomecanica",
+      normalizarFechaInventario(vehiculo.tecnomecanica),
+    );
+
+    establecerValorInventario(
+      "editarInventarioPicoYPlaca",
+      vehiculo.picoYPlaca,
+    );
+
+    establecerValorInventario("editarInventarioPrecio", vehiculo.precio);
+
+    establecerValorInventario(
+      "editarInventarioKilometraje",
+      vehiculo.kilometraje,
+    );
+
+    establecerValorInventario("editarInventarioDetalles", vehiculo.detalles);
+
+    cargarUbicacionesEditorInventario(vehiculo.ubicacion);
+  }
+
+  function cargarUbicacionesEditorInventario(ubicacionActual) {
+    const select = document.getElementById("editarInventarioUbicacion");
+
+    if (!select || !tokenSesion) {
+      return;
+    }
+
+    select.innerHTML = `
+    <option value="">
+      Selecciona una ubicación
+    </option>
+  `;
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.parqueaderos)
+        ) {
+          return;
+        }
+
+        respuesta.parqueaderos.forEach(function (parqueadero) {
+          const nombre = String(parqueadero.nombre || "").trim();
+
+          if (!nombre) {
+            return;
+          }
+
+          const opcion = document.createElement("option");
+
+          opcion.value = nombre;
+
+          opcion.textContent = nombre;
+
+          select.appendChild(opcion);
+        });
+
+        select.value = ubicacionActual ? String(ubicacionActual).trim() : "";
+      })
+      .obtenerParqueaderosAdministracion(tokenSesion);
+  }
+
+  /* =====================================================
+   ESTABLECER VALOR
+===================================================== */
+
+  function establecerValorInventario(id, valor) {
+    const elemento = document.getElementById(id);
+
+    if (!elemento) {
+      return;
+    }
+
+    elemento.value = valor === null || valor === undefined ? "" : valor;
+  }
+
+  /* =====================================================
+   NORMALIZAR FECHA
+===================================================== */
+
+  function normalizarFechaInventario(fecha) {
+    if (!fecha) {
+      return "";
+    }
+
+    const texto = String(fecha).trim();
+
+    // Ya está en formato compatible con input[type="date"]
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return texto;
+    }
+
+    // Fecha mostrada por Google Sheets:
+    // DD/MM/YYYY
+    const coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+    if (coincidencia) {
+      const dia = coincidencia[1].padStart(2, "0");
+
+      const mes = coincidencia[2].padStart(2, "0");
+
+      const año = coincidencia[3];
+
+      return `${año}-${mes}-${dia}`;
+    }
+
+    // Intento de compatibilidad con otros formatos
+    const fechaObjeto = new Date(texto);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return "";
+    }
+
+    const año = fechaObjeto.getFullYear();
+
+    const mes = String(fechaObjeto.getMonth() + 1).padStart(2, "0");
+
+    const dia = String(fechaObjeto.getDate()).padStart(2, "0");
+
+    return `${año}-${mes}-${dia}`;
+  }
+
+  /* =====================================================
+   CERRAR EDITOR
+===================================================== */
+
+  function cerrarEditorVehiculoInventario() {
+    const editor = document.getElementById("editorVehiculoInventario");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (inventarioVehiculoSeleccionado) {
+      const detalle = document.getElementById("detalleVehiculoInventario");
+
+      if (detalle) {
+        detalle.style.display = "block";
+      }
+
+      return;
+    }
+
+    const vistaPrincipal = document.getElementById("vistaPrincipalInventario");
+
+    if (vistaPrincipal) {
+      vistaPrincipal.style.display = "block";
+    }
+  }
+
+  /* =====================================================
+   GUARDAR CAMBIOS
+===================================================== */
+
+  function guardarCambiosVehiculoInventario() {
+    if (!inventarioVehiculoSeleccionado) {
+      return;
+    }
+
+    const datos = obtenerDatosFormularioInventario();
+
+    const modal = document.getElementById(
+      "modalConfirmacionVehiculoInventario",
+    );
+
+    if (!modal) {
+      return;
+    }
+
+    modal.dataset.datos = JSON.stringify(datos);
+
+    modal.style.display = "flex";
+  }
+
+  /* =====================================================
+   OBTENER DATOS DEL FORMULARIO
+===================================================== */
+
+  function obtenerDatosFormularioInventario() {
+    return {
+      placaOriginal: inventarioVehiculoSeleccionado.placa || "",
+
+      nombre: obtenerValorInventario("editarInventarioNombre"),
+
+      placa: obtenerValorInventario("editarInventarioPlaca"),
+
+      transito: obtenerValorInventario("editarInventarioTransito"),
+
+      soat: obtenerValorInventario("editarInventarioSoat"),
+
+      tecnomecanica: obtenerValorInventario("editarInventarioTecnomecanica"),
+
+      picoYPlaca: obtenerValorInventario("editarInventarioPicoYPlaca"),
+
+      precio: obtenerValorInventario("editarInventarioPrecio"),
+
+      kilometraje: obtenerValorInventario("editarInventarioKilometraje"),
+
+      detalles: obtenerValorInventario("editarInventarioDetalles"),
+
+      ubicacion: obtenerValorInventario("editarInventarioUbicacion"),
+    };
+  }
+
+  /* =====================================================
+   OBTENER VALOR DEL FORMULARIO
+===================================================== */
+
+  function obtenerValorInventario(id) {
+    const elemento = document.getElementById(id);
+
+    if (!elemento) {
+      return "";
+    }
+
+    return elemento.value.trim();
+  }
+
+  /* =====================================================
+   CANCELAR CONFIRMACIÓN
+===================================================== */
+
+  function cancelarConfirmacionVehiculoInventario() {
+    const modal = document.getElementById(
+      "modalConfirmacionVehiculoInventario",
+    );
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "none";
+
+    modal.dataset.datos = "";
+  }
+
+  /* =====================================================
+   CONFIRMAR GUARDADO
+===================================================== */
+
+  function confirmarGuardadoVehiculoInventario(datos) {
+    if (!datos || !tokenSesion) {
+      return;
+    }
+
+    const boton = document.querySelector(
+      ".inventario-confirmacion-boton-principal",
+    );
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Guardando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Guardar cambios";
+          }
+
+          const mensaje =
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No se pudieron guardar los cambios.";
+
+          alert(mensaje);
+
+          return;
+        }
+
+        /*
+         * Actualizar el vehículo localmente
+         * con la información confirmada por el backend.
+         */
+
+        const vehiculo = buscarVehiculoInventario(datos.placaOriginal);
+
+        if (vehiculo) {
+          vehiculo.nombre = datos.nombre;
+
+          vehiculo.placa = datos.placa;
+
+          vehiculo.transito = datos.transito;
+
+          vehiculo.soat = datos.soat;
+
+          vehiculo.tecnomecanica = datos.tecnomecanica;
+
+          vehiculo.picoYPlaca = datos.picoYPlaca;
+
+          vehiculo.precio = datos.precio;
+
+          vehiculo.kilometraje = datos.kilometraje;
+
+          vehiculo.detalles = datos.detalles;
+
+          vehiculo.ubicacion = datos.ubicacion;
+
+          inventarioVehiculoSeleccionado = vehiculo;
+        }
+
+        cancelarConfirmacionVehiculoInventario();
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        mostrarResultadoGuardadoVehiculoInventario();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al actualizar vehículo:", error);
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        alert("Ocurrió un error al actualizar la información del vehículo.");
+      })
+
+      .actualizarVehiculoAdministracion(
+        tokenSesion,
+
+        datos.placaOriginal,
+
+        datos.nombre,
+
+        datos.placa,
+
+        datos.transito,
+
+        datos.soat,
+
+        datos.tecnomecanica,
+
+        datos.picoYPlaca,
+
+        datos.precio,
+
+        datos.kilometraje,
+
+        datos.detalles,
+
+        datos.ubicacion,
+      );
+  }
+
+  /* =====================================================
+   RESULTADO GUARDADO
+===================================================== */
+
+  function mostrarResultadoGuardadoVehiculoInventario() {
+    const editor = document.getElementById("editorVehiculoInventario");
+
+    const resultado = document.getElementById(
+      "resultadoGuardadoVehiculoInventario",
+    );
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (resultado) {
+      resultado.style.display = "block";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   CONTINUAR DESPUÉS DE GUARDAR
+===================================================== */
+
+  function continuarDespuesDeGuardarVehiculoInventario() {
+    const resultado = document.getElementById(
+      "resultadoGuardadoVehiculoInventario",
+    );
+
+    if (resultado) {
+      resultado.style.display = "none";
+    }
+
+    inventarioVehiculoSeleccionado = null;
+
+    mostrarVistaPrincipalInventario();
+
+    actualizarListaInventario();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   MOSTRAR SIN RESULTADOS
+===================================================== */
+
+  function mostrarSinResultadosInventario() {
+    const contenedor = document.getElementById("listaVehiculosInventario");
+
+    const sinResultados = document.getElementById("inventarioSinResultados");
+
+    if (contenedor) {
+      contenedor.innerHTML = "";
+    }
+
+    if (sinResultados) {
+      sinResultados.style.display = "flex";
+    }
+  }
+
+  /* =====================================================
+   OCULTAR SIN RESULTADOS
+===================================================== */
+
+  function ocultarSinResultadosInventario() {
+    const elemento = document.getElementById("inventarioSinResultados");
+
+    if (elemento) {
+      elemento.style.display = "none";
+    }
+  }
+
+  /* =====================================================
+   LIMPIAR BÚSQUEDA
+===================================================== */
+
+  function limpiarBusquedaInventario() {
+    const buscador = document.getElementById("buscadorVehiculosInventario");
+
+    inventarioTextoBusqueda = "";
+
+    inventarioBusquedaActiva = false;
+
+    if (buscador) {
+      buscador.value = "";
+    }
+
+    actualizarEstadoBusquedaInventario();
+
+    actualizarListaInventario(vehiculosAdministracion);
+  }
+
+  /* =====================================================
+   FORMATEAR PRECIO
+===================================================== */
+
+  function formatearPrecioInventario(precio) {
+    if (precio === null || precio === undefined || precio === "") {
+      return "$0";
+    }
+
+    const numero = Number(
+      String(precio)
+        .replace(/\./g, "")
+        .replace(/,/g, "")
+        .replace(/\$/g, "")
+        .trim(),
+    );
+
+    if (Number.isNaN(numero)) {
+      return `$${escaparHTML(precio)}`;
+    }
+
+    return "$" + numero.toLocaleString("es-CO");
+  }
+
+  /* =====================================================
+   FORMATEAR KILOMETRAJE
+===================================================== */
+
+  function formatearKilometrajeInventario(kilometraje) {
+    if (
+      kilometraje === null ||
+      kilometraje === undefined ||
+      kilometraje === ""
+    ) {
+      return "0 km";
+    }
+
+    const numero = Number(
+      String(kilometraje)
+        .replace(/\./g, "")
+        .replace(/,/g, "")
+        .replace(/km/gi, "")
+        .trim(),
+    );
+
+    if (Number.isNaN(numero)) {
+      return escaparHTML(kilometraje) + " km";
+    }
+
+    return numero.toLocaleString("es-CO") + " km";
+  }
+</script>

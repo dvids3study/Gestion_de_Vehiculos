@@ -1,0 +1,2441 @@
+<style>
+
+  /* =====================================================
+     GESTIÓN DE USUARIOS - ESTILOS ORGANIZADOS
+     Archivo depurado: sin bloques duplicados y con
+     responsive/modal dentro del mismo <style>.
+  ===================================================== */
+
+
+  /* =====================================================
+     BASE
+  ===================================================== */
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+
+  /* =====================================================
+     VISTAS INTERNAS
+  ===================================================== */
+
+  .gestion-usuarios-vista {
+    width: 100%;
+  }
+
+  .gestion-usuarios-vista-encabezado {
+    display: flex;
+      align-items: center;
+
+      gap: 14px;
+
+      margin-bottom: 20px;
+  }
+
+  .gestion-usuarios-vista-icono {
+    width: 48px;
+      height: 48px;
+      min-width: 48px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 15px;
+
+      background: linear-gradient(
+        135deg,
+        #147eea,
+        #17bce9
+      );
+
+      color: #ffffff;
+
+      font-size: 22px;
+
+      box-shadow:
+        0 8px 18px rgba(20,126,234,.16);
+  }
+
+  .gestion-usuarios-vista-encabezado h3 {
+    margin: 0;
+
+      color: #244a68;
+
+      font-size: 20px;
+      font-weight: 700;
+  }
+
+  .gestion-usuarios-vista-encabezado p {
+    margin: 4px 0 0;
+
+      color: #7b94a8;
+
+      font-size: 13px;
+      line-height: 1.4;
+  }
+
+
+  /* =====================================================
+     FORMULARIOS Y BOTONES
+  ===================================================== */
+
+  .gestion-usuarios-form {
+    display: flex;
+      flex-direction: column;
+      gap: 13px;
+
+      padding: 20px;
+
+      border-radius: 20px;
+
+      background: rgba(255,255,255,.68);
+
+      border: 1px solid rgba(255,255,255,.76);
+
+      box-shadow:
+        0 8px 24px rgba(40,100,150,.08);
+
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+  }
+
+  .gestion-usuarios-campo {
+    display: flex;
+      flex-direction: column;
+
+      gap: 6px;
+  }
+
+  .gestion-usuarios-campo label {
+    color: #466981;
+
+      font-size: 13px;
+      font-weight: 600;
+  }
+
+  .gestion-usuarios-campo input,
+  .gestion-usuarios-campo select {
+    width: 100%;
+      box-sizing: border-box;
+
+      min-height: 44px;
+
+      padding: 11px 13px;
+
+      border: 1px solid rgba(120,160,190,.25);
+      border-radius: 13px;
+
+      background: rgba(255,255,255,.82);
+
+      color: #244a68;
+
+      font-family: inherit;
+      font-size: 14px;
+
+      outline: none;
+
+      transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+  }
+
+  .gestion-usuarios-campo input::placeholder {
+    color: #9aafbd;
+  }
+
+  .gestion-usuarios-campo input:focus,
+  .gestion-usuarios-campo select:focus {
+    background: #ffffff;
+
+      border-color: rgba(20,126,234,.42);
+
+      box-shadow:
+        0 0 0 3px rgba(20,126,234,.08);
+  }
+
+  .gestion-usuarios-boton-principal {
+    width: 100%;
+
+      min-height: 46px;
+
+      margin-top: 4px;
+
+      padding: 12px 16px;
+
+      border: none;
+      border-radius: 14px;
+
+      background: linear-gradient(
+        135deg,
+        #147eea,
+        #17bce9
+      );
+
+      color: #ffffff;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 8px 18px rgba(20,126,234,.18);
+
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        opacity .18s ease;
+  }
+
+  .gestion-usuarios-boton-principal:hover {
+    transform: translateY(-1px);
+
+      box-shadow:
+        0 10px 22px rgba(20,126,234,.22);
+  }
+
+  .gestion-usuarios-boton-principal:active {
+    transform: scale(.985);
+  }
+
+  .gestion-usuarios-boton-principal:disabled {
+    cursor: default;
+      opacity: .7;
+      transform: none;
+  }
+
+  .gestion-usuarios-boton-secundario {
+    width: 100%;
+
+      min-height: 44px;
+
+      padding: 11px 16px;
+
+      border: none;
+      border-radius: 14px;
+
+      background: rgba(255,255,255,.82);
+
+      color: #4d6d84;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 6px 16px rgba(40,100,150,.06);
+
+      transition:
+        transform .18s ease,
+        background .18s ease;
+  }
+
+  .gestion-usuarios-boton-secundario:hover {
+    background: #ffffff;
+
+      transform: translateY(-1px);
+  }
+
+
+  /* =====================================================
+     MENSAJES Y ESTADOS
+  ===================================================== */
+
+  .gestion-usuarios-mensaje.success {
+    background: rgba(46,180,120,.10);
+
+      color: #23865d;
+  }
+
+  .gestion-usuarios-cargando {
+    padding: 24px 16px;
+
+      border-radius: 17px;
+
+      background: rgba(255,255,255,.65);
+
+      color: #7b94a8;
+
+      font-size: 13px;
+
+      text-align: center;
+  }
+
+
+  /* =====================================================
+     PERFIL
+  ===================================================== */
+
+  .gestion-usuario-perfil {
+    padding: 16px;
+
+      border-radius: 18px;
+
+      background: rgba(255,255,255,.76);
+
+      border: 1px solid rgba(255,255,255,.78);
+
+      box-shadow:
+        0 7px 18px rgba(40,100,150,.07);
+
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+  }
+
+  .gestion-usuario-perfil-cabecera {
+    display: flex;
+      align-items: center;
+
+      gap: 13px;
+
+      margin-bottom: 16px;
+  }
+
+  .gestion-usuario-perfil-avatar {
+    width: 50px;
+      height: 50px;
+
+      min-width: 50px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background: linear-gradient(
+        135deg,
+        rgba(20,126,234,.14),
+        rgba(23,188,233,.18)
+      );
+
+      font-size: 23px;
+  }
+
+  .gestion-usuario-perfil-nombre {
+    display: flex;
+      flex-direction: column;
+
+      gap: 5px;
+  }
+
+  .gestion-usuario-perfil-nombre strong {
+    color: #244a68;
+
+      font-size: 16px;
+      font-weight: 700;
+  }
+
+  .gestion-usuario-perfil-nombre span {
+    width: fit-content;
+
+      padding: 5px 9px;
+
+      border-radius: 9px;
+
+      background: rgba(20,126,234,.09);
+
+      color: #147eea;
+
+      font-size: 10px;
+      font-weight: 700;
+  }
+
+  .gestion-usuario-perfil-datos {
+    display: flex;
+      flex-direction: column;
+
+      gap: 0;
+
+      border-radius: 14px;
+
+      background: rgba(247,250,252,.72);
+
+      overflow: hidden;
+  }
+
+  .gestion-usuario-perfil-dato {
+    display: flex;
+      flex-direction: column;
+
+      gap: 4px;
+
+      padding: 11px 12px;
+
+      border-bottom: 1px solid rgba(120,160,190,.12);
+  }
+
+  .gestion-usuario-perfil-dato:last-child {
+    border-bottom: none;
+  }
+
+  .gestion-usuario-perfil-dato span {
+    color: #7b94a8;
+
+      font-size: 11px;
+  }
+
+  .gestion-usuario-perfil-dato strong {
+    color: #244a68;
+
+      font-size: 13px;
+  }
+
+
+  /* =====================================================
+     LISTADOS Y BORRADO
+  ===================================================== */
+
+  .gestion-usuario-eliminar {
+    display: flex;
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 13px 14px;
+
+      border-radius: 18px;
+
+      background: rgba(255,255,255,.76);
+
+      border: 1px solid rgba(255,255,255,.78);
+
+      box-shadow:
+        0 7px 18px rgba(40,100,150,.07);
+
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+  }
+
+  .gestion-usuario-eliminar-info {
+    min-width: 0;
+
+      flex: 1;
+
+      display: flex;
+      align-items: center;
+
+      gap: 11px;
+  }
+
+  .gestion-usuario-eliminar-avatar {
+    width: 42px;
+      height: 42px;
+
+      min-width: 42px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 13px;
+
+      background: linear-gradient(
+        135deg,
+        rgba(20,126,234,.11),
+        rgba(23,188,233,.16)
+      );
+
+      font-size: 19px;
+  }
+
+  .gestion-usuario-eliminar-texto {
+    min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 2px;
+  }
+
+  .gestion-usuario-eliminar-texto strong {
+    overflow: hidden;
+
+      color: #244a68;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }
+
+  .gestion-usuario-eliminar-texto span {
+    color: #5f7b8e;
+
+      font-size: 12px;
+  }
+
+  .gestion-usuario-eliminar-texto small {
+    color: #8aa0ae;
+
+      font-size: 11px;
+  }
+
+  .gestion-usuario-eliminar-boton {
+    flex-shrink: 0;
+
+      padding: 8px 11px;
+
+      border: none;
+      border-radius: 11px;
+
+      background: rgba(229,87,87,.09);
+
+      color: #cf4c4c;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        background .18s ease,
+        transform .18s ease;
+  }
+
+  .gestion-usuario-eliminar-boton:hover {
+    background: rgba(229,87,87,.15);
+
+      transform: translateY(-1px);
+  }
+
+
+  /* =====================================================
+     MENSAJES Y ESTADOS
+  ===================================================== */
+
+  .gestion-usuarios-vacio strong {
+    font-weight: 600;
+  }
+
+
+  /* =====================================================
+     ESTRUCTURA Y ENCABEZADO
+  ===================================================== */
+
+  .gestion-usuarios-modulo {
+    width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+  }
+
+  .gestion-usuarios-encabezado {
+    display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+  }
+
+  .gestion-usuarios-icono {
+    width: 52px;
+      height: 52px;
+      min-width: 52px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 16px;
+
+      background: linear-gradient(
+        135deg,
+        #147eea,
+        #17bce9
+      );
+
+      color: #ffffff;
+
+      font-size: 24px;
+
+      box-shadow:
+        0 8px 18px rgba(20, 126, 234, 0.18);
+  }
+
+  .gestion-usuarios-encabezado h3 {
+    margin: 0;
+
+      font-size: 20px;
+      font-weight: 700;
+
+      color: #244a68;
+  }
+
+  .gestion-usuarios-encabezado p {
+    margin: 4px 0 0;
+
+      font-size: 13px;
+      line-height: 1.4;
+
+      color: #7b94a8;
+  }
+
+  .gestion-submodulo-volver {
+    display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 18px;
+
+      border: none;
+      background: transparent;
+
+      color: #147eea;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      padding: 6px 4px;
+
+      transition:
+        transform 0.18s ease,
+        opacity 0.18s ease;
+  }
+
+  .gestion-submodulo-volver:hover {
+    opacity: 0.8;
+      transform: translateX(-2px);
+  }
+
+
+  /* =====================================================
+     OPCIONES
+  ===================================================== */
+
+  .gestion-usuarios-opciones {
+    display: flex;
+      flex-direction: column;
+      gap: 12px;
+  }
+
+  .gestion-usuario-opcion {
+    width: 100%;
+
+      display: flex;
+      align-items: center;
+
+      gap: 13px;
+
+      padding: 14px 15px;
+
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 19px;
+
+      background: rgba(255,255,255,0.72);
+
+      box-shadow:
+        0 7px 18px rgba(40,100,150,.07);
+
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
+      text-align: left;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .gestion-usuario-opcion:hover {
+    transform: translateY(-2px);
+
+      background: rgba(255,255,255,0.9);
+
+      box-shadow:
+        0 10px 22px rgba(40,100,150,.11);
+  }
+
+  .gestion-usuario-opcion:active {
+    transform: scale(0.985);
+  }
+
+  .gestion-usuario-icono {
+    width: 44px;
+      height: 44px;
+      min-width: 44px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 14px;
+
+      background: linear-gradient(
+        135deg,
+        rgba(20,126,234,0.12),
+        rgba(23,188,233,0.16)
+      );
+
+      color: #147eea;
+
+      font-size: 21px;
+  }
+
+  .gestion-usuario-texto {
+    min-width: 0;
+
+      flex: 1;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 3px;
+  }
+
+  .gestion-usuario-texto strong {
+    font-size: 15px;
+      font-weight: 700;
+
+      color: #244a68;
+  }
+
+  .gestion-usuario-texto small {
+    font-size: 12px;
+      line-height: 1.4;
+
+      color: #7b94a8;
+  }
+
+  .gestion-usuario-flecha {
+    width: 30px;
+      height: 30px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+
+      border-radius: 10px;
+
+      background: rgba(20,126,234,0.08);
+
+      color: #147eea;
+
+      font-size: 23px;
+      line-height: 1;
+
+      transition:
+        transform 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .gestion-usuario-opcion:hover .gestion-usuario-flecha {
+    transform: translateX(2px);
+
+      background: rgba(20,126,234,0.13);
+  }
+
+
+  /* =====================================================
+     FORMULARIOS Y BOTONES
+  ===================================================== */
+
+  .gestion-usuarios-formulario {
+    display: flex;
+      flex-direction: column;
+      gap: 15px;
+  }
+
+  .gestion-usuarios-formulario-grupo {
+    display: flex;
+      flex-direction: column;
+      gap: 6px;
+  }
+
+  .gestion-usuarios-formulario-grupo label {
+    font-size: 13px;
+      font-weight: 600;
+      color: #466981;
+  }
+
+  .gestion-usuarios-formulario-grupo input,
+  .gestion-usuarios-formulario-grupo select {
+    width: 100%;
+      box-sizing: border-box;
+
+      padding: 13px 14px;
+
+      border: 1px solid rgba(120, 160, 190, 0.25);
+      border-radius: 14px;
+
+      background: rgba(255,255,255,0.82);
+
+      color: #244a68;
+
+      font-size: 14px;
+
+      outline: none;
+
+      transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .gestion-usuarios-formulario-grupo input:focus,
+  .gestion-usuarios-formulario-grupo select:focus {
+    border-color: rgba(20,126,234,0.45);
+
+      background: #ffffff;
+
+      box-shadow:
+        0 0 0 3px rgba(20,126,234,0.08);
+  }
+
+  .gestion-usuarios-formulario-acciones {
+    display: flex;
+      gap: 10px;
+
+      margin-top: 4px;
+  }
+
+  .gestion-usuarios-btn-principal {
+    flex: 1;
+
+      border: none;
+      border-radius: 14px;
+
+      padding: 13px 16px;
+
+      background: linear-gradient(
+        135deg,
+        #147eea,
+        #17bce9
+      );
+
+      color: #ffffff;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 8px 18px rgba(20,126,234,0.18);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+  }
+
+  .gestion-usuarios-btn-principal:hover {
+    transform: translateY(-1px);
+
+      box-shadow:
+        0 10px 22px rgba(20,126,234,0.23);
+  }
+
+  .gestion-usuarios-btn-principal:active {
+    transform: scale(0.985);
+  }
+
+  .gestion-usuarios-btn-secundario {
+    flex: 1;
+
+      border: none;
+      border-radius: 14px;
+
+      padding: 13px 16px;
+
+      background: rgba(255,255,255,0.78);
+
+      color: #4d6d84;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 6px 16px rgba(40,100,150,.06);
+
+      transition:
+        transform 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .gestion-usuarios-btn-secundario:hover {
+    background: rgba(255,255,255,0.95);
+
+      transform: translateY(-1px);
+  }
+
+
+  /* =====================================================
+     LISTADOS Y BORRADO
+  ===================================================== */
+
+  .gestion-usuarios-lista {
+    display: flex;
+      flex-direction: column;
+      gap: 10px;
+  }
+
+  .gestion-usuario-card {
+    display: flex;
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 13px 14px;
+
+      border-radius: 17px;
+
+      background: rgba(255,255,255,0.72);
+
+      border: 1px solid rgba(255,255,255,0.7);
+
+      box-shadow:
+        0 6px 17px rgba(40,100,150,.06);
+  }
+
+  .gestion-usuario-card-info {
+    min-width: 0;
+      flex: 1;
+  }
+
+  .gestion-usuario-card-info strong {
+    display: block;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      color: #244a68;
+  }
+
+  .gestion-usuario-card-info span {
+    display: block;
+
+      margin-top: 3px;
+
+      font-size: 12px;
+
+      color: #7b94a8;
+  }
+
+  .gestion-usuario-card-rol {
+    padding: 6px 9px;
+
+      border-radius: 10px;
+
+      background: rgba(20,126,234,0.08);
+
+      color: #147eea;
+
+      font-size: 10px;
+      font-weight: 700;
+
+      white-space: nowrap;
+      text-transform: uppercase;
+  }
+
+  .gestion-usuario-card-eliminar {
+    width: 34px;
+      height: 34px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+
+      border: none;
+      border-radius: 11px;
+
+      background: rgba(240,80,80,0.08);
+
+      color: #e45757;
+
+      font-size: 17px;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .gestion-usuario-card-eliminar:hover {
+    transform: translateY(-1px);
+
+      background: rgba(240,80,80,0.14);
+  }
+
+
+  /* =====================================================
+     MENSAJES Y ESTADOS
+  ===================================================== */
+
+  .gestion-usuarios-mensaje {
+    margin-top: 12px;
+
+      padding: 11px 13px;
+
+      border-radius: 13px;
+
+      font-size: 13px;
+      line-height: 1.4;
+  }
+
+  .gestion-usuarios-mensaje.exito {
+    background: rgba(46, 180, 120, 0.10);
+      color: #23865d;
+  }
+
+  .gestion-usuarios-mensaje.error {
+    background: rgba(229, 87, 87, 0.10);
+      color: #c24848;
+  }
+
+  .gestion-usuarios-mensaje.info {
+    background: rgba(20,126,234,0.09);
+      color: #1473c9;
+  }
+
+  .gestion-usuarios-vacio {
+    padding: 22px 16px;
+
+      border-radius: 17px;
+
+      background: rgba(255,255,255,0.6);
+
+      color: #7b94a8;
+
+      font-size: 13px;
+
+      text-align: center;
+  }
+
+
+  /* =====================================================
+     MODAL ELIMINAR USUARIO
+  ===================================================== */
+
+  .modal-confirmar-eliminar-usuario {
+    position: fixed;
+      inset: 0;
+      z-index: 10000;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background: rgba(17, 35, 55, 0.38);
+
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+  }
+
+  .confirmar-eliminar-usuario-contenido {
+    width: 100%;
+      max-width: 390px;
+
+      padding: 30px 24px 24px;
+
+      border:
+        1px solid rgba(255, 255, 255, 0.85);
+
+      border-radius: 28px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(238, 247, 255, 0.94)
+        );
+
+      box-shadow:
+        0 25px 65px rgba(22, 73, 118, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+
+      text-align: center;
+
+      animation:
+        aparecerConfirmacionUsuario
+        0.22s ease;
+  }
+
+  .confirmar-eliminar-usuario-icono {
+    width: 70px;
+      height: 70px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin: 0 auto 18px;
+
+      border-radius: 22px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #fff0f0,
+          #ffe2e2
+        );
+
+      font-size: 31px;
+
+      box-shadow:
+        0 10px 25px rgba(220, 60, 60, 0.12);
+  }
+
+  .confirmar-eliminar-usuario-contenido h3 {
+    margin: 0 0 8px;
+
+      color: #173e62;
+
+      font-size: 22px;
+      font-weight: 800;
+
+      letter-spacing: -0.3px;
+  }
+
+  .confirmar-eliminar-usuario-contenido p {
+    margin: 0;
+
+      color: #738da5;
+
+      font-size: 13px;
+      line-height: 1.5;
+  }
+
+  .confirmar-eliminar-usuario-nombre {
+    margin: 17px 0;
+
+      padding: 14px 16px;
+
+      border:
+        1px solid rgba(73, 151, 210, 0.15);
+
+      border-radius: 16px;
+
+      background:
+        rgba(255, 255, 255, 0.72);
+
+      color: #174f7c;
+
+      font-size: 15px;
+      font-weight: 800;
+
+      box-shadow:
+        0 6px 18px rgba(40, 100, 150, 0.06);
+  }
+
+  .confirmar-eliminar-usuario-advertencia {
+    display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      margin-top: 2px !important;
+
+      padding: 8px 12px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(239, 68, 68, 0.08);
+
+      color: #c94a4a !important;
+
+      font-size: 11px !important;
+      font-weight: 700;
+  }
+
+  .confirmar-eliminar-usuario-botones {
+    display: flex;
+
+      gap: 11px;
+
+      margin-top: 23px;
+  }
+
+  .btn-cancelar-eliminar-usuario,
+  .btn-confirmar-eliminar-usuario {
+    flex: 1;
+
+      min-height: 48px;
+
+      padding: 0 14px;
+
+      border: none;
+      border-radius: 15px;
+
+      font-family: inherit;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+  }
+
+  .btn-cancelar-eliminar-usuario {
+    background:
+        rgba(229, 239, 247, 0.92);
+
+      color: #54738e;
+  }
+
+  .btn-cancelar-eliminar-usuario:hover {
+    background:
+        rgba(214, 229, 241, 0.95);
+
+      transform: translateY(-1px);
+  }
+
+  .btn-confirmar-eliminar-usuario {
+    background:
+        linear-gradient(
+          135deg,
+          #ef5350,
+          #d93636
+        );
+
+      color: #ffffff;
+
+      box-shadow:
+        0 9px 22px rgba(217, 54, 54, 0.22);
+  }
+
+  .btn-confirmar-eliminar-usuario:hover {
+    transform: translateY(-1px);
+
+      box-shadow:
+        0 12px 26px rgba(217, 54, 54, 0.28);
+  }
+
+  .btn-cancelar-eliminar-usuario:active,
+  .btn-confirmar-eliminar-usuario:active {
+    transform: scale(0.97);
+  }
+
+
+  /* =====================================================
+     @KEYFRAMES aparecerConfirmacionUsuario
+  ===================================================== */
+
+  @keyframes aparecerConfirmacionUsuario {
+    from {
+        opacity: 0;
+
+        transform:
+          translateY(10px)
+          scale(0.96);
+      }
+
+      to {
+        opacity: 1
+
+        transform:
+          translateY(0)
+          scale(1);
+      }
+  }
+
+  /* =====================================================
+     RESPONSIVE (max-width: 600px)
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    .gestion-usuarios-vista-encabezado {
+      gap: 11px;
+          margin-bottom: 17px;
+    }
+
+    .gestion-usuarios-vista-icono {
+      width: 45px;
+          height: 45px;
+          min-width: 45px;
+
+          border-radius: 14px;
+
+          font-size: 20px;
+    }
+
+    .gestion-usuarios-vista-encabezado h3 {
+      font-size: 18px;
+    }
+
+    .gestion-usuarios-vista-encabezado p {
+      font-size: 12px;
+    }
+
+    .gestion-usuarios-form {
+      padding: 15px;
+
+          border-radius: 18px;
+
+          gap: 12px;
+    }
+
+    .gestion-usuarios-campo input,
+    .gestion-usuarios-campo select {
+      min-height: 43px;
+    }
+
+    .gestion-usuario-eliminar {
+      padding: 12px;
+    }
+
+    .gestion-usuario-eliminar-avatar {
+      width: 39px;
+          height: 39px;
+          min-width: 39px;
+
+          border-radius: 12px;
+    }
+
+    .gestion-usuario-eliminar-boton {
+      padding: 7px 9px;
+
+          font-size: 11px;
+    }
+
+    .gestion-usuarios-modulo {
+      max-width: 100%;
+    }
+
+    .gestion-usuarios-encabezado {
+      gap: 11px;
+          margin-bottom: 18px;
+    }
+
+    .gestion-usuarios-icono {
+      width: 48px;
+          height: 48px;
+          min-width: 48px;
+
+          border-radius: 15px;
+
+          font-size: 22px;
+    }
+
+    .gestion-usuarios-encabezado h3 {
+      font-size: 18px;
+    }
+
+    .gestion-usuarios-encabezado p {
+      font-size: 12px;
+    }
+
+    .gestion-usuario-opcion {
+      padding: 13px;
+          border-radius: 17px;
+    }
+
+    .gestion-usuario-icono {
+      width: 42px;
+          height: 42px;
+          min-width: 42px;
+
+          border-radius: 13px;
+
+          font-size: 19px;
+    }
+
+    .gestion-usuario-texto strong {
+      font-size: 14px;
+    }
+
+    .gestion-usuario-texto small {
+      font-size: 11px;
+    }
+
+    .gestion-usuario-flecha {
+      width: 28px;
+          height: 28px;
+    }
+
+    .gestion-usuarios-formulario-acciones {
+      flex-direction: column;
+    }
+
+  }
+
+  /* =====================================================
+     RESPONSIVE (max-width: 480px)
+  ===================================================== */
+
+  @media (max-width: 480px) {
+
+    .gestion-usuarios-modulo {
+      width: 100%;
+          max-width: none;
+          padding-left: 10px;
+          padding-right: 10px;
+          box-sizing: border-box;
+    }
+
+    .gestion-usuarios-encabezado,
+    .gestion-usuarios-vista-encabezado {
+      gap: 9px;
+    }
+
+    .gestion-usuarios-encabezado h3,
+    .gestion-usuarios-vista-encabezado h3 {
+      font-size: 17px;
+          line-height: 1.2;
+    }
+
+    .gestion-usuarios-encabezado p,
+    .gestion-usuarios-vista-encabezado p {
+      font-size: 11px;
+    }
+
+    .gestion-usuarios-form {
+      padding: 13px;
+          gap: 11px;
+    }
+
+    .gestion-usuarios-formulario {
+      gap: 12px;
+    }
+
+    .gestion-usuarios-formulario-grupo input,
+    .gestion-usuarios-formulario-grupo select,
+    .gestion-usuarios-campo input,
+    .gestion-usuarios-campo select {
+      min-width: 0;
+          font-size: 13px;
+    }
+
+    .gestion-usuarios-formulario-acciones {
+      flex-direction: row;
+          align-items: stretch;
+          gap: 8px;
+    }
+
+    .gestion-usuarios-btn-principal,
+    .gestion-usuarios-btn-secundario {
+      min-width: 0;
+          padding-left: 10px;
+          padding-right: 10px;
+          white-space: nowrap;
+    }
+
+    .gestion-usuario-opcion {
+      min-width: 0;
+          gap: 9px;
+          padding: 11px;
+    }
+
+    .gestion-usuario-texto {
+      min-width: 0;
+    }
+
+    .gestion-usuario-texto strong,
+    .gestion-usuario-texto small {
+      overflow-wrap: anywhere;
+    }
+
+    .gestion-usuario-flecha {
+      width: 27px;
+          height: 27px;
+          flex-shrink: 0;
+          font-size: 20px;
+    }
+
+    .gestion-usuario-perfil,
+    .gestion-usuario-eliminar {
+      padding: 12px;
+    }
+
+    .gestion-usuario-perfil-cabecera,
+    .gestion-usuario-eliminar-info {
+      min-width: 0;
+    }
+
+    .gestion-usuario-eliminar {
+      gap: 8px;
+    }
+
+    .gestion-usuario-eliminar-texto {
+      min-width: 0;
+    }
+
+    .gestion-usuario-eliminar-texto strong {
+      max-width: 100%;
+    }
+
+    .gestion-usuario-eliminar-boton {
+      flex-shrink: 0;
+          white-space: nowrap;
+    }
+
+    .gestion-usuario-card {
+      min-width: 0;
+          gap: 8px;
+          padding: 11px;
+    }
+
+    .gestion-usuario-card-info {
+      min-width: 0;
+    }
+
+    .gestion-usuario-card-rol,
+    .gestion-usuario-card-eliminar {
+      flex-shrink: 0;
+    }
+
+    .gestion-usuarios-vacio,
+    .gestion-usuarios-cargando,
+    .gestion-usuarios-mensaje {
+      padding-left: 12px;
+          padding-right: 12px;
+    }
+
+  }
+
+  /* =====================================================
+     RESPONSIVE (max-width: 360px)
+  ===================================================== */
+
+  @media (max-width: 360px) {
+
+    .gestion-usuarios-modulo {
+      padding-left: 7px;
+          padding-right: 7px;
+    }
+
+    .gestion-usuarios-encabezado,
+    .gestion-usuarios-vista-encabezado {
+      gap: 7px;
+    }
+
+    .gestion-usuarios-icono {
+      width: 43px;
+          height: 43px;
+          min-width: 43px;
+          font-size: 20px;
+    }
+
+    .gestion-usuarios-vista-icono {
+      width: 41px;
+          height: 41px;
+          min-width: 41px;
+          font-size: 19px;
+    }
+
+    .gestion-usuario-opcion {
+      gap: 7px;
+          padding: 9px;
+    }
+
+    .gestion-usuario-icono {
+      width: 38px;
+          height: 38px;
+          min-width: 38px;
+          font-size: 17px;
+    }
+
+    .gestion-usuario-texto strong {
+      font-size: 13px;
+    }
+
+    .gestion-usuario-texto small {
+      font-size: 10px;
+    }
+
+    .gestion-usuario-flecha {
+      width: 25px;
+          height: 25px;
+          font-size: 18px;
+    }
+
+    .gestion-usuarios-formulario-acciones {
+      flex-direction: row;
+          gap: 6px;
+    }
+
+    .gestion-usuarios-btn-principal,
+    .gestion-usuarios-btn-secundario {
+      padding-left: 7px;
+          padding-right: 7px;
+          font-size: 12px;
+    }
+
+    .gestion-usuario-card {
+      gap: 6px;
+          padding: 9px;
+    }
+
+    .gestion-usuario-card-rol {
+      padding: 5px 7px;
+          font-size: 9px;
+    }
+
+    .gestion-usuario-card-eliminar {
+      width: 31px;
+          height: 31px;
+          font-size: 15px;
+    }
+
+  }
+
+  /* =====================================================
+     MÓDULO GESTIÓN DE USUARIOS
+     ===================================================== */
+
+  .gestion-usuarios-modulo {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+
+  /* =====================================================
+     ENCABEZADO PRINCIPAL
+     ===================================================== */
+
+  .gestion-usuarios-encabezado {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .gestion-usuarios-icono {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+
+    background: linear-gradient(
+      135deg,
+      #147eea,
+      #17bce9
+    );
+
+    color: #ffffff;
+    font-size: 24px;
+
+    box-shadow:
+      0 8px 18px rgba(20,126,234,.18);
+  }
+
+  .gestion-usuarios-encabezado h3 {
+    margin: 0;
+
+    color: #244a68;
+
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .gestion-usuarios-encabezado p {
+    margin: 4px 0 0;
+
+    color: #7b94a8;
+
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+
+  /* =====================================================
+     BOTÓN VOLVER
+     ===================================================== */
+
+  .gestion-submodulo-volver {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 18px;
+
+    padding: 6px 4px;
+
+    border: none;
+    background: transparent;
+
+    color: #147eea;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      transform .18s ease,
+      opacity .18s ease;
+  }
+
+  .gestion-submodulo-volver:hover {
+    opacity: .8;
+    transform: translateX(-2px);
+  }
+
+
+  /* =====================================================
+     OPCIONES PRINCIPALES
+     ===================================================== */
+
+  .gestion-usuarios-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .gestion-usuario-opcion {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 14px 15px;
+
+    border: 1px solid rgba(255,255,255,.7);
+    border-radius: 19px;
+
+    background: rgba(255,255,255,.72);
+
+    box-shadow:
+      0 7px 18px rgba(40,100,150,.07);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      background .18s ease;
+  }
+
+  .gestion-usuario-opcion:hover {
+    transform: translateY(-2px);
+
+    background: rgba(255,255,255,.9);
+
+    box-shadow:
+      0 10px 22px rgba(40,100,150,.11);
+  }
+
+  .gestion-usuario-opcion:active {
+    transform: scale(.985);
+  }
+
+  .gestion-usuario-icono {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(20,126,234,.12),
+      rgba(23,188,233,.16)
+    );
+
+    color: #147eea;
+
+    font-size: 21px;
+  }
+
+  .gestion-usuario-texto {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .gestion-usuario-texto strong {
+    color: #244a68;
+
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .gestion-usuario-texto small {
+    color: #7b94a8;
+
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .gestion-usuario-flecha {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: rgba(20,126,234,.08);
+
+    color: #147eea;
+
+    font-size: 23px;
+  }
+
+
+  /* =====================================================
+     VISTAS INTERNAS
+     ===================================================== */
+
+  .gestion-usuarios-vista {
+    width: 100%;
+  }
+
+  .gestion-usuarios-vista-encabezado {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 20px;
+  }
+
+  .gestion-usuarios-vista-icono {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: linear-gradient(
+      135deg,
+      #147eea,
+      #17bce9
+    );
+
+    color: #ffffff;
+
+    font-size: 22px;
+
+    box-shadow:
+      0 8px 18px rgba(20,126,234,.16);
+  }
+
+  .gestion-usuarios-vista-encabezado h3 {
+    margin: 0;
+
+    color: #244a68;
+
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .gestion-usuarios-vista-encabezado p {
+    margin: 4px 0 0;
+
+    color: #7b94a8;
+
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+
+  /* =====================================================
+     FORMULARIO CREAR USUARIO
+     ===================================================== */
+
+  .gestion-usuarios-form {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+
+    padding: 20px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.68);
+
+    border: 1px solid rgba(255,255,255,.76);
+
+    box-shadow:
+      0 8px 24px rgba(40,100,150,.08);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .gestion-usuarios-campo {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+  }
+
+  .gestion-usuarios-campo label {
+    color: #466981;
+
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .gestion-usuarios-campo input,
+  .gestion-usuarios-campo select {
+    width: 100%;
+    box-sizing: border-box;
+
+    min-height: 44px;
+
+    padding: 11px 13px;
+
+    border: 1px solid rgba(120,160,190,.25);
+    border-radius: 13px;
+
+    background: rgba(255,255,255,.82);
+
+    color: #244a68;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+      border-color .18s ease,
+      box-shadow .18s ease,
+      background .18s ease;
+  }
+
+  .gestion-usuarios-campo input::placeholder {
+    color: #9aafbd;
+  }
+
+  .gestion-usuarios-campo input:focus,
+  .gestion-usuarios-campo select:focus {
+    background: #ffffff;
+
+    border-color: rgba(20,126,234,.42);
+
+    box-shadow:
+      0 0 0 3px rgba(20,126,234,.08);
+  }
+
+
+  /* =====================================================
+     BOTÓN PRINCIPAL
+     ===================================================== */
+
+  .gestion-usuarios-boton-principal {
+    width: 100%;
+
+    min-height: 46px;
+
+    margin-top: 4px;
+
+    padding: 12px 16px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: linear-gradient(
+      135deg,
+      #147eea,
+      #17bce9
+    );
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+      0 8px 18px rgba(20,126,234,.18);
+
+    transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      opacity .18s ease;
+  }
+
+  .gestion-usuarios-boton-principal:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 10px 22px rgba(20,126,234,.22);
+  }
+
+  .gestion-usuarios-boton-principal:active {
+    transform: scale(.985);
+  }
+
+  .gestion-usuarios-boton-principal:disabled {
+    cursor: default;
+    opacity: .7;
+    transform: none;
+  }
+
+
+  /* =====================================================
+     BOTÓN SECUNDARIO
+     ===================================================== */
+
+  .gestion-usuarios-boton-secundario {
+    width: 100%;
+
+    min-height: 44px;
+
+    padding: 11px 16px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: rgba(255,255,255,.82);
+
+    color: #4d6d84;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+      0 6px 16px rgba(40,100,150,.06);
+
+    transition:
+      transform .18s ease,
+      background .18s ease;
+  }
+
+  .gestion-usuarios-boton-secundario:hover {
+    background: #ffffff;
+
+    transform: translateY(-1px);
+  }
+
+
+  /* =====================================================
+     MENSAJES
+     ===================================================== */
+
+  .gestion-usuarios-mensaje {
+    display: none;
+
+    padding: 11px 13px;
+
+    border-radius: 13px;
+
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .gestion-usuarios-mensaje.success {
+    background: rgba(46,180,120,.10);
+
+    color: #23865d;
+  }
+
+  .gestion-usuarios-mensaje.error {
+    background: rgba(229,87,87,.10);
+
+    color: #c24848;
+  }
+
+
+  /* =====================================================
+     CARGANDO
+     ===================================================== */
+
+  .gestion-usuarios-cargando {
+    padding: 24px 16px;
+
+    border-radius: 17px;
+
+    background: rgba(255,255,255,.65);
+
+    color: #7b94a8;
+
+    font-size: 13px;
+
+    text-align: center;
+  }
+
+
+  /* =====================================================
+     LISTADO
+     ===================================================== */
+
+  .gestion-usuarios-lista {
+    display: flex;
+    flex-direction: column;
+
+    gap: 11px;
+  }
+
+
+  /* =====================================================
+     PERFIL DEL SUPERVISOR
+     ===================================================== */
+
+  .gestion-usuario-perfil {
+    padding: 16px;
+
+    border-radius: 18px;
+
+    background: rgba(255,255,255,.76);
+
+    border: 1px solid rgba(255,255,255,.78);
+
+    box-shadow:
+      0 7px 18px rgba(40,100,150,.07);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .gestion-usuario-perfil-cabecera {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    margin-bottom: 16px;
+  }
+
+  .gestion-usuario-perfil-avatar {
+    width: 50px;
+    height: 50px;
+
+    min-width: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+      135deg,
+      rgba(20,126,234,.14),
+      rgba(23,188,233,.18)
+    );
+
+    font-size: 23px;
+  }
+
+  .gestion-usuario-perfil-nombre {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+  }
+
+  .gestion-usuario-perfil-nombre strong {
+    color: #244a68;
+
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .gestion-usuario-perfil-nombre span {
+    width: fit-content;
+
+    padding: 5px 9px;
+
+    border-radius: 9px;
+
+    background: rgba(20,126,234,.09);
+
+    color: #147eea;
+
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .gestion-usuario-perfil-datos {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0;
+
+    border-radius: 14px;
+
+    background: rgba(247,250,252,.72);
+
+    overflow: hidden;
+  }
+
+  .gestion-usuario-perfil-dato {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    padding: 11px 12px;
+
+    border-bottom: 1px solid rgba(120,160,190,.12);
+  }
+
+  .gestion-usuario-perfil-dato:last-child {
+    border-bottom: none;
+  }
+
+  .gestion-usuario-perfil-dato span {
+    color: #7b94a8;
+
+    font-size: 11px;
+  }
+
+  .gestion-usuario-perfil-dato strong {
+    color: #244a68;
+
+    font-size: 13px;
+  }
+
+
+  /* =====================================================
+     TARJETAS PARA BORRAR USUARIO
+     ===================================================== */
+
+  .gestion-usuario-eliminar {
+    display: flex;
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 13px 14px;
+
+    border-radius: 18px;
+
+    background: rgba(255,255,255,.76);
+
+    border: 1px solid rgba(255,255,255,.78);
+
+    box-shadow:
+      0 7px 18px rgba(40,100,150,.07);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .gestion-usuario-eliminar-info {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+  }
+
+  .gestion-usuario-eliminar-avatar {
+    width: 42px;
+    height: 42px;
+
+    min-width: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(20,126,234,.11),
+      rgba(23,188,233,.16)
+    );
+
+    font-size: 19px;
+  }
+
+  .gestion-usuario-eliminar-texto {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+  }
+
+  .gestion-usuario-eliminar-texto strong {
+    overflow: hidden;
+
+    color: #244a68;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gestion-usuario-eliminar-texto span {
+    color: #5f7b8e;
+
+    font-size: 12px;
+  }
+
+  .gestion-usuario-eliminar-texto small {
+    color: #8aa0ae;
+
+    font-size: 11px;
+  }
+
+  .gestion-usuario-eliminar-boton {
+    flex-shrink: 0;
+
+    padding: 8px 11px;
+
+    border: none;
+    border-radius: 11px;
+
+    background: rgba(229,87,87,.09);
+
+    color: #cf4c4c;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+      background .18s ease,
+      transform .18s ease;
+  }
+
+  .gestion-usuario-eliminar-boton:hover {
+    background: rgba(229,87,87,.15);
+
+    transform: translateY(-1px);
+  }
+
+
+  /* =====================================================
+     ESTADO VACÍO
+     ===================================================== */
+
+  .gestion-usuarios-vacio {
+    padding: 23px 16px;
+
+    border-radius: 17px;
+
+    background: rgba(255,255,255,.62);
+
+    color: #7b94a8;
+
+    font-size: 13px;
+
+    text-align: center;
+  }
+
+  .gestion-usuarios-vacio strong {
+    font-weight: 600;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+     ===================================================== */
+
+  @media (max-width: 600px) {
+
+    .gestion-usuarios-modulo {
+      max-width: 100%;
+    }
+
+    .gestion-usuarios-vista-encabezado {
+      gap: 11px;
+      margin-bottom: 17px;
+    }
+
+    .gestion-usuarios-vista-icono {
+      width: 45px;
+      height: 45px;
+      min-width: 45px;
+
+      border-radius: 14px;
+
+      font-size: 20px;
+    }
+
+    .gestion-usuarios-vista-encabezado h3 {
+      font-size: 18px;
+    }
+
+    .gestion-usuarios-vista-encabezado p {
+      font-size: 12px;
+    }
+
+    .gestion-usuarios-form {
+      padding: 15px;
+
+      border-radius: 18px;
+
+      gap: 12px;
+    }
+
+    .gestion-usuarios-campo input,
+    .gestion-usuarios-campo select {
+      min-height: 43px;
+    }
+
+    .gestion-usuario-eliminar {
+      padding: 12px;
+    }
+
+    .gestion-usuario-eliminar-avatar {
+      width: 39px;
+      height: 39px;
+      min-width: 39px;
+
+      border-radius: 12px;
+    }
+
+    .gestion-usuario-eliminar-boton {
+      padding: 7px 9px;
+
+      font-size: 11px;
+    }
+
+  }
+</style>

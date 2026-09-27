@@ -1,0 +1,1963 @@
+<style>
+  /* =====================================================
+   MÓDULO INVENTARIO
+===================================================== */
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  #moduloInventario {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    box-sizing: border-box;
+
+    /* Evitar separación vertical heredada */
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  #moduloInventario .inventario-encabezado {
+    margin-top: 0;
+  }
+
+  /* =====================================================
+   ENCABEZADO
+===================================================== */
+
+  .inventario-encabezado {
+    margin-bottom: 5px;
+  }
+
+  .inventario-modulo-icono {
+    background: linear-gradient(135deg, #147eea, #17bce9);
+
+    color: white;
+
+    box-shadow: 0 8px 18px rgba(20, 126, 234, 0.2);
+  }
+
+  /* =====================================================
+   BUSCADOR
+===================================================== */
+
+  .inventario-buscador {
+    position: relative;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .inventario-buscador-icono {
+    position: absolute;
+
+    left: 17px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 17px;
+    line-height: 1;
+
+    pointer-events: none;
+  }
+
+  .inventario-buscador-input {
+    width: 100%;
+    height: 54px;
+
+    padding: 0 17px 0 48px;
+
+    border: 1px solid rgba(90, 160, 230, 0.16);
+    border-radius: 18px;
+
+    outline: none;
+
+    background: rgba(255, 255, 255, 0.88);
+
+    color: #17324d;
+
+    font-family: inherit;
+    font-size: 16px;
+
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .inventario-buscador-input::placeholder {
+    color: #8ea1b4;
+  }
+
+  .inventario-buscador-input:focus {
+    border-color: rgba(37, 99, 235, 0.38);
+
+    background: rgba(255, 255, 255, 0.98);
+
+    box-shadow:
+      0 10px 24px rgba(59, 130, 246, 0.12),
+      0 0 0 4px rgba(59, 130, 246, 0.07);
+  }
+
+  /* =====================================================
+   ESTADO DE BÚSQUEDA
+===================================================== */
+
+  .inventario-estado-busqueda {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    margin: -4px 2px 15px;
+
+    padding: 8px 10px;
+
+    border: 1px solid rgba(120, 170, 220, 0.1);
+
+    border-radius: 13px;
+
+    background: rgba(255, 255, 255, 0.54);
+  }
+
+  .inventario-estado-busqueda-texto {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    color: #718ba3;
+
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .inventario-estado-busqueda-icono {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .inventario-limpiar-busqueda {
+    flex-shrink: 0;
+
+    min-height: 30px;
+
+    padding: 0 10px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: rgba(20, 126, 234, 0.09);
+
+    color: #1978c6;
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .inventario-limpiar-busqueda:hover {
+    background: rgba(20, 126, 234, 0.14);
+  }
+
+  .inventario-limpiar-busqueda:active {
+    transform: scale(0.95);
+  }
+
+  /* =====================================================
+   RESUMEN
+===================================================== */
+
+  .inventario-resumen {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 11px;
+
+    margin-bottom: 15px;
+  }
+
+  .inventario-resumen-card {
+    min-height: 80px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.8);
+
+    border-radius: 19px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.86),
+      rgba(228, 244, 255, 0.68)
+    );
+
+    box-shadow:
+      0 9px 22px rgba(40, 100, 150, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.96);
+
+    backdrop-filter: blur(16px) saturate(140%);
+
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  .inventario-resumen-icono {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 13px;
+
+    background: linear-gradient(135deg, #147eea, #17bce9);
+
+    color: white;
+
+    font-size: 18px;
+
+    box-shadow: 0 7px 16px rgba(20, 126, 234, 0.2);
+  }
+
+  .inventario-resumen-contenido {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  .inventario-resumen-label {
+    color: #7e96aa;
+
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .inventario-resumen-valor {
+    margin-top: 2px;
+
+    color: #183f63;
+
+    font-size: 19px;
+    font-weight: 800;
+
+    line-height: 1;
+  }
+
+  /* =====================================================
+   ENCABEZADO DE LISTA
+===================================================== */
+
+  .inventario-lista-encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 13px;
+  }
+
+  .inventario-lista-encabezado > div {
+    min-width: 0;
+  }
+
+  .inventario-lista-encabezado h3 {
+    margin: 0;
+
+    color: #173f63;
+
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .inventario-lista-encabezado p {
+    margin: 4px 0 0;
+
+    color: #7a93a8;
+
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .inventario-contador-resultados {
+    min-width: 29px;
+    height: 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 8px;
+
+    border-radius: 999px;
+
+    background: rgba(20, 126, 234, 0.1);
+
+    color: #1778c8;
+
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  /* =====================================================
+   LISTA
+===================================================== */
+
+  .inventario-lista-vehiculos {
+    display: flex;
+    flex-direction: column;
+
+    gap: 11px;
+  }
+
+  /* =====================================================
+   TARJETA DE VEHÍCULO
+===================================================== */
+
+  .inventario-vehiculo-card {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 11px;
+
+    border: 1px solid rgba(255, 255, 255, 0.82);
+
+    border-radius: 21px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(238, 248, 255, 0.75)
+    );
+
+    box-shadow:
+      0 9px 23px rgba(42, 100, 150, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.96);
+
+    backdrop-filter: blur(15px) saturate(135%);
+
+    -webkit-backdrop-filter: blur(15px) saturate(135%);
+
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .inventario-vehiculo-card:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(59, 130, 246, 0.2);
+
+    box-shadow:
+      0 13px 28px rgba(42, 100, 150, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  }
+
+  /* =====================================================
+   IMAGEN DEL VEHÍCULO
+===================================================== */
+
+  .inventario-vehiculo-imagen {
+    width: 60px;
+    height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 18px;
+
+    background: linear-gradient(135deg, #e0efff, #e1f8ff);
+
+    color: #2687d3;
+
+    font-size: 25px;
+
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  }
+
+  /* =====================================================
+   INFORMACIÓN DEL VEHÍCULO
+===================================================== */
+
+  .inventario-vehiculo-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  .inventario-vehiculo-info > strong {
+    overflow: hidden;
+
+    color: #173f63;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    line-height: 1.25;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventario-vehiculo-info > small {
+    margin-top: 3px;
+
+    color: #8098ab;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+  }
+
+  .inventario-vehiculo-precio {
+    margin-top: 6px;
+
+    color: #1672bc;
+
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .inventario-vehiculo-meta {
+    margin-top: 2px;
+
+    color: #7d95a9;
+
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .inventario-vehiculo-ubicacion,
+  .inventario-vehiculo-puesto {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+
+    margin-top: 4px;
+
+    overflow: hidden;
+
+    color: #67839b;
+
+    font-size: 10px;
+    line-height: 1.3;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventario-vehiculo-ubicacion span,
+  .inventario-vehiculo-puesto span {
+    flex-shrink: 0;
+  }
+
+  /* =====================================================
+   ACCIONES DE LA TARJETA
+===================================================== */
+
+  .inventario-vehiculo-acciones {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    flex-shrink: 0;
+  }
+
+  .inventario-vehiculo-boton-detalle,
+  .inventario-vehiculo-boton-editar {
+    min-width: 61px;
+    min-height: 32px;
+
+    padding: 0 9px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .inventario-vehiculo-boton-detalle {
+    border: 1px solid rgba(59, 130, 246, 0.16);
+
+    background: rgba(255, 255, 255, 0.72);
+
+    color: #367dac;
+  }
+
+  .inventario-vehiculo-boton-editar {
+    border: 0;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    box-shadow: 0 6px 14px rgba(20, 126, 234, 0.18);
+  }
+
+  .inventario-vehiculo-boton-detalle:hover,
+  .inventario-vehiculo-boton-editar:hover {
+    transform: translateY(-1px);
+  }
+
+  .inventario-vehiculo-boton-detalle:active,
+  .inventario-vehiculo-boton-editar:active {
+    transform: scale(0.95);
+  }
+
+  /* =====================================================
+   DETALLE
+===================================================== */
+
+  .inventario-detalle {
+    width: 100%;
+  }
+
+  .inventario-volver {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 15px;
+
+    padding: 8px 11px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.66);
+
+    color: #2879b9;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    box-shadow: 0 5px 14px rgba(40, 100, 150, 0.06);
+
+    cursor: pointer;
+  }
+
+  .inventario-volver:hover {
+    background: rgba(255, 255, 255, 0.84);
+  }
+
+  .inventario-volver:active {
+    transform: scale(0.97);
+  }
+
+  .inventario-volver-icono {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  /* =====================================================
+   HERO DETALLE
+===================================================== */
+
+  .inventario-detalle-hero {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 15px;
+
+    padding: 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.82);
+
+    border-radius: 22px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.89),
+      rgba(228, 244, 255, 0.7)
+    );
+
+    box-shadow:
+      0 10px 24px rgba(42, 100, 150, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.97);
+
+    backdrop-filter: blur(15px) saturate(140%);
+
+    -webkit-backdrop-filter: blur(15px) saturate(140%);
+  }
+
+  .inventario-detalle-imagen {
+    width: 72px;
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 21px;
+
+    background: linear-gradient(135deg, #dceeff, #def8ff);
+
+    color: #2584cf;
+
+    font-size: 29px;
+
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  }
+
+  .inventario-detalle-identificacion {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .inventario-detalle-etiqueta {
+    color: #7e99ae;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.8px;
+  }
+
+  .inventario-detalle-identificacion h3 {
+    margin: 3px 0 0;
+
+    overflow: hidden;
+
+    color: #153d61;
+
+    font-size: 20px;
+    font-weight: 800;
+
+    line-height: 1.2;
+
+    text-overflow: ellipsis;
+  }
+
+  .inventario-detalle-identificacion p {
+    margin: 4px 0 0;
+
+    color: #718aa0;
+
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* =====================================================
+   ACCIÓN EDITAR
+===================================================== */
+
+  .inventario-detalle-acciones {
+    margin-bottom: 15px;
+  }
+
+  .inventario-accion-principal {
+    width: 100%;
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border: 0;
+    border-radius: 15px;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    box-shadow: 0 9px 20px rgba(20, 126, 234, 0.2);
+
+    cursor: pointer;
+
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .inventario-accion-principal:hover {
+    transform: translateY(-1px);
+
+    box-shadow: 0 12px 24px rgba(20, 126, 234, 0.25);
+  }
+
+  .inventario-accion-principal:active {
+    transform: scale(0.98);
+  }
+
+  /* =====================================================
+   CARDS DE INFORMACIÓN
+===================================================== */
+
+  .inventario-detalle-card {
+    margin-bottom: 12px;
+
+    padding: 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.82);
+
+    border-radius: 21px;
+
+    background: rgba(255, 255, 255, 0.68);
+
+    box-shadow:
+      0 8px 20px rgba(40, 100, 150, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+
+    backdrop-filter: blur(15px) saturate(135%);
+
+    -webkit-backdrop-filter: blur(15px) saturate(135%);
+  }
+
+  .inventario-detalle-card-encabezado {
+    margin-bottom: 11px;
+  }
+
+  .inventario-detalle-card-encabezado > div {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+  }
+
+  .inventario-detalle-card-icono {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 12px;
+
+    background: rgba(20, 126, 234, 0.09);
+
+    font-size: 17px;
+  }
+
+  .inventario-detalle-card h3 {
+    margin: 0;
+
+    color: #244a68;
+
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .inventario-detalle-card-encabezado p {
+    margin: 3px 0 0;
+
+    color: #8499aa;
+
+    font-size: 10px;
+  }
+
+  .inventario-detalle-dato {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 0;
+
+    border-top: 1px solid rgba(72, 135, 177, 0.08);
+  }
+
+  .inventario-detalle-dato:first-of-type {
+    border-top: 0;
+  }
+
+  .inventario-detalle-dato-icono {
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 11px;
+
+    background: rgba(219, 238, 255, 0.74);
+
+    font-size: 15px;
+  }
+
+  .inventario-detalle-dato > div {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+  .inventario-detalle-dato-label {
+    color: #8498aa;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inventario-detalle-dato strong {
+    overflow-wrap: anywhere;
+
+    color: #315674;
+
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .inventario-detalle-texto {
+    margin: 0;
+
+    color: #69839b;
+
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* =====================================================
+   EDITOR
+===================================================== */
+
+  .inventario-editor {
+    width: 100%;
+  }
+
+  .inventario-editor-encabezado {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    margin-bottom: 17px;
+
+    padding: 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.82);
+
+    border-radius: 21px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.88),
+      rgba(228, 244, 255, 0.7)
+    );
+
+    box-shadow: 0 9px 22px rgba(42, 100, 150, 0.08);
+  }
+
+  .inventario-editor-imagen {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 18px;
+
+    background: linear-gradient(135deg, #dceeff, #def8ff);
+
+    color: #2684cf;
+
+    font-size: 24px;
+  }
+
+  .inventario-editor-encabezado > div:last-child {
+    min-width: 0;
+  }
+
+  .inventario-editor-encabezado > div:last-child > span {
+    color: #7e99ae;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.8px;
+  }
+
+  .inventario-editor-encabezado h3 {
+    margin: 3px 0 0;
+
+    overflow: hidden;
+
+    color: #173f63;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventario-editor-encabezado p {
+    margin: 3px 0 0;
+
+    color: #7c93a7;
+
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* =====================================================
+   FORMULARIO
+===================================================== */
+
+  .inventario-editor-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+  }
+
+  .inventario-editor-campo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .inventario-editor-campo label {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-bottom: 7px;
+
+    color: #42627e;
+
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .inventario-editor-label-icono {
+    font-size: 13px;
+  }
+
+  .inventario-editor-input,
+  .inventario-editor-textarea {
+    width: 100%;
+
+    border: 1px solid rgba(100, 155, 193, 0.18);
+
+    border-radius: 15px;
+
+    outline: none;
+
+    background: rgba(255, 255, 255, 0.72);
+
+    color: #244866;
+
+    font-family: inherit;
+    font-size: 12px;
+
+    box-shadow: inset 0 1px 2px rgba(30, 90, 140, 0.03);
+
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .inventario-editor-input {
+    height: 48px;
+    padding: 0 14px;
+  }
+
+  .inventario-editor-textarea {
+    min-height: 118px;
+
+    padding: 13px 14px;
+
+    resize: vertical;
+  }
+
+  .inventario-editor-input::placeholder,
+  .inventario-editor-textarea::placeholder {
+    color: #9aabba;
+  }
+
+  .inventario-editor-input:focus,
+  .inventario-editor-textarea:focus {
+    border-color: rgba(20, 126, 234, 0.4);
+
+    background: rgba(255, 255, 255, 0.9);
+
+    box-shadow: 0 0 0 4px rgba(20, 126, 234, 0.07);
+  }
+
+  .inventario-editor-ubicacion {
+    margin-top: 1px;
+  }
+
+  .inventario-editor-ayuda {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 9px;
+
+    padding: 12px;
+
+    border-radius: 14px;
+
+    background: rgba(219, 238, 255, 0.52);
+
+    color: #66829a;
+
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .inventario-editor-ayuda p {
+    margin: 0;
+  }
+
+  .inventario-editor-ayuda strong {
+    color: #2677b5;
+  }
+
+  /* =====================================================
+   MENSAJE DEL EDITOR
+===================================================== */
+
+  .inventario-editor-mensaje {
+    padding: 10px 12px;
+
+    border-radius: 13px;
+
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* =====================================================
+   BOTONES DEL EDITOR
+===================================================== */
+
+  .inventario-editor-boton-principal {
+    width: 100%;
+    min-height: 49px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border: 0;
+    border-radius: 16px;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    box-shadow: 0 9px 20px rgba(20, 126, 234, 0.2);
+
+    cursor: pointer;
+
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      opacity 0.18s ease;
+  }
+
+  .inventario-editor-boton-principal:hover {
+    transform: translateY(-1px);
+
+    box-shadow: 0 12px 24px rgba(20, 126, 234, 0.25);
+  }
+
+  .inventario-editor-boton-principal:active {
+    transform: scale(0.98);
+  }
+
+  .inventario-editor-boton-principal:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .inventario-editor-boton-secundario {
+    width: 100%;
+    min-height: 45px;
+
+    border: 1px solid rgba(100, 155, 193, 0.15);
+
+    border-radius: 15px;
+
+    background: rgba(255, 255, 255, 0.62);
+
+    color: #5e7d99;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+      transform 0.18s ease,
+      background 0.18s ease;
+  }
+
+  .inventario-editor-boton-secundario:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .inventario-editor-boton-secundario:active {
+    transform: scale(0.98);
+  }
+
+  /* =====================================================
+   CONFIRMACIÓN
+===================================================== */
+
+  .inventario-confirmacion {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 18px;
+
+    z-index: 10050;
+  }
+
+  .inventario-confirmacion-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(12, 42, 72, 0.25);
+
+    backdrop-filter: blur(7px);
+
+    -webkit-backdrop-filter: blur(7px);
+  }
+
+  .inventario-confirmacion-card {
+    position: relative;
+
+    z-index: 1;
+
+    width: min(100%, 390px);
+
+    padding: 22px;
+
+    border: 1px solid rgba(255, 255, 255, 0.88);
+
+    border-radius: 25px;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(232, 246, 255, 0.92)
+    );
+
+    box-shadow:
+      0 22px 50px rgba(22, 71, 112, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.98);
+
+    backdrop-filter: blur(25px) saturate(145%);
+
+    -webkit-backdrop-filter: blur(25px) saturate(145%);
+  }
+
+  .inventario-confirmacion-icono {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 13px;
+
+    border-radius: 16px;
+
+    background: rgba(20, 126, 234, 0.1);
+
+    color: #147eea;
+
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .inventario-confirmacion-contenido h3 {
+    margin: 0;
+
+    color: #173f63;
+
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .inventario-confirmacion-contenido p {
+    margin: 6px 0 18px;
+
+    color: #7891a7;
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .inventario-confirmacion-acciones {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+  .inventario-confirmacion-boton-principal {
+    width: 100%;
+    min-height: 45px;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow: 0 8px 17px rgba(20, 126, 234, 0.18);
+  }
+
+  .inventario-confirmacion-boton-secundario {
+    width: 100%;
+    min-height: 43px;
+
+    border: 1px solid rgba(100, 155, 193, 0.14);
+
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.66);
+
+    color: #5d7b96;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+  }
+
+  /* =====================================================
+   RESULTADO EXITOSO
+===================================================== */
+
+  .inventario-resultado {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    padding: 35px 22px;
+
+    text-align: center;
+  }
+
+  .inventario-resultado-icono {
+    width: 68px;
+    height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 16px;
+
+    border-radius: 22px;
+
+    background: linear-gradient(135deg, #147eea, #17bce9);
+
+    color: white;
+
+    font-size: 30px;
+    font-weight: 900;
+
+    box-shadow: 0 13px 28px rgba(20, 126, 234, 0.22);
+  }
+
+  .inventario-resultado h3 {
+    margin: 0;
+
+    color: #173f63;
+
+    font-size: 19px;
+    font-weight: 800;
+  }
+
+  .inventario-resultado p {
+    max-width: 310px;
+
+    margin: 7px 0 18px;
+
+    color: #7b93a8;
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .inventario-resultado-boton {
+    width: 100%;
+    max-width: 320px;
+
+    min-height: 47px;
+
+    border: 0;
+    border-radius: 15px;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    box-shadow: 0 9px 20px rgba(20, 126, 234, 0.2);
+
+    cursor: pointer;
+  }
+
+  /* =====================================================
+   ESTADO SIN RESULTADOS
+===================================================== */
+
+  .inventario-sin-resultados {
+    width: 100%;
+
+    align-items: center;
+    flex-direction: column;
+
+    padding: 34px 20px;
+
+    border: 1px solid rgba(120, 170, 220, 0.1);
+
+    border-radius: 24px;
+
+    background: rgba(255, 255, 255, 0.68);
+
+    text-align: center;
+
+    box-shadow: 0 8px 22px rgba(52, 103, 160, 0.06);
+  }
+
+  .inventario-sin-resultados-icono {
+    width: 56px;
+    height: 56px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 18px;
+
+    background: rgba(219, 234, 254, 0.82);
+
+    font-size: 23px;
+  }
+
+  .inventario-sin-resultados h3 {
+    margin: 0;
+
+    color: #17324d;
+
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .inventario-sin-resultados p {
+    max-width: 290px;
+
+    margin: 6px 0 0;
+
+    color: #8799ab;
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .inventario-limpiar-boton {
+    min-height: 40px;
+
+    margin-top: 15px;
+
+    padding: 0 15px;
+
+    border: 0;
+    border-radius: 13px;
+
+    background: linear-gradient(135deg, #147eea, #16b8e8);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow: 0 7px 16px rgba(20, 126, 234, 0.18);
+  }
+
+  /* =====================================================
+   BOTÓN VEHÍCULOS SIN PARQUEADERO
+===================================================== */
+
+  .btn-vehiculos-sin-parqueadero {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 10px;
+    margin-bottom: 23px;
+    padding: 10px 16px;
+
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    border-radius: 14px;
+
+    background: rgba(37, 99, 235, 0.07);
+    color: #2563eb;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  .btn-vehiculos-sin-parqueadero:hover {
+    background: rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.28);
+  }
+
+  .btn-vehiculos-sin-parqueadero:active {
+    transform: scale(0.98);
+  }
+
+  /* =====================================================
+   BOTÓN ELIMINAR VEHÍCULO
+===================================================== */
+
+  .inventario-vehiculo-boton-eliminar {
+    border: none;
+    border-radius: 14px;
+
+    padding: 10px 14px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    background: #fff1f1;
+    color: #c62828;
+
+    transition:
+      transform 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .inventario-vehiculo-boton-eliminar:hover {
+    background: #ffe3e3;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 6px 18px rgba(198, 40, 40, 0.14);
+  }
+
+  .inventario-vehiculo-boton-eliminar:active {
+    transform: scale(0.97);
+  }
+
+  .inventario-vehiculo-boton-eliminar:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* =====================================================
+   MODAL ELIMINAR VEHÍCULO
+===================================================== */
+
+  #modalEliminarVehiculoInventario .inventario-confirmacion-icono {
+    background: #fff0f0;
+    color: #d32f2f;
+
+    width: 62px;
+    height: 62px;
+
+    border-radius: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 28px;
+
+    margin: 0 auto 16px;
+  }
+
+  #modalEliminarVehiculoInventario .inventario-confirmacion-contenido {
+    text-align: center;
+  }
+
+  #modalEliminarVehiculoInventario .inventario-confirmacion-contenido h3 {
+    color: #1f2937;
+  }
+
+  #nombreVehiculoEliminarInventario {
+    display: block;
+
+    margin-top: 14px;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    color: #111827;
+  }
+
+  #placaVehiculoEliminarInventario {
+    margin-top: 4px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #6b7280;
+  }
+
+  /* BOTÓN ROJO DEL POPUP */
+
+  #btnConfirmarEliminarVehiculoInventario {
+    background: #d93025;
+    color: white;
+
+    border: none;
+  }
+
+  #btnConfirmarEliminarVehiculoInventario:hover {
+    background: #c5221f;
+
+    box-shadow: 0 7px 20px rgba(217, 48, 37, 0.22);
+  }
+
+  #btnConfirmarEliminarVehiculoInventario:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* =====================================================
+   TABLET Y CELULAR
+===================================================== */
+
+  @media (max-width: 991px) {
+    .inventario-encabezado {
+      margin-bottom: 17px;
+    }
+
+    .inventario-buscador {
+      margin-bottom: 14px;
+    }
+
+    .inventario-buscador-input {
+      height: 52px;
+
+      border-radius: 17px;
+
+      font-size: 16px;
+    }
+
+    .inventario-buscador-icono {
+      left: 17px;
+      font-size: 16px;
+    }
+
+    .inventario-resumen {
+      gap: 9px;
+
+      margin-bottom: 18px;
+    }
+
+    .inventario-resumen-card {
+      min-height: 70px;
+
+      padding: 10px;
+
+      border-radius: 17px;
+    }
+
+    .inventario-resumen-icono {
+      width: 37px;
+      height: 37px;
+
+      border-radius: 12px;
+
+      font-size: 16px;
+    }
+
+    .inventario-resumen-label {
+      font-size: 9px;
+    }
+
+    .inventario-resumen-valor {
+      font-size: 17px;
+    }
+
+    .inventario-lista-encabezado {
+      margin-bottom: 11px;
+    }
+
+    .inventario-lista-encabezado h3 {
+      font-size: 14px;
+    }
+
+    .inventario-lista-encabezado p {
+      font-size: 10px;
+    }
+
+    .inventario-contador-resultados {
+      min-width: 27px;
+      height: 27px;
+
+      font-size: 10px;
+    }
+
+    .inventario-vehiculo-card {
+      grid-template-columns: 50px minmax(0, 1fr) auto;
+
+      gap: 9px;
+
+      padding: 10px;
+
+      border-radius: 18px;
+    }
+
+    .inventario-vehiculo-imagen {
+      width: 50px;
+      height: 50px;
+
+      border-radius: 15px;
+
+      font-size: 21px;
+    }
+
+    .inventario-vehiculo-info > strong {
+      font-size: 13px;
+    }
+
+    .inventario-vehiculo-info > small {
+      font-size: 9px;
+    }
+
+    .inventario-vehiculo-precio {
+      font-size: 12px;
+    }
+
+    .inventario-vehiculo-meta {
+      font-size: 9px;
+    }
+
+    .inventario-vehiculo-ubicacion,
+    .inventario-vehiculo-puesto {
+      font-size: 9px;
+    }
+
+    .inventario-vehiculo-boton-detalle,
+    .inventario-vehiculo-boton-editar {
+      min-width: 52px;
+      min-height: 30px;
+
+      padding: 0 7px;
+
+      font-size: 9px;
+    }
+
+    .inventario-detalle-hero {
+      gap: 11px;
+
+      padding: 13px;
+
+      border-radius: 19px;
+    }
+
+    .inventario-detalle-imagen {
+      width: 60px;
+      height: 60px;
+
+      border-radius: 17px;
+
+      font-size: 24px;
+    }
+
+    .inventario-detalle-identificacion h3 {
+      font-size: 18px;
+    }
+
+    .inventario-detalle-card {
+      padding: 13px;
+
+      border-radius: 19px;
+    }
+
+    .inventario-editor-encabezado {
+      padding: 13px;
+
+      border-radius: 19px;
+    }
+
+    .inventario-confirmacion {
+      padding: 16px;
+    }
+
+    .inventario-confirmacion-card {
+      width: 100%;
+      max-width: 370px;
+
+      padding: 19px;
+
+      border-radius: 22px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .btn-vehiculos-sin-parqueadero {
+      min-height: 42px;
+      margin-top: 8px;
+      padding: 9px 12px;
+      border-radius: 13px;
+      font-size: 11px;
+    }
+  }
+
+  /* =====================================================
+   AJUSTE RESPONSIVE MÓVIL
+   Solo adapta dimensiones/espaciado; no modifica lógica.
+   Se mantienen las disposiciones horizontales existentes.
+===================================================== */
+
+  @media (max-width: 480px) {
+    #moduloInventario {
+      width: 100%;
+      max-width: none;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .inventario-resumen {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .inventario-resumen-card {
+      min-width: 0;
+      padding: 9px;
+      gap: 8px;
+    }
+
+    .inventario-resumen-icono {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+    }
+
+    .inventario-resumen-valor {
+      font-size: 16px;
+    }
+
+    .inventario-vehiculo-card {
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 9px;
+    }
+
+    .inventario-vehiculo-imagen {
+      width: 48px;
+      height: 48px;
+    }
+
+    .inventario-vehiculo-info > strong {
+      font-size: 12px;
+    }
+
+    .inventario-vehiculo-precio {
+      font-size: 11px;
+    }
+
+    .inventario-vehiculo-boton-detalle,
+    .inventario-vehiculo-boton-editar {
+      min-width: 50px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .inventario-detalle-hero {
+      gap: 9px;
+      padding: 11px;
+    }
+
+    .inventario-detalle-imagen {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    .inventario-detalle-identificacion h3 {
+      font-size: 16px;
+    }
+
+    .inventario-editor-encabezado {
+      gap: 10px;
+      padding: 11px;
+    }
+
+    .inventario-editor-imagen {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .inventario-confirmacion {
+      padding: 12px;
+    }
+
+    .inventario-confirmacion-card {
+      width: 100%;
+      max-width: 390px;
+      padding: 18px;
+    }
+
+    .inventario-resultado {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    #moduloInventario {
+      padding-left: 7px;
+      padding-right: 7px;
+    }
+
+    .inventario-resumen-card {
+      padding: 8px;
+      gap: 6px;
+    }
+
+    .inventario-resumen-icono {
+      width: 31px;
+      height: 31px;
+      font-size: 14px;
+    }
+
+    .inventario-resumen-label {
+      font-size: 8px;
+    }
+
+    .inventario-resumen-valor {
+      font-size: 15px;
+    }
+
+    .inventario-vehiculo-card {
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      gap: 7px;
+      padding: 8px;
+    }
+
+    .inventario-vehiculo-imagen {
+      width: 44px;
+      height: 44px;
+    }
+
+    .inventario-vehiculo-boton-detalle,
+    .inventario-vehiculo-boton-editar {
+      min-width: 47px;
+      padding-left: 5px;
+      padding-right: 5px;
+      font-size: 8px;
+    }
+  }
+</style>

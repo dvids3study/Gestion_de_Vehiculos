@@ -1,0 +1,789 @@
+<!-- =====================================================
+     MÓDULO INVENTARIO
+     Consulta y administración de vehículos
+====================================================== -->
+
+<section
+  id="moduloInventario"
+  class="modulo-panel"
+  style="display: none; position: static"
+>
+  <!-- =================================================
+       ENCABEZADO DEL MÓDULO
+  ================================================== -->
+
+  <div class="modulo-panel-encabezado inventario-encabezado">
+    <div>
+      <span class="panel-opcion-icono panel-opcion-icono-lottie">
+        <lottie-player
+          src="https://lottie.host/8b0e7582-afb1-4a2a-9f89-cce6224b434d/H0wyXFqe52.json"
+          background="transparent"
+          speed="1"
+          autoplay
+        >
+        </lottie-player>
+      </span>
+
+      <h2 class="panel-modulo-titulo">Inventario</h2>
+
+      <p class="panel-modulo-descripcion">
+        Consulta y administra los vehículos registrados.
+      </p>
+    </div>
+  </div>
+
+  <!-- =================================================
+       VISTA PRINCIPAL DEL INVENTARIO
+  ================================================== -->
+
+  <div id="vistaPrincipalInventario">
+    <!-- ===============================================
+         BUSCADOR
+    ================================================ -->
+
+    <div class="inventario-buscador">
+      <span class="inventario-buscador-icono"> 🔍 </span>
+
+      <input
+        id="buscadorVehiculosInventario"
+        type="search"
+        class="inventario-buscador-input"
+        placeholder="Buscar vehículo"
+        autocomplete="off"
+        aria-label="Buscar vehículo"
+      />
+    </div>
+
+    <!-- ===============================================
+         ESTADO DE BÚSQUEDA
+    ================================================ -->
+
+    <div
+      id="estadoBusquedaInventario"
+      class="inventario-estado-busqueda"
+      style="display: none"
+    >
+      <div class="inventario-estado-busqueda-texto">
+        <span class="inventario-estado-busqueda-icono"> 🔎 </span>
+
+        <span id="textoBusquedaInventario"> </span>
+      </div>
+
+      <button
+        id="btnLimpiarBusquedaInventario"
+        type="button"
+        class="inventario-limpiar-busqueda"
+        onclick="limpiarBusquedaInventario()"
+      >
+        Limpiar
+      </button>
+    </div>
+
+    <!-- ===============================================
+         RESUMEN
+    ================================================ -->
+
+    <div class="inventario-resumen">
+      <!-- TOTAL VEHÍCULOS -->
+
+      <div class="inventario-resumen-card">
+        <div class="parqueadero-resumen-icono parqueadero-resumen-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/ac951d17-f118-4d31-9b47-76df6469f0f0/ec0E57gv5X.json"
+            background="transparent"
+            speed="1"
+          >
+          </lottie-player>
+        </div>
+
+        <div class="inventario-resumen-contenido">
+          <span class="inventario-resumen-label"> Vehículos </span>
+
+          <strong
+            id="inventarioTotalVehiculos"
+            class="inventario-resumen-valor"
+          >
+            0
+          </strong>
+        </div>
+      </div>
+
+      <!-- VEHÍCULOS UBICADOS -->
+
+      <div class="inventario-resumen-card">
+        <div class="parqueadero-resumen-icono parqueadero-resumen-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/9d5a54eb-f896-45b1-9564-53d397c350cb/OaAQmR3kKL.json"
+            background="transparent"
+            speed="1"
+          >
+          </lottie-player>
+        </div>
+
+        <div class="inventario-resumen-contenido">
+          <span class="inventario-resumen-label"> Ubicados </span>
+
+          <strong
+            id="inventarioVehiculosUbicados"
+            class="inventario-resumen-valor"
+          >
+            0
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===============================================
+         ENCABEZADO DE LA LISTA
+    ================================================ -->
+
+    <div class="inventario-lista-encabezado">
+      <div>
+        <h3>Vehículos registrados</h3>
+
+        <p id="inventarioListaDescripcion">
+          Selecciona un vehículo para consultar o editar su información.
+        </p>
+      </div>
+
+      <span
+        id="inventarioContadorResultados"
+        class="inventario-contador-resultados"
+      >
+        0
+      </span>
+    </div>
+
+    <!-- ===============================================
+         LOADING
+    ================================================ -->
+
+    <div
+      id="inventarioLoading"
+      class="inventario-loading"
+      style="display: none"
+    ></div>
+
+    <!-- ===============================================
+         LISTA DE VEHÍCULOS
+    ================================================ -->
+
+    <div
+      id="listaVehiculosInventario"
+      class="lista-vehiculos-panel inventario-lista-vehiculos"
+    ></div>
+
+    <!-- ===============================================
+         SIN RESULTADOS
+    ================================================ -->
+
+    <section
+      id="inventarioSinResultados"
+      class="inventario-sin-resultados"
+      style="display: none"
+    >
+      <div class="inventario-sin-resultados-icono">🔍</div>
+
+      <h3>No se encontraron vehículos</h3>
+
+      <p>No hay vehículos que coincidan con la búsqueda realizada.</p>
+
+      <button
+        type="button"
+        class="inventario-limpiar-boton"
+        onclick="limpiarBusquedaInventario()"
+      >
+        Ver todos los vehículos
+      </button>
+    </section>
+  </div>
+
+  <!-- =================================================
+       DETALLE DEL VEHÍCULO
+  ================================================== -->
+
+  <section
+    id="detalleVehiculoInventario"
+    class="inventario-detalle"
+    style="display: none"
+  >
+    <!-- ===============================================
+         VOLVER
+    ================================================ -->
+
+    <button
+      type="button"
+      class="inventario-volver"
+      onclick="cerrarDetalleVehiculoInventario()"
+    >
+      <span class="inventario-volver-icono"> ← </span>
+
+      <span> Doble click para volver a Inventario </span>
+    </button>
+
+    <!-- ===============================================
+         ENCABEZADO DEL VEHÍCULO
+    ================================================ -->
+
+    <div class="inventario-detalle-hero">
+      <div class="inventario-detalle-imagen">🚗</div>
+
+      <div class="inventario-detalle-identificacion">
+        <span class="inventario-detalle-etiqueta"> VEHÍCULO </span>
+
+        <h3 id="detalleInventarioNombre">Vehículo</h3>
+
+        <p id="detalleInventarioPlaca">Placa: -</p>
+      </div>
+    </div>
+
+    <!-- ===============================================
+         ACCIONES
+    ================================================ -->
+
+    <div class="inventario-detalle-acciones">
+      <button
+        id="btnEditarVehiculoInventario"
+        type="button"
+        class="inventario-accion-principal"
+        onclick="abrirEditorVehiculoInventario()"
+      >
+        <span> ✏️ </span>
+
+        <span> Editar vehículo </span>
+      </button>
+    </div>
+
+    <!-- ===============================================
+         INFORMACIÓN GENERAL
+    ================================================ -->
+
+    <section class="inventario-detalle-card">
+      <div class="inventario-detalle-card-encabezado">
+        <div>
+          <span class="inventario-detalle-card-icono"> 🚗 </span>
+
+          <div>
+            <h3>Información general</h3>
+
+            <p>Datos principales del vehículo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRECIO -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 💰 </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Precio </span>
+
+          <strong id="detalleInventarioPrecio"> - </strong>
+        </div>
+      </div>
+
+      <!-- KILOMETRAJE -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 🛣️ </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Kilometraje </span>
+
+          <strong id="detalleInventarioKilometraje"> - </strong>
+        </div>
+      </div>
+
+      <!-- SOAT -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 📄 </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> SOAT </span>
+
+          <strong id="detalleInventarioSoat"> - </strong>
+        </div>
+      </div>
+
+      <!-- TECNOMECÁNICA -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 🔧 </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Tecnomecánica </span>
+
+          <strong id="detalleInventarioTecnomecanica"> - </strong>
+        </div>
+      </div>
+
+      <!-- PICO Y PLACA -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 📍 </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Pico y placa </span>
+
+          <strong id="detalleInventarioPicoYPlaca"> - </strong>
+        </div>
+      </div>
+
+      <!-- TRÁNSITO -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 🏛️ </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Tránsito </span>
+
+          <strong id="detalleInventarioTransito">
+            Sin tránsito registrado
+          </strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================
+         UBICACIÓN
+    ================================================ -->
+
+    <section class="inventario-detalle-card">
+      <div class="inventario-detalle-card-encabezado">
+        <div>
+          <span class="inventario-detalle-card-icono"> 🅿️ </span>
+
+          <div>
+            <h3>Ubicación</h3>
+
+            <p>Información del Ubicación</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- UBICACIÓN -->
+
+      <div class="inventario-detalle-dato">
+        <span class="inventario-detalle-dato-icono"> 📍 </span>
+
+        <div>
+          <span class="inventario-detalle-dato-label"> Ubicación </span>
+
+          <strong id="detalleInventarioUbicacion">
+            Sin ubicación asignada
+          </strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================
+         DETALLES
+    ================================================ -->
+
+    <section class="inventario-detalle-card">
+      <div class="inventario-detalle-card-encabezado">
+        <div>
+          <span class="inventario-detalle-card-icono"> 📝 </span>
+
+          <div>
+            <h3>Detalles</h3>
+
+            <p>Información adicional del vehículo</p>
+          </div>
+        </div>
+      </div>
+
+      <p id="detalleInventarioDetalles" class="inventario-detalle-texto">
+        Sin detalles registrados.
+      </p>
+    </section>
+  </section>
+
+  <!-- =================================================
+       EDITOR DEL VEHÍCULO
+  ================================================== -->
+
+  <section
+    id="editorVehiculoInventario"
+    class="inventario-editor"
+    style="display: none"
+  >
+    <!-- ===============================================
+         VOLVER
+    ================================================ -->
+
+    <button
+      type="button"
+      class="inventario-volver"
+      onclick="cerrarEditorVehiculoInventario()"
+    >
+      <span class="inventario-volver-icono"> ← </span>
+
+      <span> Vehículo </span>
+    </button>
+
+    <!-- ===============================================
+         ENCABEZADO
+    ================================================ -->
+
+    <div class="inventario-editor-encabezado">
+      <div class="inventario-editor-imagen">🚗</div>
+
+      <div>
+        <span> EDITAR VEHÍCULO </span>
+
+        <h3 id="editorInventarioTituloVehiculo">Vehículo</h3>
+
+        <p id="editorInventarioSubtituloVehiculo">Placa: -</p>
+      </div>
+    </div>
+
+    <!-- ===============================================
+         FORMULARIO
+    ================================================ -->
+
+    <div class="inventario-editor-form">
+      <!-- VEHÍCULO -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioNombre">
+          <span class="inventario-editor-label-icono"> 🚗 </span>
+
+          <span> Vehículo </span>
+        </label>
+
+        <input
+          id="editarInventarioNombre"
+          class="inventario-editor-input"
+          type="text"
+          placeholder="Nombre del vehículo"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- PLACA -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioPlaca">
+          <span class="inventario-editor-label-icono"> 🔢 </span>
+
+          <span> Placa </span>
+        </label>
+
+        <input
+          id="editarInventarioPlaca"
+          class="inventario-editor-input"
+          type="text"
+          placeholder="ABC123"
+          autocomplete="off"
+          autocapitalize="characters"
+        />
+      </div>
+
+      <!-- TRÁNSITO -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioTransito">
+          <span class="inventario-editor-label-icono"> 🏛️ </span>
+
+          <span> Tránsito </span>
+        </label>
+
+        <input
+          id="editarInventarioTransito"
+          class="inventario-editor-input"
+          type="text"
+          placeholder="Ej: Medellín"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- SOAT -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioSoat">
+          <span class="inventario-editor-label-icono"> 📄 </span>
+
+          <span> SOAT </span>
+        </label>
+
+        <input
+          id="editarInventarioSoat"
+          class="inventario-editor-input"
+          type="date"
+        />
+      </div>
+
+      <!-- TECNOMECÁNICA -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioTecnomecanica">
+          <span class="inventario-editor-label-icono"> 🔧 </span>
+
+          <span> Tecnomecánica </span>
+        </label>
+
+        <input
+          id="editarInventarioTecnomecanica"
+          class="inventario-editor-input"
+          type="date"
+        />
+      </div>
+
+      <!-- PICO Y PLACA -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioPicoYPlaca">
+          <span class="inventario-editor-label-icono"> 📍 </span>
+
+          <span> Pico y placa </span>
+        </label>
+
+        <input
+          id="editarInventarioPicoYPlaca"
+          class="inventario-editor-input"
+          type="text"
+          placeholder="Ej. Lunes: 7 - 8"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- PRECIO -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioPrecio">
+          <span class="inventario-editor-label-icono"> 💰 </span>
+
+          <span> Precio </span>
+        </label>
+
+        <input
+          id="editarInventarioPrecio"
+          class="inventario-editor-input"
+          type="text"
+          inputmode="numeric"
+          placeholder="45900000"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- KILOMETRAJE -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioKilometraje">
+          <span class="inventario-editor-label-icono"> 🛣️ </span>
+
+          <span> Kilometraje </span>
+        </label>
+
+        <input
+          id="editarInventarioKilometraje"
+          class="inventario-editor-input"
+          type="text"
+          inputmode="numeric"
+          placeholder="72500"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- DETALLES -->
+
+      <div class="inventario-editor-campo inventario-editor-campo-grande">
+        <label for="editarInventarioDetalles">
+          <span class="inventario-editor-label-icono"> 📝 </span>
+
+          <span> Detalles </span>
+        </label>
+
+        <textarea
+          id="editarInventarioDetalles"
+          class="inventario-editor-textarea"
+          rows="5"
+          placeholder="Describe el estado y características del vehículo."
+        ></textarea>
+      </div>
+
+      <!-- UBICACIÓN -->
+
+      <div class="inventario-editor-campo">
+        <label for="editarInventarioUbicacion">
+          <span class="inventario-editor-label-icono"> 📍 </span>
+
+          <span> Ubicación </span>
+        </label>
+
+        <select id="editarInventarioUbicacion" class="inventario-editor-input">
+          <option value="">Selecciona una ubicación</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MENSAJE -->
+
+    <div
+      id="mensajeEditorVehiculoInventario"
+      class="inventario-editor-mensaje"
+      style="display: none"
+    ></div>
+
+    <!-- GUARDAR -->
+
+    <button
+      id="btnGuardarVehiculoInventario"
+      type="button"
+      class="inventario-editor-boton-principal"
+      onclick="guardarCambiosVehiculoInventario()"
+    >
+      <span> ✓ </span>
+
+      <span> GUARDAR CAMBIOS </span>
+    </button>
+
+    <!-- CANCELAR -->
+
+    <button
+      type="button"
+      class="inventario-editor-boton-secundario"
+      onclick="cerrarEditorVehiculoInventario()"
+    >
+      Cancelar
+    </button>
+  </section>
+
+  <!-- =================================================
+       CONFIRMACIÓN DE CAMBIOS
+  ================================================== -->
+
+  <div
+    id="modalConfirmacionVehiculoInventario"
+    class="inventario-confirmacion"
+    style="display: none"
+  >
+    <div
+      class="inventario-confirmacion-overlay"
+      onclick="cancelarConfirmacionVehiculoInventario()"
+    ></div>
+
+    <div class="inventario-confirmacion-card">
+      <!-- ICONO -->
+
+      <div class="inventario-confirmacion-icono">!</div>
+
+      <!-- TEXTO -->
+
+      <div class="inventario-confirmacion-contenido">
+        <h3>¿Guardar cambios?</h3>
+
+        <p>Se actualizará la información de este vehículo.</p>
+      </div>
+
+      <!-- ACCIONES -->
+
+      <div class="inventario-confirmacion-acciones">
+        <button
+          type="button"
+          class="inventario-confirmacion-boton-principal"
+          onclick="
+            const modal = document.getElementById(
+              'modalConfirmacionVehiculoInventario',
+            );
+            const datos =
+              modal && modal.dataset.datos
+                ? JSON.parse(modal.dataset.datos)
+                : null;
+
+            if (datos) {
+              confirmarGuardadoVehiculoInventario(datos);
+            }
+          "
+        >
+          Guardar cambios
+        </button>
+
+        <button
+          type="button"
+          class="inventario-confirmacion-boton-secundario"
+          onclick="cancelarConfirmacionVehiculoInventario()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================
+      CONFIRMACIÓN ELIMINAR VEHÍCULO
+  ================================================== -->
+
+  <div
+    id="modalEliminarVehiculoInventario"
+    class="inventario-confirmacion"
+    style="display: none"
+  >
+    <div
+      class="inventario-confirmacion-overlay"
+      onclick="cerrarConfirmacionEliminarVehiculo()"
+    ></div>
+
+    <div class="inventario-confirmacion-card">
+      <div class="inventario-confirmacion-icono">🗑️</div>
+
+      <div class="inventario-confirmacion-contenido">
+        <h3>¿Eliminar vehículo?</h3>
+
+        <p>Estás a punto de eliminar este vehículo.</p>
+
+        <strong id="nombreVehiculoEliminarInventario"> Vehículo </strong>
+
+        <p id="placaVehiculoEliminarInventario">Placa: -</p>
+
+        <p>Esta acción no se puede deshacer.</p>
+      </div>
+
+      <div class="inventario-confirmacion-acciones">
+        <button
+          type="button"
+          class="inventario-confirmacion-boton-principal"
+          id="btnConfirmarEliminarVehiculoInventario"
+          onclick="confirmarEliminarVehiculoInventario()"
+        >
+          🗑️ Eliminar vehículo
+        </button>
+
+        <button
+          type="button"
+          class="inventario-confirmacion-boton-secundario"
+          onclick="cerrarConfirmacionEliminarVehiculo()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================
+       RESULTADO EXITOSO
+  ================================================== -->
+
+  <section
+    id="resultadoGuardadoVehiculoInventario"
+    class="inventario-resultado"
+    style="display: none"
+  >
+    <div class="inventario-resultado-icono">✓</div>
+
+    <h3>Cambios guardados</h3>
+
+    <p>La información del vehículo fue actualizada correctamente.</p>
+
+    <button
+      type="button"
+      class="inventario-resultado-boton"
+      onclick="continuarDespuesDeGuardarVehiculoInventario()"
+    >
+      Continuar
+    </button>
+  </section>
+</section>

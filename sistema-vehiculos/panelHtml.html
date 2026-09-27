@@ -1,0 +1,2174 @@
+<section
+  id="panelAdministrativo"
+  class="panel-administrativo"
+  style="display: none"
+>
+  <!-- =====================================================
+       ENCABEZADO DEL PANEL
+  ====================================================== -->
+
+  <header class="panel-header">
+    <button
+      type="button"
+      class="panel-logo"
+      onclick="volverConsultaVehiculos()"
+      aria-label="Volver a Consulta de vehículos"
+    >
+      <img
+        class="panel-logo-imagen"
+        src="https://drive.google.com/thumbnail?id=1-RHh_ktoGRkxP_7_GJaqzRnW7SoSZYVh&sz=w1000"
+        alt="Sistema de Vehículos"
+      />
+    </button>
+
+    <div class="panel-header-texto">
+      <h1 class="panel-titulo">Sistema de Vehículos</h1>
+
+      <p class="panel-subtitulo">Panel administrativo</p>
+    </div>
+
+    <!-- =================================================
+         BOTÓN MENÚ HAMBURGUESA
+    ================================================== -->
+
+    <button
+      id="btnMenuAdministrativo"
+      type="button"
+      class="panel-menu-hamburguesa"
+      onclick="alternarMenuAdministrativo()"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+
+  <!-- =====================================================
+       MENÚ HAMBURGUESA
+  ====================================================== -->
+
+  <div
+    id="menuAdministrativoOverlay"
+    class="panel-menu-overlay"
+    onclick="cerrarMenuAdministrativo()"
+  ></div>
+
+  <aside id="menuAdministrativo" class="panel-menu">
+    <div class="panel-menu-header">
+      <div class="panel-menu-logo">
+        <img
+          src="https://drive.google.com/thumbnail?id=1-RHh_ktoGRkxP_7_GJaqzRnW7SoSZYVh&sz=w1000"
+          alt="Sistema de Vehículos"
+        />
+      </div>
+
+      <button
+        type="button"
+        class="panel-menu-cerrar"
+        onclick="cerrarMenuAdministrativo()"
+        aria-label="Cerrar menú"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="panel-menu-titulo">
+      <strong> MENÚ </strong>
+
+      <span> Administración del sistema </span>
+    </div>
+
+    <div class="panel-menu-opciones">
+      <!-- GESTIÓN -->
+
+      <button
+        id="opcionGestion"
+        type="button"
+        class="panel-menu-opcion"
+        onclick="
+          abrirModuloGestion();
+          cerrarMenuAdministrativo();
+        "
+      >
+        <span class="modulo-panel-icono modulo-panel-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/4a74bdff-f819-4f34-980b-6b5afe71c763/9JEpmGQKfF.json"
+            background="transparent"
+            speed="1"
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-menu-opcion-texto">
+          <strong> GESTIÓN </strong>
+
+          <small> Administrar vehículos y usuarios </small>
+        </span>
+
+        <span class="panel-menu-opcion-flecha"> › </span>
+      </button>
+
+      <!-- HISTORIAL -->
+
+      <button
+        id="opcionHistorial"
+        type="button"
+        class="panel-menu-opcion"
+        onclick="
+          abrirModuloHistorial();
+          cerrarMenuAdministrativo();
+        "
+      >
+        <span class="modulo-panel-icono modulo-panel-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/8a23943b-5a1d-46cd-b439-ce6019407997/FPHl6N4ZGG.json"
+            background="transparent"
+            speed="1"
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-menu-opcion-texto">
+          <strong> HISTORIAL </strong>
+
+          <small> Consultar movimientos registrados </small>
+        </span>
+
+        <span class="panel-menu-opcion-flecha"> › </span>
+      </button>
+
+      <!-- CITAS -->
+
+      <button
+        id="opcionCitas"
+        type="button"
+        class="panel-menu-opcion"
+        onclick="
+          abrirModuloCitas();
+          cerrarMenuAdministrativo();
+        "
+        style="display: none"
+      >
+        <span class="panel-menu-opcion-icono"> 📅 </span>
+
+        <span class="panel-menu-opcion-texto">
+          <strong> CITAS </strong>
+
+          <small> Administrar citas de vehículos </small>
+        </span>
+
+        <span class="panel-menu-opcion-flecha"> › </span>
+      </button>
+
+      <!-- PERFIL -->
+
+      <button
+        type="button"
+        class="panel-menu-opcion"
+        onclick="
+          abrirModuloPerfil();
+          cerrarMenuAdministrativo();
+        "
+      >
+        <span class="panel-menu-opcion-icono panel-menu-opcion-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/37a7c972-d994-4b83-bce1-c0bbb4f11c4d/qZ9YD9BOgO.json"
+            background="transparent"
+            speed="1"
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-menu-opcion-texto">
+          <strong> PERFIL </strong>
+
+          <small> Consultar información de la cuenta </small>
+        </span>
+
+        <span class="panel-menu-opcion-flecha"> › </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- =====================================================
+       INICIO DEL PANEL
+       SOLO SE MUESTRA EN EL MENÚ PRINCIPAL
+  ====================================================== -->
+
+  <div id="inicioPanelAdministrativo" class="inicio-panel-administrativo">
+    <!-- =================================================
+         BIENVENIDA
+    ================================================== -->
+
+    <section class="panel-bienvenida">
+      <div class="panel-avatar">👤</div>
+
+      <div class="panel-usuario-info">
+        <p class="panel-saludo">
+          Hola,
+
+          <span id="panelNombreUsuario"> Usuario </span>
+
+          👋
+        </p>
+
+        <span id="panelRolUsuario" class="panel-rol"> USUARIO </span>
+      </div>
+    </section>
+
+    <!-- =================================================
+         MENÚ PRINCIPAL
+         SOLO UBICACIÓN E INVENTARIO
+    ================================================== -->
+
+    <section id="panelMenuPrincipal" class="panel-opciones">
+      <!-- UBICACIÓN -->
+
+      <button
+        id="opcionUbicacion"
+        type="button"
+        class="panel-opcion"
+        onclick="abrirModuloUbicacion()"
+      >
+        <span class="panel-opcion-icono panel-opcion-icono-lottie">
+          <lottie-player
+            id="lottieUbicacionPrincipal"
+            src="https://lottie.host/0844139f-91b9-43a2-b4d3-df82f8d30b83/tF4LBvdbyi.json"
+            background="transparent"
+            speed="1"
+            autoplay
+            loop
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-opcion-contenido">
+          <strong> UBICACIÓN </strong>
+
+          <small> Consultar y administrar ubicaciones </small>
+        </span>
+
+        <span class="panel-opcion-flecha"> › </span>
+      </button>
+
+      <!-- INVENTARIO -->
+
+      <button
+        id="opcionInventario"
+        type="button"
+        class="panel-opcion"
+        onclick="abrirModuloInventario()"
+      >
+        <span class="panel-opcion-icono panel-opcion-icono-lottie">
+          <lottie-player
+            src="https://lottie.host/8b0e7582-afb1-4a2a-9f89-cce6224b434d/H0wyXFqe52.json"
+            background="transparent"
+            speed="1"
+            autoplay
+            loop
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-opcion-contenido">
+          <strong> INVENTARIO </strong>
+
+          <small> Consultar vehículos registrados </small>
+        </span>
+
+        <span class="panel-opcion-flecha"> › </span>
+      </button>
+    </section>
+
+    <!-- =================================================
+        ATENCIÓN RÁPIDA
+    ================================================== -->
+
+    <section id="panelAtencionRapida" class="panel-atencion-rapida">
+      <div class="panel-atencion-encabezado">
+        <div>
+          <span class="panel-atencion-etiqueta"> RESUMEN </span>
+
+          <h2>Información rápida</h2>
+        </div>
+
+        <span class="panel-atencion-estado"> EN VIVO </span>
+      </div>
+
+      <div class="panel-atencion-lista">
+        <!-- DOCUMENTACIÓN -->
+
+        <button
+          type="button"
+          class="panel-atencion-item"
+          onclick="abrirModuloDocumentacion()"
+        >
+          <span class="panel-atencion-icono panel-atencion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/bf7f31f1-6204-4a48-96a1-b9117f5f79ed/egxZcxVF0g.json"
+              background="transparent"
+              speed="1"
+              autoplay
+              loop
+            >
+            </lottie-player>
+          </span>
+
+          <span class="panel-atencion-contenido">
+            <strong> Sin Documentación </strong>
+
+            <small id="atencionRapidaDocumentacion">
+              Revisando documentos...
+            </small>
+          </span>
+
+          <span class="panel-atencion-flecha"> › </span>
+        </button>
+
+        <!-- PICO Y PLACA -->
+
+        <button
+          type="button"
+          class="panel-atencion-item"
+          onclick="abrirModuloPicoPlacaManana()"
+        >
+          <span class="panel-atencion-icono panel-atencion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/473b346d-7af1-49cd-91fa-768a6c268120/QR1QcU2zjc.json"
+              background="transparent"
+              speed="1"
+              autoplay
+              loop
+            >
+            </lottie-player>
+          </span>
+
+          <span class="panel-atencion-contenido">
+            <strong> Pico y placa mañana </strong>
+
+            <small id="atencionRapidaPicoPlaca">
+              Consultando restricción...
+            </small>
+          </span>
+
+          <span class="panel-atencion-flecha"> › </span>
+        </button>
+
+        <!-- UBICACIÓN -->
+
+        <button
+          type="button"
+          class="panel-atencion-item"
+          onclick="abrirAtencionRapidaUbicacion()"
+        >
+          <span class="panel-opcion-icono panel-opcion-icono-lottie">
+            <lottie-player
+              id="lottieUbicacionRapida"
+              src="https://lottie.host/0844139f-91b9-43a2-b4d3-df82f8d30b83/tF4LBvdbyi.json"
+              background="transparent"
+              speed="1"
+              autoplay
+              loop
+            >
+            </lottie-player>
+          </span>
+
+          <span class="panel-atencion-contenido">
+            <strong> Sin Ubicación </strong>
+
+            <small id="atencionRapidaUbicacion"> Revisando vehículos... </small>
+          </span>
+
+          <span class="panel-atencion-flecha"> › </span>
+        </button>
+      </div>
+
+      <!-- PRÓXIMAS CITAS -->
+
+      <button
+        id="atencionRapidaCitasItem"
+        type="button"
+        class="panel-atencion-item"
+        onclick="abrirAtencionRapidaCitas()"
+        style="display: none"
+      >
+        <span class="panel-atencion-icono panel-atencion-icono-lottie">
+          <lottie-player
+            id="lottieCitasRapidas"
+            src="https://lottie.host/33012ba0-cb72-49d6-8de5-89d747850f13/PqnEsZWkxq.json"
+            background="transparent"
+            speed="1"
+            autoplay
+          >
+          </lottie-player>
+        </span>
+
+        <span class="panel-atencion-contenido">
+          <strong> Próximas citas </strong>
+
+          <small id="atencionRapidaCitasResumen">
+            Revisando citas de hoy...
+          </small>
+        </span>
+
+        <span class="panel-atencion-flecha"> › </span>
+      </button>
+    </section>
+  </div>
+
+  <!-- =====================================================
+       CONTENIDO DE LOS MÓDULOS
+  ====================================================== -->
+
+  <section
+    id="contenidoModuloPanel"
+    class="contenido-modulo-panel"
+    style="display: none"
+  >
+    <!-- =================================================
+      BOTÓN GLOBAL PARA VOLVER AL PANEL
+  ================================================== -->
+
+    <button
+      id="btnVolverPanelGlobal"
+      type="button"
+      class="panel-modulo-volver"
+      onclick="volverPanelPrincipal()"
+    >
+      ← Volver al panel
+    </button>
+
+    <!-- =================================================
+      INFORMACIÓN RÁPIDA → CITAS DE HOY
+  ================================================== -->
+
+    <section
+      id="moduloAtencionRapidaCitas"
+      class="modulo-panel"
+      style="display: none"
+    >
+      <div class="citas-rapidas-topbar">
+        <button
+          type="button"
+          class="citas-rapidas-boton-ver"
+          onclick="abrirModuloCitas()"
+        >
+          VER
+        </button>
+      </div>
+
+      <div class="citas-rapidas-detalle">
+        <div class="citas-rapidas-detalle-header">
+          <div>
+            <span class="panel-atencion-etiqueta"> AGENDA </span>
+
+            <h2>Citas de hoy</h2>
+
+            <p id="citasRapidasDetalleResumen">Consultando citas...</p>
+          </div>
+        </div>
+
+        <div
+          id="citasRapidasDetalleLista"
+          class="citas-rapidas-detalle-lista"
+        ></div>
+      </div>
+    </section>
+
+    <!-- =================================================
+         MÓDULO UBICACIÓN
+    ================================================== -->
+
+    <section id="moduloUbicacion" class="modulo-panel" style="display: none">
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="panel-opcion-icono panel-opcion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/0844139f-91b9-43a2-b4d3-df82f8d30b83/tF4LBvdbyi.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Ubicación</h2>
+
+          <p class="panel-modulo-descripcion">
+            Consulta y administra la ubicación de los vehículos.
+          </p>
+        </div>
+      </div>
+
+      <!-- =================================================
+          BUSCADOR DE VEHÍCULOS
+      ================================================== -->
+
+      <div class="parqueadero-buscador">
+        <span class="parqueadero-buscador-icono"> 🔍 </span>
+
+        <input
+          id="buscadorVehiculosUbicacion"
+          type="search"
+          class="parqueadero-buscador-input"
+          placeholder="Buscar vehículo o Ubicación"
+          autocomplete="off"
+          aria-label="Buscar vehículo o Ubicación"
+        />
+      </div>
+
+      <button
+        type="button"
+        id="btnVehiculosSinParqueadero"
+        class="btn-vehiculos-sin-parqueadero"
+        onclick="mostrarVehiculosSinParqueadero()"
+      >
+        🚗 Ver vehículos sin Ubicación
+      </button>
+
+      <!-- ===============================================
+          RESUMEN DE UBICACIÓN
+      ================================================ -->
+
+      <div class="parqueadero-resumen">
+        <!-- TOTAL DE VEHÍCULOS -->
+
+        <div class="parqueadero-resumen-card">
+          <div
+            class="parqueadero-resumen-icono parqueadero-resumen-icono-lottie"
+          >
+            <lottie-player
+              src="https://lottie.host/ac951d17-f118-4d31-9b47-76df6469f0f0/ec0E57gv5X.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </div>
+
+          <div class="parqueadero-resumen-contenido">
+            <span class="parqueadero-resumen-label"> Vehículos </span>
+
+            <strong
+              id="parqueaderoTotalVehiculos"
+              class="parqueadero-resumen-valor"
+            >
+              0
+            </strong>
+          </div>
+        </div>
+
+        <!-- VEHÍCULOS UBICADOS -->
+
+        <div class="parqueadero-resumen-card">
+          <div
+            class="parqueadero-resumen-icono parqueadero-resumen-icono-lottie"
+          >
+            <lottie-player
+              src="https://lottie.host/9d5a54eb-f896-45b1-9564-53d397c350cb/OaAQmR3kKL.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </div>
+
+          <div class="parqueadero-resumen-contenido">
+            <span class="parqueadero-resumen-label"> Ubicados </span>
+
+            <strong
+              id="parqueaderoVehiculosUbicados"
+              class="parqueadero-resumen-valor"
+            >
+              0
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      <div id="listaVehiculosUbicacion" class="lista-vehiculos-panel"></div>
+
+      <!-- ===============================================
+          DETALLE DEL VEHÍCULO
+      ================================================ -->
+
+      <section
+        id="detalleUbicacion"
+        class="ubicacion-detalle"
+        style="display: none"
+      >
+        <button
+          type="button"
+          class="ubicacion-detalle-volver"
+          onclick="cerrarDetalleUbicacion()"
+        >
+          ← Ubicación
+        </button>
+
+        <div class="ubicacion-detalle-hero">
+          <div class="ubicacion-detalle-imagen">🚗</div>
+
+          <div class="ubicacion-detalle-identificacion">
+            <span> VEHÍCULO </span>
+
+            <h3 id="detalleUbicacionNombre">Vehículo</h3>
+
+            <p id="detalleUbicacionPlaca">Placa: -</p>
+          </div>
+        </div>
+
+        <div class="ubicacion-detalle-card">
+          <div class="ubicacion-detalle-dato">
+            <span> 📍 </span>
+
+            <div>
+              <small> Ubicación </small>
+
+              <strong id="detalleUbicacionParqueadero">
+                Sin ubicación asignada
+              </strong>
+            </div>
+          </div>
+
+          <div class="ubicacion-detalle-dato"></div>
+        </div>
+
+        <button
+          type="button"
+          class="ubicacion-detalle-editar"
+          onclick="
+            seleccionarVehiculoUbicacion(
+              document
+                .getElementById('detalleUbicacionPlaca')
+                .textContent.replace('Placa: ', ''),
+            )
+          "
+        >
+          <span>✏️</span>
+          <span>Editar ubicación</span>
+        </button>
+
+        <button
+          type="button"
+          class="ubicacion-detalle-intercambiar"
+          onclick="abrirIntercambioParqueadero()"
+        >
+          <span>🔄</span>
+          <span>Intercambiar Ubicación</span>
+        </button>
+      </section>
+
+      <!-- EDITOR DE UBICACIÓN -->
+
+      <section id="editorUbicacion" class="editor-panel" style="display: none">
+        <div class="editor-panel-encabezado">
+          <span class="editor-panel-icono"> 📍 </span>
+
+          <div>
+            <h3>Editar ubicación</h3>
+
+            <p id="editorUbicacionVehiculo">Vehículo</p>
+          </div>
+        </div>
+
+        <div class="editor-panel-form">
+          <label for="inputNuevaUbicacion" class="editor-panel-label">
+            Ubicación
+          </label>
+
+          <select id="inputNuevaUbicacion" class="editor-panel-input">
+            <option value="">Selecciona una Ubicación</option>
+          </select>
+
+          <div
+            id="mensajeEditorUbicacion"
+            class="editor-panel-mensaje"
+            style="display: none"
+          ></div>
+
+          <button
+            id="btnGuardarUbicacion"
+            type="button"
+            class="editor-panel-boton"
+            onclick="guardarUbicacionVehiculo()"
+          >
+            Guardar ubicación
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <!-- =================================================
+        MÓDULO DOCUMENTACIÓN
+    ================================================== -->
+
+    <section
+      id="moduloDocumentacion"
+      class="modulo-panel"
+      style="display: none"
+    >
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="panel-atencion-icono panel-atencion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/bf7f31f1-6204-4a48-96a1-b9117f5f79ed/egxZcxVF0g.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Documentación</h2>
+
+          <p class="panel-modulo-descripcion">
+            Vehículos con documentos vencidos o próximos a vencer.
+          </p>
+        </div>
+      </div>
+
+      <div id="listaDocumentacionAtencion" class="documentacion-atencion-lista">
+        <div class="documentacion-atencion-vacio">
+          <span> 📄 </span>
+
+          <strong> Revisando documentación... </strong>
+
+          <small> Consultando SOAT y tecnomecánica. </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================
+        MÓDULO PICO Y PLACA
+    ================================================== -->
+
+    <section
+      id="moduloPicoPlacaManana"
+      class="modulo-panel"
+      style="display: none"
+    >
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="panel-atencion-icono panel-atencion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/473b346d-7af1-49cd-91fa-768a6c268120/QR1QcU2zjc.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Pico y placa mañana</h2>
+
+          <p id="descripcionPicoPlacaManana" class="panel-modulo-descripcion">
+            Vehículos con restricción para mañana.
+          </p>
+        </div>
+      </div>
+
+      <div id="listaPicoPlacaManana" class="pico-placa-manana-lista">
+        <div class="pico-placa-manana-vacio">
+          <span> 🚦 </span>
+
+          <strong> Revisando pico y placa... </strong>
+
+          <small> Consultando los vehículos con restricción. </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================
+         MÓDULO PERFIL
+    ================================================== -->
+
+    <section id="moduloPerfil" class="modulo-panel" style="display: none">
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="panel-menu-opcion-icono panel-menu-opcion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/37a7c972-d994-4b83-bce1-c0bbb4f11c4d/qZ9YD9BOgO.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Mi perfil</h2>
+
+          <p class="panel-modulo-descripcion">Información de tu cuenta.</p>
+        </div>
+      </div>
+
+      <div class="perfil-panel">
+        <div class="perfil-panel-avatar">👤</div>
+
+        <div class="perfil-panel-datos">
+          <div class="perfil-panel-dato">
+            <span> Nombre </span>
+
+            <strong id="perfilNombre"> Usuario </strong>
+          </div>
+
+          <div class="perfil-panel-dato">
+            <span> Usuario </span>
+
+            <strong id="perfilUsuario"> - </strong>
+          </div>
+
+          <div class="perfil-panel-dato">
+            <span> Correo electrónico </span>
+
+            <strong id="perfilEmail"> - </strong>
+          </div>
+
+          <div class="perfil-panel-dato">
+            <span> Rol </span>
+
+            <strong id="perfilRol"> - </strong>
+          </div>
+        </div>
+
+        <button
+          id="btnEditarPerfil"
+          type="button"
+          class="editor-panel-boton"
+          onclick="editarPerfilAdministracion()"
+        >
+          Editar perfil
+        </button>
+      </div>
+
+      <!-- EDITAR PERFIL -->
+      <section id="editorPerfilAdministracion" style="display: none">
+        <div class="perfil-panel">
+          <div class="perfil-panel-datos">
+            <div class="perfil-panel-dato">
+              <span>Nombre</span>
+              <input
+                type="text"
+                id="editarPerfilNombre"
+                placeholder="Nombre completo"
+              />
+            </div>
+
+            <div class="perfil-panel-dato">
+              <span>Usuario</span>
+              <input type="text" id="editarPerfilUsuario" autocomplete="off" />
+            </div>
+
+            <div class="perfil-panel-dato">
+              <span>Correo electrónico</span>
+              <input
+                type="email"
+                id="editarPerfilEmail"
+                placeholder="Correo electrónico"
+              />
+            </div>
+
+            <div class="perfil-panel-dato">
+              <span>Contraseña</span>
+              <input
+                type="password"
+                id="editarPerfilPassword"
+                placeholder="Dejar vacío para no cambiar"
+              />
+            </div>
+
+            <div class="perfil-panel-dato">
+              <span>Rol</span>
+              <input type="text" id="editarPerfilRol" disabled />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              class="editor-panel-boton"
+              onclick="guardarPerfilAdministracion()"
+            >
+              Guardar cambios
+            </button>
+
+            <button
+              type="button"
+              class="editor-panel-boton"
+              onclick="cancelarEdicionPerfilAdministracion()"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div id="mensajeEditarPerfil" style="display: none"></div>
+        </div>
+      </section>
+      <!-- FIN EDITAR PERFIL -->
+    </section>
+
+    <!-- =================================================
+         MÓDULO GESTIÓN
+    ================================================== -->
+
+    <section id="moduloGestion" class="modulo-panel" style="display: none">
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="modulo-panel-icono modulo-panel-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/4a74bdff-f819-4f34-980b-6b5afe71c763/9JEpmGQKfF.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Gestión</h2>
+
+          <p class="panel-modulo-descripcion">
+            Administración general del sistema.
+          </p>
+        </div>
+      </div>
+
+      <!-- OPCIONES DE GESTIÓN -->
+
+      <div class="gestion-opciones">
+        <!-- AGREGAR CARRO -->
+
+        <button
+          type="button"
+          class="gestion-opcion"
+          id="btnGestionAgregarCarro"
+          onclick="abrirGestionAgregarCarro()"
+        >
+          <span class="gestion-opcion-icono">
+            <lottie-player
+              src="https://lottie.host/f3d3eb6e-0bc3-47d6-8e7d-9acbfdc2ba82/oJRXjL3hJX.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <span class="gestion-opcion-contenido">
+            <strong> AGREGAR VEHÍCULO </strong>
+
+            <small> Registrar un nuevo vehículo en el sistema. </small>
+          </span>
+
+          <span class="gestion-opcion-flecha"> › </span>
+        </button>
+
+        <!-- EDITAR CARROS -->
+
+        <button
+          type="button"
+          class="gestion-opcion"
+          id="btnGestionEditarCarros"
+          onclick="abrirGestionEditarCarros()"
+        >
+          <span class="gestion-opcion-icono gestion-opcion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/06fe1a98-d775-4cbf-8c5c-e30100bb8e1a/ci0UTf5K5j.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <span class="gestion-opcion-contenido">
+            <strong> EDITAR VEHÍCULOS </strong>
+
+            <small> Modificar información de los vehículos. </small>
+          </span>
+
+          <span class="gestion-opcion-flecha"> › </span>
+        </button>
+
+        <!-- EDITAR UBICACIÓN  -->
+
+        <button
+          type="button"
+          class="gestion-opcion"
+          id="btnGestionEditarUbicacion"
+          onclick="abrirGestionEditarUbicacion()"
+        >
+          <span class="panel-opcion-icono panel-opcion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/0844139f-91b9-43a2-b4d3-df82f8d30b83/tF4LBvdbyi.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <span class="gestion-opcion-contenido">
+            <strong> EDITAR UBICACIÓN DE CARROS </strong>
+
+            <small> Administrar ubicaciones. </small>
+          </span>
+
+          <span class="gestion-opcion-flecha"> › </span>
+        </button>
+
+        <!-- GESTIÓN DE USUARIOS -->
+
+        <button
+          type="button"
+          class="gestion-opcion"
+          id="btnGestionUsuarios"
+          onclick="abrirGestionUsuarios()"
+        >
+          <span class="gestion-opcion-icono gestion-opcion-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/2d0bdb89-656a-4683-81c7-ef957936a4bb/n8moAsuaZc.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <span class="gestion-opcion-contenido">
+            <strong> GESTIÓN DE USUARIOS </strong>
+
+            <small> Administrar usuarios y supervisores. </small>
+          </span>
+
+          <span class="gestion-opcion-flecha"> › </span>
+        </button>
+
+        <!-- EDITAR PARQUEADERO -->
+
+        <button
+          type="button"
+          class="gestion-opcion"
+          id="btnGestionParqueaderos"
+          onclick="abrirGestionParqueaderos()"
+        >
+          <div
+            class="parqueadero-resumen-icono parqueadero-resumen-icono-lottie"
+          >
+            <lottie-player
+              src="https://lottie.host/9d5a54eb-f896-45b1-9564-53d397c350cb/OaAQmR3kKL.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </div>
+
+          <span class="gestion-opcion-contenido">
+            <strong> GESTIÓN DE UBICACIÓN </strong>
+
+            <small> Crear, editar y eliminar ubicación. </small>
+          </span>
+
+          <span class="gestion-opcion-flecha"> › </span>
+        </button>
+      </div>
+
+      <!-- =================================================
+          AGREGAR CARRO
+      ================================================== -->
+
+      <section
+        id="gestionAgregarCarro"
+        class="gestion-submodulo"
+        style="display: none"
+      >
+        <button
+          type="button"
+          class="gestion-submodulo-volver"
+          onclick="volverModuloGestion()"
+        >
+          ↑ Volver a opciones
+        </button>
+
+        <div class="editar-carros-encabezado">
+          <h3>Agregar VEHÍCULOS</h3>
+
+          <p>Registra un nuevo vehículo en el sistema.</p>
+        </div>
+
+        <div class="editor-vehiculo-form">
+          <!-- VEHÍCULO -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoNombre">
+              <span class="editor-vehiculo-icono">🚗</span>
+              <span>Vehículo</span>
+            </label>
+
+            <input
+              id="agregarVehiculoNombre"
+              class="editor-vehiculo-input"
+              type="text"
+              placeholder="Nombre del vehículo"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- PLACA -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoPlaca">
+              <span class="editor-vehiculo-icono">🔢</span>
+              <span>Placa</span>
+            </label>
+
+            <input
+              id="agregarVehiculoPlaca"
+              class="editor-vehiculo-input"
+              type="text"
+              placeholder="ABC123"
+              autocomplete="off"
+              autocapitalize="characters"
+              maxlength="6"
+              oninput="this.value = this.value.toUpperCase()"
+            />
+          </div>
+
+          <!-- TRÁNSITO -->
+
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoTransito">
+              <span class="editor-vehiculo-icono"> 🏛️ </span>
+
+              <span> Tránsito </span>
+            </label>
+
+            <input
+              id="agregarVehiculoTransito"
+              class="editor-vehiculo-input"
+              type="text"
+              placeholder="Ej. Medellín"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- SOAT -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoSoat">
+              <span class="editor-vehiculo-icono">📄</span>
+              <span>SOAT</span>
+            </label>
+
+            <input
+              id="agregarVehiculoSoat"
+              class="editor-vehiculo-input"
+              type="date"
+            />
+          </div>
+
+          <!-- TECNOMECÁNICA -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoTecnomecanica">
+              <span class="editor-vehiculo-icono">🔧</span>
+              <span>Tecnomecánica</span>
+            </label>
+
+            <input
+              id="agregarVehiculoTecnomecanica"
+              class="editor-vehiculo-input"
+              type="date"
+            />
+          </div>
+
+          <!-- PICO Y PLACA -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoPicoYPlaca">
+              <span class="editor-vehiculo-icono">🚦</span>
+              <span>Pico y placa</span>
+            </label>
+
+            <input
+              id="agregarVehiculoPicoYPlaca"
+              class="editor-vehiculo-input"
+              type="text"
+              placeholder="Ej. Lunes: 7 - 8"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- PRECIO -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoPrecio">
+              <span class="editor-vehiculo-icono">💰</span>
+              <span>Precio</span>
+            </label>
+
+            <input
+              id="agregarVehiculoPrecio"
+              class="editor-vehiculo-input"
+              type="text"
+              inputmode="numeric"
+              placeholder="45900000"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- KILOMETRAJE -->
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoKilometraje">
+              <span class="editor-vehiculo-icono">🛣️</span>
+              <span>Kilometraje</span>
+            </label>
+
+            <input
+              id="agregarVehiculoKilometraje"
+              class="editor-vehiculo-input"
+              type="text"
+              inputmode="numeric"
+              placeholder="72500"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- DETALLES -->
+          <div class="editor-vehiculo-campo editor-vehiculo-campo-grande">
+            <label for="agregarVehiculoDetalles">
+              <span class="editor-vehiculo-icono">📝</span>
+              <span>Detalles</span>
+            </label>
+
+            <textarea
+              id="agregarVehiculoDetalles"
+              class="editor-vehiculo-textarea"
+              rows="4"
+              placeholder="Describe el estado y características del vehículo."
+            ></textarea>
+          </div>
+
+          <!-- UBICACIÓN -->
+
+          <div class="editor-vehiculo-campo">
+            <label for="agregarVehiculoUbicacion">
+              <span class="editor-vehiculo-icono"> 📍 </span>
+
+              <span> Ubicación </span>
+            </label>
+
+            <select id="agregarVehiculoUbicacion" class="editor-vehiculo-input">
+              <option value="">Selecciona una ubicación</option>
+            </select>
+          </div>
+
+          <!-- MENSAJE -->
+          <div
+            id="mensajeAgregarVehiculo"
+            class="editor-vehiculo-mensaje"
+            style="display: none"
+          ></div>
+
+          <!-- BOTÓN GUARDAR -->
+
+          <button
+            id="btnGuardarNuevoVehiculo"
+            type="button"
+            class="editor-vehiculo-boton-principal"
+            onclick="revisarNuevoVehiculoAntesDeGuardar()"
+          >
+            GUARDAR VEHÍCULOS
+          </button>
+
+          <!-- CANCELAR -->
+          <button
+            type="button"
+            class="editor-vehiculo-boton-secundario"
+            onclick="volverModuloGestion()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================
+         EDITAR PARQUEADERO
+    ================================================== -->
+
+      <section
+        id="gestionParqueaderos"
+        class="gestion-submodulo"
+        style="display: none"
+      >
+        <button
+          type="button"
+          class="gestion-submodulo-volver"
+          onclick="volverModuloGestion()"
+        >
+          ↑ Volver a opciones
+        </button>
+
+        <div class="editar-carros-encabezado">
+          <h3>Editar Ubicación</h3>
+
+          <p>Administra los ubicacion registrados en el sistema.</p>
+        </div>
+
+        <div class="formulario-parqueadero">
+          <input
+            type="text"
+            id="nuevoParqueaderoGestion"
+            placeholder="Nombre de la nueva Ubicacion"
+            autocomplete="off"
+          />
+
+          <button type="button" onclick="crearParqueaderoGestion()">
+            + Crear ubicación
+          </button>
+        </div>
+
+        <div id="listaParqueaderosGestion" class="lista-vehiculos-panel"></div>
+      </section>
+
+      <!-- =================================================
+       EDITAR CARROS
+  ================================================== -->
+
+      <section
+        id="gestionEditarCarros"
+        class="gestion-submodulo"
+        style="display: none"
+      >
+        <!-- ===============================================
+         LISTA DE VEHÍCULOS
+    ================================================ -->
+
+        <div id="vistaListaEditarCarros">
+          <button
+            type="button"
+            class="gestion-submodulo-volver"
+            onclick="volverModuloGestion()"
+          >
+            ↑ Volver a opciones
+          </button>
+
+          <div class="editar-carros-encabezado">
+            <h3>Editar VEHICULOS</h3>
+
+            <p>Selecciona un vehículo para modificar su información.</p>
+          </div>
+
+          <!-- BUSCADOR EDITAR VEHÍCULOS -->
+
+          <div class="inventario-buscador">
+            <span class="inventario-buscador-icono"> 🔍 </span>
+
+            <input
+              id="buscadorEditarVehiculos"
+              type="search"
+              placeholder="Buscar por vehículo o placa..."
+              autocomplete="off"
+              oninput="filtrarEditarVehiculos()"
+            />
+          </div>
+
+          <div
+            id="listaVehiculosEditarCarros"
+            class="lista-vehiculos-panel"
+          ></div>
+        </div>
+
+        <!-- ===============================================
+         EDITOR DEL VEHÍCULO
+    ================================================ -->
+
+        <section
+          id="editorVehiculoAdministracion"
+          class="editor-vehiculo-panel"
+          style="display: none"
+        >
+          <button
+            type="button"
+            class="gestion-submodulo-volver"
+            onclick="volverModuloGestion()"
+          >
+            ↑ Volver a opciones
+          </button>
+
+          <!-- ENCABEZADO DEL VEHÍCULO -->
+
+          <div class="editor-vehiculo-encabezado">
+            <div class="editor-vehiculo-imagen">🚗</div>
+
+            <div class="editor-vehiculo-identificacion">
+              <h3 id="editorVehiculoNombre">Vehículo</h3>
+
+              <p id="editorVehiculoPlaca">Placa: -</p>
+            </div>
+          </div>
+
+          <!-- FORMULARIO -->
+
+          <div class="editor-vehiculo-form">
+            <!-- VEHÍCULO -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoNombre">
+                <span class="editor-vehiculo-icono"> 🚗 </span>
+
+                <span> Vehículo </span>
+              </label>
+
+              <input
+                id="editarVehiculoNombre"
+                class="editor-vehiculo-input"
+                type="text"
+                placeholder="Nombre del vehículo"
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- PLACA -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoPlaca">
+                <span class="editor-vehiculo-icono"> 🔢 </span>
+
+                <span> Placa </span>
+              </label>
+
+              <input
+                id="editarVehiculoPlaca"
+                class="editor-vehiculo-input"
+                type="text"
+                placeholder="ABC123"
+                autocomplete="off"
+                autocapitalize="characters"
+              />
+            </div>
+
+            <!-- SOAT -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoSoat">
+                <span class="editor-vehiculo-icono"> 📄 </span>
+
+                <span> SOAT </span>
+              </label>
+
+              <input
+                id="editarVehiculoSoat"
+                class="editor-vehiculo-input"
+                type="date"
+              />
+            </div>
+
+            <!-- TECNOMECÁNICA -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoTecnomecanica">
+                <span class="editor-vehiculo-icono"> 🔧 </span>
+
+                <span> Tecnomecánica </span>
+              </label>
+
+              <input
+                id="editarVehiculoTecnomecanica"
+                class="editor-vehiculo-input"
+                type="date"
+              />
+            </div>
+
+            <!-- PICO Y PLACA -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoPicoYPlaca">
+                <span class="editor-vehiculo-icono"> 📍 </span>
+
+                <span> Pico y placa </span>
+              </label>
+
+              <input
+                id="editarVehiculoPicoYPlaca"
+                class="editor-vehiculo-input"
+                type="text"
+                placeholder="Ej. Lunes: 7 - 8"
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- PRECIO -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoPrecio">
+                <span class="editor-vehiculo-icono"> 💰 </span>
+
+                <span> Precio </span>
+              </label>
+
+              <input
+                id="editarVehiculoPrecio"
+                class="editor-vehiculo-input"
+                type="text"
+                inputmode="numeric"
+                placeholder="45900000"
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- KILOMETRAJE -->
+
+            <div class="editor-vehiculo-campo">
+              <label for="editarVehiculoKilometraje">
+                <span class="editor-vehiculo-icono"> 🛣️ </span>
+
+                <span> Kilometraje </span>
+              </label>
+
+              <input
+                id="editarVehiculoKilometraje"
+                class="editor-vehiculo-input"
+                type="text"
+                inputmode="numeric"
+                placeholder="72500"
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- DETALLES -->
+
+            <div class="editor-vehiculo-campo editor-vehiculo-campo-grande">
+              <label for="editarVehiculoDetalles">
+                <span class="editor-vehiculo-icono"> 📝 </span>
+
+                <span> Detalles </span>
+              </label>
+
+              <textarea
+                id="editarVehiculoDetalles"
+                class="editor-vehiculo-textarea"
+                rows="4"
+                placeholder="Describe el estado y características del vehículo."
+              ></textarea>
+            </div>
+
+            <!-- UBICACIÓN -->
+
+            <div class="inventario-editor-campo">
+              <label for="editarVehiculoUbicacion">
+                <span class="inventario-editor-label-icono"> 📍 </span>
+
+                <span> Ubicación </span>
+              </label>
+
+              <select
+                id="editarVehiculoUbicacion"
+                class="inventario-editor-input"
+              >
+                <option value="">Selecciona una ubicación</option>
+              </select>
+            </div>
+
+            <!-- MENSAJE -->
+
+            <div
+              id="mensajeEditorVehiculo"
+              class="editor-vehiculo-mensaje"
+              style="display: none"
+            ></div>
+
+            <!-- GUARDAR -->
+
+            <button
+              id="btnGuardarCambiosVehiculo"
+              type="button"
+              class="editor-vehiculo-boton-principal"
+              onclick="guardarCambiosVehiculo()"
+            >
+              GUARDAR CAMBIOS
+            </button>
+
+            <!-- CANCELAR -->
+
+            <button
+              type="button"
+              class="editor-vehiculo-boton-secundario"
+              onclick="volverEditarCarros()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <!-- =================================================
+           EDITAR UBICACIÓN
+      ================================================== -->
+
+      <section
+        id="gestionEditarUbicacion"
+        class="gestion-submodulo"
+        style="display: none"
+      >
+        <button
+          type="button"
+          class="gestion-submodulo-volver"
+          onclick="volverModuloGestion()"
+        >
+          ↑ Volver a opciones
+        </button>
+
+        <h3>Editar ubicación</h3>
+
+        <p>Selecciona un vehículo para modificar su ubicación.</p>
+
+        <!-- BUSCADOR EDITAR UBICACIÓN -->
+
+        <div class="inventario-buscador">
+          <span class="inventario-buscador-icono"> 🔍 </span>
+
+          <input
+            id="buscadorEditarUbicacion"
+            type="search"
+            placeholder="Buscar por vehículo o placa..."
+            autocomplete="off"
+            oninput="filtrarEditarUbicacion()"
+          />
+        </div>
+
+        <div id="listaGestionUbicacion" class="lista-vehiculos-panel"></div>
+
+        <!-- =====================================================
+            EDITOR DE UBICACIÓN
+        ===================================================== -->
+
+        <section
+          id="editorGestionUbicacion"
+          class="editor-ubicacion-panel"
+          style="display: none"
+        >
+          <button
+            type="button"
+            class="editor-ubicacion-volver"
+            onclick="cerrarEditorGestionUbicacion()"
+          >
+            ← Vehículos
+          </button>
+
+          <div class="editor-ubicacion-encabezado">
+            <div class="editor-ubicacion-icono">🚗</div>
+
+            <div class="editor-ubicacion-identificacion">
+              <span> VEHÍCULO </span>
+
+              <h3 id="gestionUbicacionNombre">Vehículo</h3>
+
+              <p id="gestionUbicacionPlaca">Placa: -</p>
+            </div>
+          </div>
+
+          <div class="editor-ubicacion-form">
+            <div class="editor-ubicacion-campo">
+              <label for="gestionUbicacionParqueadero"> 📍 Ubicación </label>
+
+              <select
+                id="gestionUbicacionParqueadero"
+                class="editor-ubicacion-input"
+              >
+                <option value="">Selecciona una Ubicación</option>
+              </select>
+            </div>
+
+            <div class="editor-ubicacion-campo">
+              <label for="gestionUbicacionPuesto"> 🅿️ Puesto </label>
+
+              <input
+                type="text"
+                id="gestionUbicacionPuesto"
+                class="editor-ubicacion-input"
+                placeholder="Ej. 25"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div
+            id="mensajeEditorGestionUbicacion"
+            class="editor-ubicacion-mensaje"
+          ></div>
+
+          <button
+            type="button"
+            class="editor-ubicacion-boton-principal"
+            onclick="guardarCambiosGestionUbicacion()"
+          >
+            Guardar cambios
+          </button>
+        </section>
+      </section>
+    </section>
+
+    <!-- =================================================
+     CONFIRMACIÓN ELIMINAR VEHÍCULO - PANEL
+================================================== -->
+
+    <div
+      id="modalEliminarVehiculoPanel"
+      class="modal-eliminar-vehiculo-panel"
+      style="display: none"
+    >
+      <div class="modal-eliminar-vehiculo-panel-contenido">
+        <div class="modal-eliminar-vehiculo-panel-icono">🗑️</div>
+
+        <h3>¿Eliminar vehículo?</h3>
+
+        <p>Estás a punto de eliminar:</p>
+
+        <strong id="nombreVehiculoEliminarPanel"> Vehículo </strong>
+
+        <span id="placaVehiculoEliminarPanel"> Placa: - </span>
+
+        <p class="modal-eliminar-vehiculo-panel-aviso">
+          Esta acción no se puede deshacer.
+        </p>
+
+        <div class="modal-eliminar-vehiculo-panel-botones">
+          <button
+            type="button"
+            onclick="cerrarConfirmacionEliminarVehiculoPanel()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            id="btnConfirmarEliminarVehiculoPanel"
+            type="button"
+            class="boton-confirmar-eliminar-panel"
+            onclick="confirmarEliminarVehiculoPanel()"
+          >
+            Sí, eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================
+         MÓDULO CITAS
+    ================================================== -->
+
+    <section id="moduloCitas" class="modulo-panel" style="display: none">
+      <div id="contenidoCitasAdministracion" class="citas-admin">
+        <div class="modulo-panel-encabezado">
+          <div>
+            <span class="modulo-panel-icono"> 📅 </span>
+
+            <h2 class="panel-modulo-titulo">Citas</h2>
+
+            <p class="panel-modulo-descripcion">
+              Administra las citas programadas del sistema.
+            </p>
+          </div>
+        </div>
+
+        <!-- RESUMEN -->
+
+        <div class="citas-resumen">
+          <div class="citas-resumen-card">
+            <span> 📅 </span>
+
+            <div>
+              <strong id="citasTotalProximas"> 0 </strong>
+
+              <small> Próximas </small>
+            </div>
+          </div>
+
+          <div class="citas-resumen-card">
+            <span> ⚠️ </span>
+
+            <div>
+              <strong id="citasTotalAtrasadas"> 0 </strong>
+
+              <small> Atrasadas </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCIÓN PRINCIPAL -->
+
+        <button
+          type="button"
+          class="citas-nueva-boton"
+          onclick="abrirNuevaCita()"
+        >
+          <span> ＋ </span>
+
+          Nueva cita
+        </button>
+
+        <!-- PRÓXIMAS -->
+
+        <section class="citas-seccion">
+          <div class="citas-seccion-encabezado">
+            <div>
+              <span class="citas-seccion-etiqueta"> AGENDA </span>
+
+              <h3>Próximas citas</h3>
+            </div>
+          </div>
+
+          <div id="listaCitasProximas" class="citas-lista">
+            <div class="panel-modulo-placeholder">
+              <strong> Sin citas próximas </strong>
+
+              <p>No hay citas programadas.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ATRASADAS -->
+
+        <section class="citas-seccion">
+          <div class="citas-seccion-encabezado">
+            <div>
+              <span class="citas-seccion-etiqueta"> PENDIENTES </span>
+
+              <h3>Citas atrasadas</h3>
+            </div>
+          </div>
+
+          <div id="listaCitasAtrasadas" class="citas-lista">
+            <div class="panel-modulo-placeholder">
+              <strong> Sin citas atrasadas </strong>
+
+              <p>Todo está al día.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- HISTÓRICO -->
+
+        <section class="citas-seccion">
+          <div class="citas-seccion-encabezado">
+            <div>
+              <span class="citas-seccion-etiqueta"> HISTÓRICO </span>
+
+              <h3>Atendidas y canceladas</h3>
+            </div>
+          </div>
+
+          <div id="listaCitasHistorial" class="citas-lista">
+            <div class="panel-modulo-placeholder">
+              <strong> Sin historial </strong>
+
+              <p>Aquí aparecerán las citas atendidas y canceladas.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- =================================================
+           FORMULARIO NUEVA CITA
+      ================================================== -->
+
+      <section
+        id="formularioNuevaCita"
+        class="citas-formulario"
+        style="display: none"
+      >
+        <button
+          type="button"
+          class="panel-modulo-volver"
+          onclick="cerrarNuevaCita()"
+        >
+          ← Volver
+        </button>
+
+        <div class="modulo-panel-encabezado">
+          <div>
+            <span class="modulo-panel-icono"> 📅 </span>
+
+            <h2 class="panel-modulo-titulo">Nueva cita</h2>
+
+            <p class="panel-modulo-descripcion">
+              Registra una nueva cita en el sistema.
+            </p>
+          </div>
+        </div>
+
+        <div class="editor-panel-form">
+          <label for="citaFecha" class="editor-panel-label"> Fecha </label>
+
+          <input type="date" id="citaFecha" class="editor-panel-input" />
+
+          <label for="citaHora" class="editor-panel-label"> Hora </label>
+
+          <input type="time" id="citaHora" class="editor-panel-input" />
+
+          <label for="citaVehiculo" class="editor-panel-label">
+            Vehículo
+          </label>
+
+          <input
+            type="search"
+            id="citaVehiculo"
+            class="editor-panel-input"
+            placeholder="Buscar vehículo o placa..."
+            autocomplete="off"
+            oninput="buscarVehiculosParaCita()"
+          />
+
+          <div
+            id="resultadosVehiculosCita"
+            class="citas-buscador-resultados"
+            style="display: none"
+          ></div>
+
+          <label for="citaPlaca" class="editor-panel-label"> Placa </label>
+
+          <input
+            type="text"
+            id="citaPlaca"
+            class="editor-panel-input"
+            placeholder="Placa"
+            readonly
+          />
+
+          <label for="citaCliente" class="editor-panel-label">
+            Cliente
+            <span>Opcional</span>
+          </label>
+
+          <input
+            type="text"
+            id="citaCliente"
+            class="editor-panel-input"
+            autocomplete="off"
+          />
+
+          <label for="citaTelefono" class="editor-panel-label">
+            Teléfono
+            <span>Opcional</span>
+          </label>
+
+          <input
+            type="tel"
+            id="citaTelefono"
+            class="editor-panel-input"
+            autocomplete="off"
+          />
+
+          <label for="citaTipo" class="editor-panel-label">
+            Tipo
+            <span>Opcional</span>
+          </label>
+
+          <select id="citaTipo" class="editor-panel-input">
+            <option value="">Selecciona un tipo</option>
+
+            <option value="Ver vehículo">Ver vehículo</option>
+
+            <option value="Prueba de manejo">Prueba de manejo</option>
+
+            <option value="Negociación">Negociación</option>
+
+            <option value="Peritaje">Peritaje</option>
+
+            <option value="Recibir vehículo">Recibir vehículo</option>
+
+            <option value="Otro">Otro</option>
+          </select>
+
+          <label for="citaObservaciones" class="editor-panel-label">
+            Observaciones
+            <span>Opcional</span>
+          </label>
+
+          <textarea
+            id="citaObservaciones"
+            class="editor-panel-input"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="editor-panel-boton"
+          onclick="guardarNuevaCita()"
+        >
+          Guardar cita
+        </button>
+      </section>
+    </section>
+
+    <!-- =================================================
+         MÓDULO HISTORIAL
+    ================================================== -->
+
+    <section id="moduloHistorial" class="modulo-panel" style="display: none">
+      <div class="modulo-panel-encabezado">
+        <div>
+          <span class="modulo-panel-icono modulo-panel-icono-lottie">
+            <lottie-player
+              src="https://lottie.host/8a23943b-5a1d-46cd-b439-ce6019407997/FPHl6N4ZGG.json"
+              background="transparent"
+              speed="1"
+            >
+            </lottie-player>
+          </span>
+
+          <h2 class="panel-modulo-titulo">Historial</h2>
+
+          <p class="panel-modulo-descripcion">
+            Registro de movimientos realizados en el sistema.
+          </p>
+        </div>
+      </div>
+
+      <div id="listaHistorialMovimientos" class="lista-historial-panel"></div>
+    </section>
+  </section>
+</section>
+
+<!-- =====================================================
+     ELEMENTOS MODALES GLOBALES
+     Fuera de los contenedores limitados del panel.
+====================================================== -->
+
+<!-- =====================================================
+          POPUP CONFIRMACIÓN NUEVO VEHÍCULO
+      ====================================================== -->
+
+<div
+  id="advertenciaNuevoVehiculo"
+  class="modal-nuevo-vehiculo"
+  style="display: none"
+>
+  <div class="modal-nuevo-vehiculo-contenido">
+    <div id="advertenciaNuevoVehiculoContenido"></div>
+  </div>
+</div>
+
+<div
+  id="modalIntercambioParqueadero"
+  class="modal-intercambio-parqueadero"
+  style="display: none"
+>
+  <div class="modal-intercambio-contenido">
+    <button
+      type="button"
+      class="modal-intercambio-cerrar"
+      onclick="cerrarIntercambioParqueadero()"
+    >
+      ✕
+    </button>
+
+    <div class="modal-intercambio-titulo">
+      <span>🔄</span>
+      <span>Intercambiar Ubicación</span>
+    </div>
+
+    <div class="modal-intercambio-subtitulo">
+      Selecciona el vehículo con el que deseas intercambiar
+    </div>
+
+    <!-- VEHÍCULO ACTUAL -->
+    <div class="intercambio-vehiculo-actual">
+      <div class="intercambio-vehiculo-etiqueta">Vehículo seleccionado</div>
+
+      <div id="intercambioVehiculoActual">
+        <strong>—</strong>
+      </div>
+    </div>
+
+    <!-- FLECHAS -->
+    <div class="intercambio-flechas">🔄</div>
+
+    <div
+      id="intercambioVehiculoSegundo"
+      class="intercambio-vehiculo-segundo"
+      style="display: none"
+    ></div>
+
+    <!-- BUSCADOR -->
+    <div class="intercambio-buscador">
+      <span>🔍</span>
+
+      <input
+        id="buscadorIntercambioParqueadero"
+        type="search"
+        placeholder="Buscar otro vehículo"
+        autocomplete="off"
+        oninput="buscarVehiculoParaIntercambio()"
+      />
+    </div>
+
+    <!-- RESULTADOS -->
+    <div
+      id="listaIntercambioParqueadero"
+      class="lista-intercambio-parqueadero"
+    ></div>
+
+    <div class="intercambio-accion">
+      <button
+        type="button"
+        id="btnConfirmarIntercambio"
+        class="btn-confirmar-intercambio"
+        onclick="confirmarIntercambioParqueadero()"
+        disabled
+      >
+        🔄 Confirmar intercambio
+      </button>
+    </div>
+  </div>
+</div>
+
+<div
+  id="modalConfirmacionVehiculo"
+  class="editor-vehiculo-confirmacion"
+  style="display: none"
+>
+  <div class="editor-vehiculo-confirmacion-card">
+    <div class="editor-vehiculo-confirmacion-icono">!</div>
+
+    <h3>¿Guardar cambios?</h3>
+
+    <p>Se actualizará la información de este vehículo.</p>
+
+    <button
+      type="button"
+      class="editor-vehiculo-boton-principal"
+      onclick="
+        const modal = document.getElementById('modalConfirmacionVehiculo');
+        const datos =
+          modal && modal.dataset.datos ? JSON.parse(modal.dataset.datos) : null;
+
+        if (datos) {
+          confirmarGuardadoVehiculo(datos);
+        }
+      "
+    >
+      Guardar cambios
+    </button>
+
+    <button
+      type="button"
+      class="editor-vehiculo-boton-secundario"
+      onclick="cancelarConfirmacionCambiosVehiculo()"
+    >
+      Cancelar
+    </button>
+  </div>
+</div>
+
+<div id="toastCita" class="toast-cita" style="display: none">
+  <div class="toast-cita-icono">📅</div>
+
+  <div class="toast-cita-contenido">
+    <strong id="toastCitaTitulo"> Próxima cita </strong>
+
+    <span id="toastCitaMensaje"> </span>
+  </div>
+
+  <button type="button" class="toast-cita-cerrar" onclick="cerrarToastCita()">
+    ×
+  </button>
+</div>
+
+<section
+  id="resultadoGuardadoVehiculo"
+  class="editor-vehiculo-resultado"
+  style="display: none"
+>
+  <div class="editor-vehiculo-resultado-icono">✓</div>
+
+  <h3>Cambios guardados</h3>
+
+  <p>La información del vehículo fue actualizada correctamente.</p>
+</section>
+
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>

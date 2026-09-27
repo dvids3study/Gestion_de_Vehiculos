@@ -1,0 +1,8027 @@
+<script>
+  /* =====================================================
+   VARIABLES DEL PANEL ADMINISTRATIVO
+===================================================== */
+
+  let usuarioPanel = null;
+  let vehiculosAdministracion = [];
+  let ordenParqueaderosAdministracion = [];
+  let vehiculoSeleccionadoAdministracion = null;
+  let vehiculoIntercambioSeleccionado = null;
+  let citasAdministracion = [];
+  let citaEditandoId = null;
+  let modoEdicionCita = false;
+  let intervaloAlertasCitas = null;
+  let alertasCitasMostradas = {};
+
+  /* =====================================================
+   ABRIR PANEL ADMINISTRATIVO
+===================================================== */
+
+  function abrirPanelAdministrativo(usuario, restaurarEstado = false) {
+    usuarioPanel = usuario || null;
+
+    const app = document.querySelector(".app");
+
+    const panel = document.getElementById("panelAdministrativo");
+
+    if (!panel) {
+      console.error("No se encontró #panelAdministrativo");
+
+      return;
+    }
+
+    // Ocultar pantalla pública
+    if (app) {
+      app.style.display = "none";
+    }
+
+    const historial = document.getElementById("historial");
+
+    if (historial) {
+      historial.style.display = "none";
+    }
+
+    const infoInferior = document.querySelector(".info-inferior");
+
+    if (infoInferior) {
+      infoInferior.style.display = "none";
+    }
+
+    // Mostrar panel
+    panel.style.display = "block";
+
+    actualizarInformacionPanel();
+
+    configurarPermisosPanel();
+
+    // Limpiar visualmente antes de decidir
+    // qué pantalla mostrar.
+    ocultarTodosLosModulosPanel();
+
+    cerrarSubmodulosGestion();
+
+    cerrarMenuAdministrativo();
+
+    const inicio = document.getElementById("inicioPanelAdministrativo");
+
+    const contenido = document.getElementById("contenidoModuloPanel");
+
+    const menuPrincipal = document.getElementById("panelMenuPrincipal");
+
+    // =====================================================
+    // REFRESCO DE PÁGINA
+    // =====================================================
+
+    if (restaurarEstado) {
+      const moduloGuardado = sessionStorage.getItem("moduloPanelActivo");
+
+      if (moduloGuardado) {
+        if (inicio) {
+          inicio.style.display = "none";
+        }
+
+        if (contenido) {
+          contenido.style.display = "block";
+        }
+      } else {
+        if (inicio) {
+          inicio.style.display = "block";
+        }
+
+        if (menuPrincipal) {
+          menuPrincipal.style.display = "grid";
+        }
+
+        if (contenido) {
+          contenido.style.display = "none";
+        }
+      }
+    }
+
+    // =====================================================
+    // LOGIN NORMAL
+    // =====================================================
+    else {
+      if (inicio) {
+        inicio.style.display = "block";
+      }
+
+      if (menuPrincipal) {
+        menuPrincipal.style.display = "grid";
+      }
+
+      if (contenido) {
+        contenido.style.display = "none";
+      }
+    }
+
+    if (inicio && inicio.style.display !== "none") {
+      animarContenedorVisible(inicio);
+    }
+
+    // Cargar información
+    cargarVehiculosAdministracion();
+
+    cargarOrdenParqueaderosAdministracion();
+
+    cargarAtencionRapidaCitas();
+
+    // Restaurar módulo DESPUÉS de configurar
+    // completamente el panel.
+    if (restaurarEstado) {
+      setTimeout(function () {
+        restaurarModuloPanelActivo();
+      }, 50);
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
+  }
+
+  // =====================================================
+  // RESTAURAR MÓDULO ACTIVO DEL PANEL
+  // =====================================================
+
+  function restaurarModuloPanelActivo() {
+    const moduloGuardado = sessionStorage.getItem("moduloPanelActivo");
+
+    console.log("Módulo guardado:", moduloGuardado);
+
+    if (!moduloGuardado) {
+      return;
+    }
+
+    switch (moduloGuardado) {
+      case "moduloInventario":
+        if (typeof abrirModuloInventario === "function") {
+          abrirModuloInventario();
+        }
+
+        break;
+
+      case "moduloUbicacion":
+        abrirModuloUbicacion();
+
+        break;
+
+      case "moduloDocumentacion":
+        abrirModuloDocumentacion();
+
+        break;
+
+      case "moduloPicoPlacaManana":
+        abrirModuloPicoPlacaManana();
+
+        break;
+
+      case "moduloPerfil":
+        abrirModuloPerfil();
+
+        break;
+
+      case "moduloGestion":
+        abrirModuloGestion();
+
+        break;
+
+      case "moduloHistorial":
+        abrirModuloHistorial();
+
+        break;
+
+      case "moduloCitas":
+        abrirModuloCitas();
+
+        break;
+
+      default:
+        console.warn("Módulo desconocido:", moduloGuardado);
+
+        sessionStorage.removeItem("moduloPanelActivo");
+
+        break;
+    }
+  }
+
+  /* =====================================================
+   ACTUALIZAR INFORMACIÓN DEL USUARIO
+===================================================== */
+
+  function actualizarInformacionPanel() {
+    if (!usuarioPanel) {
+      return;
+    }
+
+    const nombre = document.getElementById("panelNombreUsuario");
+
+    const rol = document.getElementById("panelRolUsuario");
+
+    if (nombre) {
+      nombre.textContent =
+        usuarioPanel.nombre || usuarioPanel.usuario || "Usuario";
+    }
+
+    if (rol) {
+      rol.textContent = usuarioPanel.rol || usuarioPanel.tipo || "USUARIO";
+    }
+
+    const perfilNombre = document.getElementById("perfilNombre");
+
+    const perfilUsuario = document.getElementById("perfilUsuario");
+
+    const perfilEmail = document.getElementById("perfilEmail");
+
+    const perfilRol = document.getElementById("perfilRol");
+
+    if (perfilNombre) {
+      perfilNombre.textContent = usuarioPanel.nombre || "Usuario";
+    }
+
+    if (perfilUsuario) {
+      perfilUsuario.textContent = usuarioPanel.usuario || "-";
+    }
+
+    if (perfilEmail) {
+      perfilEmail.textContent = usuarioPanel.email || "-";
+    }
+
+    if (perfilRol) {
+      perfilRol.textContent =
+        usuarioPanel.rol || usuarioPanel.tipo || "USUARIO";
+    }
+  }
+
+  /* =====================================================
+   PERMISOS SEGÚN EL ROL
+===================================================== */
+
+  function configurarPermisosPanel() {
+    const opcionGestion = document.getElementById("opcionGestion");
+
+    const opcionHistorial = document.getElementById("opcionHistorial");
+
+    const opcionEditarCarros = document.getElementById("opcionEditarCarros");
+
+    const opcionCitas = document.getElementById("opcionCitas");
+
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    const esAdministrador = rol === "ADMINISTRADOR" || rol === "ADMIN";
+
+    /* ==========================================
+    CITAS
+    Solo Administrador
+  ========================================== */
+
+    if (opcionCitas) {
+      opcionCitas.style.display = esAdministrador ? "flex" : "none";
+    }
+
+    /* ==========================================
+     GESTIÓN
+     Solo Administrador
+  ========================================== */
+
+    if (opcionGestion) {
+      opcionGestion.style.display = esAdministrador ? "flex" : "none";
+    }
+
+    /* ==========================================
+     HISTORIAL
+     Solo Administrador
+  ========================================== */
+
+    if (opcionHistorial) {
+      opcionHistorial.style.display = esAdministrador ? "flex" : "none";
+    }
+
+    /* ==========================================
+     EDITAR CARROS
+     Ya no debe aparecer para ningún rol
+  ========================================== */
+
+    if (opcionEditarCarros) {
+      opcionEditarCarros.style.display = "none";
+    }
+  }
+
+  /* =====================================================
+   CARGAR VEHÍCULOS
+===================================================== */
+
+  function cargarVehiculosAdministracion() {
+    if (!tokenSesion) {
+      return;
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          console.error(
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No se pudieron cargar los vehículos.",
+          );
+
+          return;
+        }
+
+        vehiculosAdministracion = Array.isArray(respuesta.vehiculos)
+          ? respuesta.vehiculos
+          : [];
+
+        actualizarListaUbicacion();
+        actualizarListaInventario();
+        actualizarListaEditarCarros();
+        actualizarListaGestionUbicacion();
+
+        actualizarAtencionRapidaUbicacion();
+        actualizarAtencionRapidaDocumentacion();
+        actualizarAtencionRapidaPicoPlaca();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al cargar vehículos:", error);
+      })
+
+      .obtenerVehiculosAdministracion(tokenSesion);
+  }
+
+  /* =====================================================
+   MOSTRAR / OCULTAR MÓDULOS
+===================================================== */
+
+  function ocultarTodosLosModulosPanel() {
+    const modulos = document.querySelectorAll(
+      "#contenidoModuloPanel .modulo-panel, #moduloInventario, #gestionUsuarios, #moduloCitas",
+    );
+
+    modulos.forEach(function (modulo) {
+      modulo.style.display = "none";
+    });
+  }
+
+  function cerrarSubmodulosGestion() {
+    const submodulos = document.querySelectorAll(
+      "#moduloGestion .gestion-submodulo",
+    );
+
+    submodulos.forEach(function (submodulo) {
+      submodulo.style.display = "none";
+    });
+  }
+
+  /* =====================================================
+   VOLVER AL PANEL PRINCIPAL
+===================================================== */
+
+  function volverPanelPrincipal() {
+    sessionStorage.removeItem("moduloPanelActivo");
+
+    const menu = document.getElementById("panelMenuPrincipal");
+
+    const contenido = document.getElementById("contenidoModuloPanel");
+
+    if (menu) {
+      menu.style.display = "grid";
+    }
+
+    const inicio = document.getElementById("inicioPanelAdministrativo");
+
+    if (inicio) {
+      inicio.style.display = "block";
+    }
+
+    animarContenedorVisible(inicio);
+
+    if (contenido) {
+      contenido.style.display = "none";
+    }
+
+    ocultarTodosLosModulosPanel();
+    cerrarSubmodulosGestion();
+
+    vehiculoSeleccionadoAdministracion = null;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   MOSTRAR UN MÓDULO
+===================================================== */
+
+  function mostrarModuloPanel(idModulo) {
+    const menu = document.getElementById("panelMenuPrincipal");
+
+    const contenido = document.getElementById("contenidoModuloPanel");
+
+    const modulo = document.getElementById(idModulo);
+
+    if (idModulo !== "moduloCitas") {
+      detenerAlertasCitas();
+    }
+
+    if (!contenido || !modulo) {
+      return;
+    }
+
+    sessionStorage.setItem("moduloPanelActivo", idModulo);
+
+    if (menu) {
+      menu.style.display = "none";
+    }
+
+    const inicio = document.getElementById("inicioPanelAdministrativo");
+
+    if (inicio) {
+      inicio.style.display = "none";
+    }
+
+    contenido.style.display = "block";
+
+    ocultarTodosLosModulosPanel();
+    cerrarSubmodulosGestion();
+
+    modulo.style.display = "block";
+
+    animarContenedorVisible(modulo);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   ESCAPAR TEXTO PARA HTML
+===================================================== */
+
+  function escaparHTML(texto) {
+    return String(texto ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  /* =====================================================
+   MÓDULO UBICACIÓN
+===================================================== */
+
+  function abrirModuloUbicacion() {
+    const editor = document.getElementById("editorUbicacion");
+
+    const detalle = document.getElementById("detalleUbicacion");
+
+    const lista = document.getElementById("listaVehiculosUbicacion");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (detalle) {
+      detalle.style.display = "none";
+    }
+
+    if (lista) {
+      lista.style.display = "block";
+    }
+
+    vehiculoSeleccionadoAdministracion = null;
+
+    mostrarModuloPanel("moduloUbicacion");
+
+    configurarBuscadorUbicacion();
+
+    actualizarListaUbicacion();
+  }
+
+  function actualizarListaUbicacion(vehiculosFiltrados) {
+    const contenedor = document.getElementById("listaVehiculosUbicacion");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const listaVehiculos = Array.isArray(vehiculosFiltrados)
+      ? vehiculosFiltrados
+      : vehiculosAdministracion;
+
+    // =================================================
+    // RESUMEN DE UBICACIÓN
+    // =================================================
+
+    const totalVehiculos = document.getElementById("parqueaderoTotalVehiculos");
+
+    const vehiculosUbicados = document.getElementById(
+      "parqueaderoVehiculosUbicados",
+    );
+
+    if (totalVehiculos) {
+      totalVehiculos.textContent = Array.isArray(vehiculosAdministracion)
+        ? vehiculosAdministracion.length
+        : 0;
+    }
+
+    if (vehiculosUbicados) {
+      const cantidadUbicados = Array.isArray(vehiculosAdministracion)
+        ? vehiculosAdministracion.filter(function (vehiculo) {
+            return String(vehiculo.ubicacion || "").trim() !== "";
+          }).length
+        : 0;
+
+      vehiculosUbicados.textContent = cantidadUbicados;
+    }
+
+    if (!listaVehiculos.length) {
+      contenedor.innerHTML = `
+    <div class="panel-modulo-placeholder">
+      <strong>No se encontraron vehículos.</strong>
+      <p>Intenta con otro término de búsqueda.</p>
+    </div>
+  `;
+
+      return;
+    }
+
+    // Agrupar vehículos por parqueadero
+    const grupos = {};
+
+    listaVehiculos.forEach(function (vehiculo) {
+      const ubicacion =
+        vehiculo.ubicacion && vehiculo.ubicacion.trim()
+          ? vehiculo.ubicacion.trim()
+          : "Sin ubicación asignada";
+
+      if (!grupos[ubicacion]) {
+        grupos[ubicacion] = [];
+      }
+
+      grupos[ubicacion].push(vehiculo);
+    });
+
+    let html = "";
+
+    const ubicacionesOrdenadas = Object.keys(grupos).sort(function (a, b) {
+      return a.localeCompare(b, "es", {
+        sensitivity: "base",
+        numeric: true,
+      });
+    });
+
+    ubicacionesOrdenadas.forEach(function (ubicacion, indice) {
+      const vehiculos = [...grupos[ubicacion]].sort(function (a, b) {
+        const nombreA = String(a.nombre || "").trim();
+
+        const nombreB = String(b.nombre || "").trim();
+
+        const coincidenciaA = nombreA.match(/^(.*?)(?:\s+(\d{4}))?$/);
+
+        const coincidenciaB = nombreB.match(/^(.*?)(?:\s+(\d{4}))?$/);
+
+        const nombreBaseA = coincidenciaA ? coincidenciaA[1].trim() : nombreA;
+
+        const nombreBaseB = coincidenciaB ? coincidenciaB[1].trim() : nombreB;
+
+        const comparacionNombre = nombreBaseA.localeCompare(nombreBaseB, "es", {
+          sensitivity: "base",
+        });
+
+        if (comparacionNombre !== 0) {
+          return comparacionNombre;
+        }
+
+        const anioA =
+          coincidenciaA && coincidenciaA[2] ? Number(coincidenciaA[2]) : 0;
+
+        const anioB =
+          coincidenciaB && coincidenciaB[2] ? Number(coincidenciaB[2]) : 0;
+
+        if (anioA !== anioB) {
+          return anioA - anioB;
+        }
+
+        return nombreA.localeCompare(nombreB, "es", {
+          sensitivity: "base",
+          numeric: true,
+        });
+      });
+
+      const cantidad = vehiculos.length;
+
+      const grupoId = `parqueaderoGrupo_${indice}`;
+
+      html += `
+      <section
+        class="parqueadero-grupo"
+        data-grupo="${grupoId}">
+
+        <div class="parqueadero-grupo-encabezado">
+
+          <div class="parqueadero-grupo-titulo">
+
+            <span class="parqueadero-grupo-icono parqueadero-grupo-icono-lottie">
+              <lottie-player
+                src="https://lottie.host/dde843bc-f2bf-4e2c-bc3b-749eb86c1a5e/YwwlQuU3dK.json"
+                background="transparent"
+                speed="1">
+              </lottie-player>
+            </span>
+
+            <div>
+
+              <h3>
+                ${escaparHTML(ubicacion)}
+              </h3>
+
+              <span>
+                ${cantidad}
+                ${cantidad === 1 ? "vehículo" : "vehículos"}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="${grupoId}"
+          class="parqueadero-grupo-lista">
+
+          ${vehiculos
+            .map(function (vehiculo, posicion) {
+              const nombre = escaparHTML(vehiculo.nombre || "Vehículo");
+
+              const placa = escaparHTML(vehiculo.placa || "-");
+
+              return `
+                <article
+                  class="parqueadero-vehiculo-card ${
+                    posicion >= 2 ? "parqueadero-vehiculo-oculto" : ""
+                  }"
+                  style="${posicion >= 3 ? "display:none;" : ""}"
+                  data-posicion="${posicion}">
+
+                  <button
+                    type="button"
+                    class="parqueadero-vehiculo-boton"
+                    onclick="abrirDetalleUbicacion('${escaparHTML(
+                      vehiculo.placa || "",
+                    )}')">
+
+                    <div class="parqueadero-vehiculo-icono">
+                      🚗
+                    </div>
+
+                    <div class="parqueadero-vehiculo-info">
+
+                      <strong>
+                        ${nombre}
+                      </strong>
+
+                      <small>
+                        ${placa}
+                      </small>
+
+                    </div>
+
+                    <span class="parqueadero-vehiculo-flecha">
+                      ›
+                    </span>
+
+                  </button>
+
+                </article>
+              `;
+            })
+            .join("")}
+
+        </div>
+
+
+        ${
+          cantidad > 3
+            ? `
+              <button
+                type="button"
+                class="parqueadero-mostrar-mas"
+                onclick="alternarVehiculosParqueadero('${grupoId}', this)">
+
+                <span>
+                  Ver ${cantidad - 3}
+                  ${cantidad - 3 === 1 ? "vehículo" : "vehículos"}
+                  más
+                </span>
+
+                <span>
+                  ↓
+                </span>
+
+              </button>
+            `
+            : ""
+        }
+
+      </section>
+    `;
+    });
+
+    contenedor.innerHTML = html;
+
+    animarContenedorVisible(contenedor);
+  }
+
+  function configurarBuscadorUbicacion() {
+    const buscador = document.getElementById("buscadorVehiculosUbicacion");
+
+    if (!buscador) {
+      return;
+    }
+
+    if (buscador.dataset.configurado === "true") {
+      return;
+    }
+
+    buscador.dataset.configurado = "true";
+
+    buscador.addEventListener("input", function () {
+      const termino = buscador.value.trim().toLowerCase();
+
+      if (!termino) {
+        actualizarListaUbicacion();
+
+        return;
+      }
+
+      const resultados = vehiculosAdministracion.filter(function (vehiculo) {
+        const nombre = String(vehiculo.nombre || "").toLowerCase();
+
+        const placa = String(vehiculo.placa || "").toLowerCase();
+
+        const ubicacion = String(vehiculo.ubicacion || "").toLowerCase();
+
+        return (
+          nombre.includes(termino) ||
+          placa.includes(termino) ||
+          ubicacion.includes(termino)
+        );
+      });
+
+      actualizarListaUbicacion(resultados);
+    });
+  }
+
+  function mostrarVehiculosSinParqueadero() {
+    const boton = document.getElementById("btnVehiculosSinParqueadero");
+
+    const estaFiltrado = boton && boton.dataset.filtrado === "true";
+
+    if (estaFiltrado) {
+      actualizarListaUbicacion(vehiculosAdministracion);
+
+      boton.dataset.filtrado = "false";
+
+      boton.innerHTML = `
+      <span>🚫</span>
+      <span>Vehículos sin Ubicacion</span>
+    `;
+
+      return;
+    }
+
+    const resultados = vehiculosAdministracion.filter(function (vehiculo) {
+      return String(vehiculo.ubicacion || "").trim() === "";
+    });
+
+    actualizarListaUbicacion(resultados);
+
+    if (boton) {
+      boton.dataset.filtrado = "true";
+
+      boton.innerHTML = `
+      <span>↩️</span>
+      <span>Mostrar todos los vehículos</span>
+    `;
+    }
+  }
+
+  function alternarVehiculosParqueadero(grupoId, boton) {
+    const grupo = document.getElementById(grupoId);
+
+    if (!grupo) {
+      return;
+    }
+
+    const vehiculosOcultos = grupo.querySelectorAll(
+      ".parqueadero-vehiculo-oculto",
+    );
+
+    const expandido = grupo.classList.contains("parqueadero-grupo-expandido");
+
+    if (expandido) {
+      vehiculosOcultos.forEach(function (item) {
+        item.style.display = "none";
+      });
+
+      grupo.classList.remove("parqueadero-grupo-expandido");
+
+      boton.innerHTML = `
+      <span>
+        Ver ${vehiculosOcultos.length}
+        ${vehiculosOcultos.length === 1 ? "vehículo" : "vehículos"}
+        más
+      </span>
+
+      <span>
+        ↓
+      </span>
+    `;
+    } else {
+      vehiculosOcultos.forEach(function (item) {
+        item.style.display = "block";
+      });
+
+      grupo.classList.add("parqueadero-grupo-expandido");
+
+      boton.innerHTML = `
+      <span>
+        Mostrar menos
+      </span>
+
+      <span>
+        ↑
+      </span>
+    `;
+    }
+  }
+
+  function abrirDetalleUbicacion(placa) {
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return (
+        String(item.placa || "")
+          .trim()
+          .toUpperCase() ===
+        String(placa || "")
+          .trim()
+          .toUpperCase()
+      );
+    });
+
+    if (!vehiculo) {
+      return;
+    }
+
+    const lista = document.getElementById("listaVehiculosUbicacion");
+
+    const detalle = document.getElementById("detalleUbicacion");
+
+    if (!detalle) {
+      return;
+    }
+
+    if (lista) {
+      lista.style.display = "none";
+    }
+
+    detalle.style.display = "block";
+
+    const nombre = document.getElementById("detalleUbicacionNombre");
+
+    const placaElemento = document.getElementById("detalleUbicacionPlaca");
+
+    const ubicacion = document.getElementById("detalleUbicacionParqueadero");
+
+    const transito = document.getElementById("detalleUbicacionTransito");
+
+    if (nombre) {
+      nombre.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (placaElemento) {
+      placaElemento.textContent = vehiculo.placa || "-";
+    }
+
+    if (ubicacion) {
+      ubicacion.textContent =
+        vehiculo.ubicacion && vehiculo.ubicacion.trim()
+          ? vehiculo.ubicacion
+          : "Sin ubicación asignada";
+    }
+
+    if (transito) {
+      transito.textContent =
+        vehiculo.transito && vehiculo.transito.trim()
+          ? vehiculo.transito
+          : "Sin tránsito registrado";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cerrarDetalleUbicacion() {
+    const lista = document.getElementById("listaVehiculosUbicacion");
+
+    const detalle = document.getElementById("detalleUbicacion");
+
+    if (detalle) {
+      detalle.style.display = "none";
+    }
+
+    const editor = document.getElementById("editorUbicacion");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (lista) {
+      lista.style.display = "block";
+    }
+
+    vehiculoSeleccionadoAdministracion = null;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function abrirIntercambioParqueadero() {
+    const placaElemento = document.getElementById("detalleUbicacionPlaca");
+
+    if (!placaElemento) {
+      return;
+    }
+
+    const placa = placaElemento.textContent.replace("Placa: ", "").trim();
+
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return String(item.placa || "").trim() === placa;
+    });
+
+    if (!vehiculo) {
+      return;
+    }
+
+    vehiculoSeleccionadoAdministracion = vehiculo;
+
+    const contenedorVehiculo = document.getElementById(
+      "intercambioVehiculoActual",
+    );
+
+    if (contenedorVehiculo) {
+      contenedorVehiculo.innerHTML = `
+      <strong>${vehiculo.nombre || ""} ${vehiculo.nombre || ""}</strong>
+      <div>Placa: ${vehiculo.placa || ""}</div>
+      <div>📍 ${vehiculo.ubicacion || "Sin Ubicacion"}</div>
+    `;
+    }
+
+    const modal = document.getElementById("modalIntercambioParqueadero");
+
+    if (modal) {
+      modal.style.display = "flex";
+    }
+
+    console.log("Vehículo seleccionado para intercambio:", vehiculo);
+  }
+
+  function cerrarIntercambioParqueadero() {
+    const modal = document.getElementById("modalIntercambioParqueadero");
+
+    const buscador = document.getElementById("buscadorIntercambioParqueadero");
+
+    const lista = document.getElementById("listaIntercambioParqueadero");
+
+    const segundo = document.getElementById("intercambioVehiculoSegundo");
+
+    const boton = document.getElementById("btnConfirmarIntercambio");
+
+    if (modal) {
+      modal.style.display = "none";
+    }
+
+    vehiculoIntercambioSeleccionado = null;
+
+    if (buscador) {
+      buscador.value = "";
+    }
+
+    if (lista) {
+      lista.innerHTML = "";
+    }
+
+    if (segundo) {
+      segundo.innerHTML = "";
+
+      segundo.style.display = "none";
+    }
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "🔄 Confirmar intercambio";
+    }
+  }
+
+  function buscarVehiculoParaIntercambio() {
+    const input = document.getElementById("buscadorIntercambioParqueadero");
+
+    const lista = document.getElementById("listaIntercambioParqueadero");
+
+    if (!input || !lista) {
+      return;
+    }
+
+    const texto = input.value.trim().toLowerCase();
+
+    if (!texto) {
+      lista.innerHTML = "";
+      return;
+    }
+
+    const resultados = vehiculosAdministracion.filter(function (vehiculo) {
+      const nombre = String(vehiculo.nombre || "").toLowerCase();
+      const placa = String(vehiculo.placa || "").toLowerCase();
+
+      return nombre.includes(texto) || placa.includes(texto);
+    });
+
+    lista.innerHTML = "";
+
+    resultados.forEach(function (vehiculo) {
+      if (
+        vehiculoSeleccionadoAdministracion &&
+        String(vehiculo.placa || "").trim() ===
+          String(vehiculoSeleccionadoAdministracion.placa || "").trim()
+      ) {
+        return;
+      }
+
+      const elemento = document.createElement("div");
+
+      elemento.className = "intercambio-vehiculo-resultado";
+
+      elemento.onclick = function () {
+        vehiculoIntercambioSeleccionado = vehiculo;
+
+        document
+          .querySelectorAll(".intercambio-vehiculo-resultado")
+          .forEach(function (item) {
+            item.classList.remove("seleccionado");
+          });
+
+        elemento.classList.add("seleccionado");
+
+        const segundo = document.getElementById("intercambioVehiculoSegundo");
+
+        if (segundo) {
+          segundo.innerHTML = `
+            <div class="intercambio-vehiculo-etiqueta">
+              VEHÍCULO PARA INTERCAMBIO
+            </div>
+
+            <strong>
+              ${vehiculo.nombre || "Vehículo"}
+            </strong>
+
+            <div>Placa: ${vehiculo.placa || ""}</div>
+            <div>📍 ${vehiculo.ubicacion || "Sin Ubicacion"}</div>
+                `;
+
+          segundo.style.display = "block";
+        }
+
+        const boton = document.getElementById("btnConfirmarIntercambio");
+
+        if (boton) {
+          boton.disabled = false;
+        }
+
+        console.log(
+          "Segundo vehículo seleccionado para intercambio:",
+          vehiculoIntercambioSeleccionado,
+        );
+      };
+
+      elemento.innerHTML = `
+      <strong>${vehiculo.nombre || "Vehículo"}</strong>
+      <div>Placa: ${vehiculo.placa || ""}</div>
+      <div>📍 ${vehiculo.ubicacion || "Sin Ubicacion"}</div>
+    `;
+
+      lista.appendChild(elemento);
+    });
+
+    if (resultados.length === 0) {
+      lista.innerHTML = `
+      <div>
+        No se encontraron vehículos.
+      </div>
+    `;
+    }
+  }
+
+  function confirmarIntercambioParqueadero() {
+    if (!vehiculoSeleccionadoAdministracion) {
+      alert("No hay un vehículo seleccionado.");
+      return;
+    }
+
+    if (!vehiculoIntercambioSeleccionado) {
+      alert("Debes seleccionar el segundo vehículo.");
+      return;
+    }
+
+    const boton = document.getElementById("btnConfirmarIntercambio");
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "🔄 Intercambiando...";
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (respuesta && respuesta.success) {
+          console.log("Intercambio realizado correctamente:", respuesta);
+
+          cargarVehiculosAdministracion();
+
+          mostrarAlerta(
+            "🔄",
+            "Intercambio realizado",
+            `
+            <div style="text-align:center;">
+              Los parqueaderos fueron intercambiados correctamente.
+            </div>
+          `,
+          );
+
+          cerrarIntercambioParqueadero();
+        } else {
+          alert(
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible realizar el intercambio.",
+          );
+
+          if (boton) {
+            boton.disabled = false;
+            boton.textContent = "🔄 Confirmar intercambio";
+          }
+        }
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error al intercambiar parqueaderos:", error);
+
+        alert("Ocurrió un error al realizar el intercambio.");
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🔄 Confirmar intercambio";
+        }
+      })
+      .intercambiarParqueaderoVehiculos(
+        tokenSesion,
+        vehiculoSeleccionadoAdministracion.placa,
+        vehiculoIntercambioSeleccionado.placa,
+      );
+  }
+
+  /* =====================================================
+   SELECCIONAR VEHÍCULO PARA UBICACIÓN
+===================================================== */
+
+  function seleccionarVehiculoUbicacion(placa) {
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return (
+        String(item.placa || "")
+          .trim()
+          .toUpperCase() ===
+        String(placa || "")
+          .trim()
+          .toUpperCase()
+      );
+    });
+
+    if (!vehiculo) {
+      return;
+    }
+
+    vehiculoSeleccionadoAdministracion = vehiculo;
+
+    mostrarEditorUbicacion();
+  }
+
+  /* =====================================================
+   MOSTRAR EDITOR DE UBICACIÓN
+===================================================== */
+
+  function mostrarEditorUbicacion() {
+    const editor = document.getElementById("editorUbicacion");
+
+    const lista = document.getElementById("listaVehiculosUbicacion");
+
+    const vehiculo = vehiculoSeleccionadoAdministracion;
+
+    if (!editor || !vehiculo) {
+      return;
+    }
+
+    if (lista) {
+      lista.style.display = "none";
+    }
+
+    const botonSinParqueadero = document.getElementById(
+      "btnVehiculosSinParqueadero",
+    );
+
+    if (botonSinParqueadero) {
+      botonSinParqueadero.style.display = "none";
+    }
+
+    editor.style.display = "block";
+
+    const titulo = document.getElementById("editorUbicacionVehiculo");
+
+    const inputUbicacion = document.getElementById("inputNuevaUbicacion");
+
+    const mensaje = document.getElementById("mensajeEditorUbicacion");
+
+    if (titulo) {
+      titulo.textContent = `${vehiculo.nombre || "Vehículo"} · ${vehiculo.placa || "-"}`;
+    }
+
+    if (inputUbicacion) {
+      inputUbicacion.value = vehiculo.ubicacion || "";
+    }
+
+    if (inputUbicacion && tokenSesion) {
+      google.script.run
+        .withSuccessHandler(function (respuesta) {
+          if (
+            !respuesta ||
+            !respuesta.success ||
+            !Array.isArray(respuesta.parqueaderos)
+          ) {
+            return;
+          }
+
+          inputUbicacion.innerHTML = `
+            <option value="">
+              Selecciona una Ubicacion
+            </option>
+          `;
+
+          respuesta.parqueaderos.forEach(function (parqueadero) {
+            const option = document.createElement("option");
+
+            option.value = parqueadero.nombre || "";
+
+            option.textContent = parqueadero.nombre || "";
+
+            inputUbicacion.appendChild(option);
+          });
+
+          inputUbicacion.value = vehiculo.ubicacion || "";
+        })
+        .obtenerParqueaderosAdministracion(tokenSesion);
+    }
+
+    if (mensaje) {
+      mensaje.style.display = "none";
+
+      mensaje.textContent = "";
+
+      mensaje.className = "editor-panel-mensaje";
+    }
+  }
+
+  /* =====================================================
+   GUARDAR UBICACIÓN
+===================================================== */
+
+  function guardarUbicacionVehiculo() {
+    const vehiculo = vehiculoSeleccionadoAdministracion;
+
+    if (!vehiculo || !tokenSesion) {
+      return;
+    }
+
+    const inputUbicacion = document.getElementById("inputNuevaUbicacion");
+
+    const mensaje = document.getElementById("mensajeEditorUbicacion");
+
+    const boton = document.getElementById("btnGuardarUbicacion");
+
+    const nuevaUbicacion = inputUbicacion ? inputUbicacion.value.trim() : "";
+
+    if (!nuevaUbicacion) {
+      if (mensaje) {
+        mensaje.style.display = "block";
+
+        mensaje.className = "editor-panel-mensaje editor-panel-mensaje-error";
+
+        mensaje.textContent = "Debes indicar una ubicación.";
+      }
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Guardando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (mensaje) {
+            mensaje.style.display = "block";
+
+            mensaje.className =
+              "editor-panel-mensaje editor-panel-mensaje-error";
+
+            mensaje.textContent =
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No se pudo actualizar la ubicación.";
+          }
+
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Guardar ubicación";
+          }
+
+          return;
+        }
+
+        vehiculo.ubicacion = nuevaUbicacion;
+
+        // Reordenar inmediatamente la lista
+        actualizarListaUbicacion();
+
+        if (mensaje) {
+          mensaje.style.display = "block";
+
+          mensaje.className =
+            "editor-panel-mensaje editor-panel-mensaje-success";
+
+          mensaje.textContent = "Ubicación actualizada correctamente.";
+        }
+
+        setTimeout(function () {
+          cargarVehiculosAdministracion();
+
+          cerrarDetalleUbicacion();
+
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Guardar ubicación";
+          }
+        }, 700);
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al actualizar ubicación:", error);
+
+        if (mensaje) {
+          mensaje.style.display = "block";
+
+          mensaje.className = "editor-panel-mensaje editor-panel-mensaje-error";
+
+          mensaje.textContent = "Ocurrió un error al actualizar la ubicación.";
+        }
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar ubicación";
+        }
+      })
+
+      .actualizarUbicacionVehiculo(tokenSesion, vehiculo.placa, nuevaUbicacion);
+  }
+
+  /* =====================================================
+   COMPATIBILIDAD CON EL BACKEND
+===================================================== */
+
+  /* =====================================================
+   EDITAR VEHÍCULO
+===================================================== */
+
+  function editarVehiculoAdministracion(placa) {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR") {
+      return;
+    }
+
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return (
+        String(item.placa || "")
+          .trim()
+          .toUpperCase() ===
+        String(placa || "")
+          .trim()
+          .toUpperCase()
+      );
+    });
+
+    if (!vehiculo) {
+      return;
+    }
+
+    vehiculoSeleccionadoAdministracion = vehiculo;
+
+    mostrarEditorVehiculo();
+  }
+
+  /* =====================================================
+    GESTIÓN → MOSTRAR EDITOR DE VEHÍCULO
+  ===================================================== */
+
+  function mostrarEditorVehiculo() {
+    const vehiculo = vehiculoSeleccionadoAdministracion;
+
+    if (!vehiculo) {
+      return;
+    }
+
+    const vistaLista = document.getElementById("vistaListaEditarCarros");
+
+    const editor = document.getElementById("editorVehiculoAdministracion");
+
+    if (vistaLista) {
+      vistaLista.style.display = "none";
+    }
+
+    const botonSinParqueadero = document.getElementById(
+      "btnVehiculosSinParqueadero",
+    );
+
+    if (botonSinParqueadero) {
+      botonSinParqueadero.style.display = "none";
+    }
+
+    if (editor) {
+      editor.style.display = "block";
+    }
+
+    const nombre = document.getElementById("editorVehiculoNombre");
+
+    const placa = document.getElementById("editorVehiculoPlaca");
+
+    if (nombre) {
+      nombre.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (placa) {
+      placa.textContent = `Placa: ${vehiculo.placa || "-"}`;
+    }
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoNombre",
+      vehiculo.nombre,
+    );
+
+    establecerValorEditorAdministracion("editarVehiculoPlaca", vehiculo.placa);
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoSoat",
+      normalizarFechaEditorAdministracion(vehiculo.soat),
+    );
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoTecnomecanica",
+      normalizarFechaEditorAdministracion(vehiculo.tecnomecanica),
+    );
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoPicoYPlaca",
+      vehiculo.picoYPlaca,
+    );
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoPrecio",
+      vehiculo.precio,
+    );
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoKilometraje",
+      vehiculo.kilometraje,
+    );
+
+    establecerValorEditorAdministracion(
+      "editarVehiculoDetalles",
+      vehiculo.detalles,
+    );
+
+    cargarUbicacionesEditorVehiculo(vehiculo.ubicacion);
+
+    const mensaje = document.getElementById("mensajeEditorVehiculo");
+
+    if (mensaje) {
+      mensaje.style.display = "none";
+
+      mensaje.textContent = "";
+
+      mensaje.className = "editor-vehiculo-mensaje";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cargarUbicacionesEditorVehiculo(ubicacionActual) {
+    const select = document.getElementById("editarVehiculoUbicacion");
+
+    if (!select || !tokenSesion) {
+      return;
+    }
+
+    select.innerHTML = `
+    <option value="">
+      Selecciona una ubicación
+    </option>
+  `;
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.parqueaderos)
+        ) {
+          return;
+        }
+
+        respuesta.parqueaderos.forEach(function (parqueadero) {
+          const nombre = String(parqueadero.nombre || "").trim();
+
+          if (!nombre) {
+            return;
+          }
+
+          const opcion = document.createElement("option");
+
+          opcion.value = nombre;
+
+          opcion.textContent = nombre;
+
+          select.appendChild(opcion);
+        });
+
+        select.value = ubicacionActual ? String(ubicacionActual).trim() : "";
+      })
+      .obtenerParqueaderosAdministracion(tokenSesion);
+  }
+
+  /* =====================================================
+   ESTABLECER VALOR DEL EDITOR
+===================================================== */
+
+  function establecerValorEditorAdministracion(id, valor) {
+    const elemento = document.getElementById(id);
+
+    if (!elemento) {
+      return;
+    }
+
+    elemento.value = valor === null || valor === undefined ? "" : valor;
+  }
+
+  /* =====================================================
+   NORMALIZAR FECHA DEL EDITOR
+===================================================== */
+
+  function normalizarFechaEditorAdministracion(fecha) {
+    if (!fecha) {
+      return "";
+    }
+
+    const texto = String(fecha).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return texto;
+    }
+
+    const coincidencia = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+    if (coincidencia) {
+      const dia = coincidencia[1].padStart(2, "0");
+
+      const mes = coincidencia[2].padStart(2, "0");
+
+      const año = coincidencia[3];
+
+      return `${año}-${mes}-${dia}`;
+    }
+
+    const fechaObjeto = new Date(texto);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return "";
+    }
+
+    const año = fechaObjeto.getFullYear();
+
+    const mes = String(fechaObjeto.getMonth() + 1).padStart(2, "0");
+
+    const dia = String(fechaObjeto.getDate()).padStart(2, "0");
+
+    return `${año}-${mes}-${dia}`;
+  }
+
+  /* =====================================================
+   GESTIÓN → VOLVER A LISTA DE CARROS
+===================================================== */
+
+  function volverEditarCarros() {
+    const editor = document.getElementById("editorVehiculoAdministracion");
+
+    const vistaLista = document.getElementById("vistaListaEditarCarros");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (vistaLista) {
+      vistaLista.style.display = "block";
+    }
+
+    const mensaje = document.getElementById("mensajeEditorVehiculo");
+
+    if (mensaje) {
+      mensaje.style.display = "none";
+
+      mensaje.textContent = "";
+    }
+
+    vehiculoSeleccionadoAdministracion = null;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   GESTIÓN → GUARDAR CAMBIOS
+===================================================== */
+
+  function guardarCambiosVehiculo() {
+    if (!vehiculoSeleccionadoAdministracion) {
+      return;
+    }
+
+    const datos = {
+      placaOriginal: vehiculoSeleccionadoAdministracion.placa || "",
+
+      nombre: obtenerValorEditorAdministracion("editarVehiculoNombre"),
+
+      placa: obtenerValorEditorAdministracion("editarVehiculoPlaca"),
+
+      soat: obtenerValorEditorAdministracion("editarVehiculoSoat"),
+
+      transito: obtenerValorEditorAdministracion("editarVehiculoTransito"),
+
+      soat: obtenerValorEditorAdministracion("editarVehiculoSoat"),
+
+      tecnomecanica: obtenerValorEditorAdministracion(
+        "editarVehiculoTecnomecanica",
+      ),
+
+      picoYPlaca: obtenerValorEditorAdministracion("editarVehiculoPicoYPlaca"),
+
+      precio: obtenerValorEditorAdministracion("editarVehiculoPrecio"),
+
+      kilometraje: obtenerValorEditorAdministracion(
+        "editarVehiculoKilometraje",
+      ),
+
+      detalles: obtenerValorEditorAdministracion("editarVehiculoDetalles"),
+
+      ubicacion: obtenerValorEditorAdministracion("editarVehiculoUbicacion"),
+    };
+
+    const modal = document.getElementById("modalConfirmacionVehiculo");
+
+    if (!modal) {
+      return;
+    }
+
+    if (modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+
+    modal.dataset.datos = JSON.stringify(datos);
+
+    modal.style.display = "flex";
+  }
+
+  /* =====================================================
+   GESTIÓN → CONFIRMAR GUARDADO
+===================================================== */
+
+  function confirmarGuardadoVehiculo(datos) {
+    alert("ENTRÉ A CONFIRMAR GUARDADO");
+
+    if (!datos || !tokenSesion) {
+      return;
+    }
+
+    const boton = document.querySelector(
+      "#modalConfirmacionVehiculo .editor-vehiculo-boton-principal",
+    );
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Guardando...";
+    }
+
+    console.log("UBICACION QUE SE VA A GUARDAR:", datos.ubicacion);
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Guardar cambios";
+          }
+
+          const mensaje =
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No se pudieron guardar los cambios.";
+
+          alert(mensaje);
+
+          return;
+        }
+
+        const vehiculo = buscarVehiculoAdministracion(datos.placaOriginal);
+
+        if (vehiculo) {
+          vehiculo.nombre = datos.nombre;
+
+          vehiculo.placa = datos.placa;
+
+          vehiculo.soat = datos.soat;
+
+          vehiculo.tecnomecanica = datos.tecnomecanica;
+
+          vehiculo.picoYPlaca = datos.picoYPlaca;
+
+          vehiculo.precio = datos.precio;
+
+          vehiculo.kilometraje = datos.kilometraje;
+
+          vehiculo.detalles = datos.detalles;
+
+          vehiculo.ubicacion = datos.ubicacion;
+
+          vehiculoSeleccionadoAdministracion = vehiculo;
+        }
+
+        const modal = document.getElementById("modalConfirmacionVehiculo");
+
+        if (modal) {
+          modal.style.display = "none";
+
+          modal.dataset.datos = "";
+        }
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        mostrarResultadoGuardadoVehiculo();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al actualizar vehículo:", error);
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        alert("Ocurrió un error al actualizar la información del vehículo.");
+      })
+
+      .actualizarVehiculoAdministracion(
+        tokenSesion,
+
+        datos.placaOriginal,
+
+        datos.nombre,
+
+        datos.placa,
+
+        datos.transito,
+
+        datos.soat,
+
+        datos.tecnomecanica,
+
+        datos.picoYPlaca,
+
+        datos.precio,
+
+        datos.kilometraje,
+
+        datos.detalles,
+
+        datos.ubicacion,
+      );
+  }
+
+  /* =====================================================
+   GESTIÓN → BUSCAR VEHÍCULO
+===================================================== */
+
+  function buscarVehiculoAdministracion(placa) {
+    const objetivo = String(placa || "")
+      .trim()
+      .toUpperCase();
+
+    return (
+      vehiculosAdministracion.find(function (vehiculo) {
+        return (
+          String(vehiculo.placa || "")
+            .trim()
+            .toUpperCase() === objetivo
+        );
+      }) || null
+    );
+  }
+
+  /* =====================================================
+   GESTIÓN → RESULTADO GUARDADO
+===================================================== */
+
+  function mostrarResultadoGuardadoVehiculo() {
+    const resultado = document.getElementById("resultadoGuardadoVehiculo");
+
+    if (resultado) {
+      resultado.style.display = "none";
+    }
+
+    volverEditarCarros();
+
+    cargarVehiculosAdministracion();
+
+    mostrarAlerta(
+      "✅",
+      "Cambios guardados",
+      `
+      <div style="text-align:center;">
+        La información del vehículo fue actualizada correctamente.
+      </div>
+    `,
+    );
+  }
+
+  /* =====================================================
+   GESTIÓN → OBTENER VALOR DEL EDITOR
+===================================================== */
+
+  function obtenerValorEditorAdministracion(id) {
+    const elemento = document.getElementById(id);
+
+    if (!elemento) {
+      return "";
+    }
+
+    return elemento.value.trim();
+  }
+
+  /* =====================================================
+   PERFIL
+===================================================== */
+
+  function abrirModuloPerfil() {
+    mostrarModuloPanel("moduloPerfil");
+
+    actualizarInformacionPanel();
+  }
+
+  function editarPerfilAdministracion() {
+    const editor = document.getElementById("editorPerfilAdministracion");
+
+    if (!editor) {
+      return;
+    }
+
+    const nombre = document.getElementById("editarPerfilNombre");
+    const usuario = document.getElementById("editarPerfilUsuario");
+    const email = document.getElementById("editarPerfilEmail");
+    const rol = document.getElementById("editarPerfilRol");
+    const password = document.getElementById("editarPerfilPassword");
+
+    if (typeof usuarioPanel !== "undefined" && usuarioPanel) {
+      if (nombre) {
+        nombre.value = usuarioPanel.nombre || "";
+      }
+
+      if (usuario) {
+        usuario.value = usuarioPanel.usuario || "";
+      }
+
+      if (email) {
+        email.value = usuarioPanel.email || "";
+      }
+
+      if (rol) {
+        rol.value = usuarioPanel.rol || "";
+      }
+
+      if (password) {
+        password.value = "";
+      }
+    }
+
+    editor.style.display = "block";
+  }
+
+  function guardarPerfilAdministracion() {
+    const nombre = document.getElementById("editarPerfilNombre");
+
+    const usuario = document.getElementById("editarPerfilUsuario");
+
+    const email = document.getElementById("editarPerfilEmail");
+
+    const password = document.getElementById("editarPerfilPassword");
+
+    const mensaje = document.getElementById("mensajeEditarPerfil");
+
+    if (!nombre || !usuario || !email) {
+      return;
+    }
+
+    const nombreNuevo = nombre.value.trim();
+
+    const usuarioNuevo = usuario.value.trim();
+
+    const emailNuevo = email.value.trim();
+
+    const nuevaContraseña = password ? password.value : "";
+
+    if (!nombreNuevo || !usuarioNuevo || !emailNuevo) {
+      if (mensaje) {
+        mensaje.textContent = "Nombre, usuario y correo son obligatorios.";
+
+        mensaje.style.display = "block";
+      }
+
+      return;
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (mensaje) {
+            mensaje.textContent =
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible actualizar el perfil.";
+
+            mensaje.style.display = "block";
+          }
+
+          return;
+        }
+
+        if (respuesta.token) {
+          tokenSesion = respuesta.token;
+
+          sessionStorage.setItem("tokenSesion", tokenSesion);
+        }
+
+        if (usuarioPanel) {
+          usuarioPanel.nombre = nombreNuevo;
+
+          usuarioPanel.usuario = usuarioNuevo;
+
+          usuarioPanel.email = emailNuevo;
+        }
+
+        actualizarInformacionPanel();
+
+        cancelarEdicionPerfilAdministracion();
+
+        mostrarAlerta(
+          "✅",
+          "Perfil actualizado",
+          `
+            <div style="text-align:center;">
+              ${escaparHTML(
+                respuesta.mensaje || "Perfil actualizado correctamente.",
+              )}
+            </div>
+          `,
+        );
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al actualizar perfil:", error);
+
+        if (mensaje) {
+          mensaje.textContent = "Ocurrió un error al actualizar el perfil.";
+
+          mensaje.style.display = "block";
+        }
+      })
+
+      .actualizarPerfilUsuario(
+        tokenSesion,
+        nombreNuevo,
+        usuarioNuevo,
+        emailNuevo,
+        nuevaContraseña,
+      );
+  }
+
+  function cancelarEdicionPerfilAdministracion() {
+    const editor = document.getElementById("editorPerfilAdministracion");
+
+    const mensaje = document.getElementById("mensajeEditarPerfil");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (mensaje) {
+      mensaje.textContent = "";
+
+      mensaje.style.display = "none";
+    }
+  }
+
+  /* =====================================================
+   GESTIÓN
+===================================================== */
+
+  function abrirModuloGestion() {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR" && rol !== "ADMIN") {
+      alert("No tienes permisos para acceder a Gestión.");
+
+      return;
+    }
+
+    mostrarModuloPanel("moduloGestion");
+  }
+
+  function ocultarOpcionesGestion() {
+    const submodulos = document.querySelectorAll(
+      "#moduloGestion .gestion-submodulo",
+    );
+
+    submodulos.forEach(function (submodulo) {
+      submodulo.style.display = "none";
+    });
+
+    const gestionUsuarios = document.getElementById("gestionUsuarios");
+
+    if (gestionUsuarios) {
+      gestionUsuarios.style.display = "none";
+    }
+
+    const opciones = document.querySelectorAll(
+      "#moduloGestion .gestion-opcion",
+    );
+
+    opciones.forEach(function (opcion) {
+      opcion.classList.remove("gestion-opcion-activa");
+    });
+  }
+
+  function mostrarSubmoduloGestionDebajo(idBoton, idModulo) {
+    const boton = document.getElementById(idBoton);
+
+    const modulo = document.getElementById(idModulo);
+
+    if (!boton || !modulo) {
+      return;
+    }
+
+    ocultarOpcionesGestion();
+
+    boton.classList.add("gestion-opcion-activa");
+
+    boton.insertAdjacentElement("afterend", modulo);
+
+    modulo.style.display = "block";
+
+    animarContenedorVisible(modulo);
+  }
+
+  function abrirGestionAgregarCarro() {
+    mostrarSubmoduloGestionDebajo(
+      "btnGestionAgregarCarro",
+      "gestionAgregarCarro",
+    );
+
+    cargarUbicacionesAgregarVehiculo();
+  }
+
+  function cargarUbicacionesAgregarVehiculo() {
+    const ubicacion = document.getElementById("agregarVehiculoUbicacion");
+
+    if (!ubicacion || !tokenSesion) {
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.parqueaderos)
+        ) {
+          return;
+        }
+
+        ubicacion.innerHTML = `
+          <option value="">
+            Selecciona una ubicación
+          </option>
+        `;
+
+        respuesta.parqueaderos.forEach(function (parqueadero) {
+          const option = document.createElement("option");
+
+          option.value = parqueadero.nombre || "";
+
+          option.textContent = parqueadero.nombre || "";
+
+          ubicacion.appendChild(option);
+        });
+      })
+      .obtenerParqueaderosAdministracion(tokenSesion);
+  }
+
+  function abrirGestionEditarCarros() {
+    const resultado = document.getElementById("resultadoGuardadoVehiculo");
+
+    if (resultado) {
+      resultado.style.display = "none";
+    }
+
+    volverEditarCarros();
+
+    mostrarSubmoduloGestionDebajo(
+      "btnGestionEditarCarros",
+      "gestionEditarCarros",
+    );
+
+    actualizarListaEditarCarros();
+  }
+
+  function abrirGestionEditarUbicacion() {
+    guardarPantallaActual("gestionEditarUbicacion");
+
+    mostrarSubmoduloGestionDebajo(
+      "btnGestionEditarUbicacion",
+      "gestionEditarUbicacion",
+    );
+
+    actualizarListaGestionUbicacion();
+  }
+
+  // =====================================================
+  // GESTIÓN → EDITAR PARQUEADERO
+  // =====================================================
+
+  function abrirGestionParqueaderos() {
+    console.log("ENTRÓ A abrirGestionEditarUbicacion");
+
+    mostrarSubmoduloGestionDebajo(
+      "btnGestionParqueaderos",
+      "gestionParqueaderos",
+    );
+
+    cargarParqueaderosGestion();
+  }
+
+  // =====================================================
+  // CARGAR PARQUEADEROS EN GESTIÓN
+  // =====================================================
+
+  function cargarParqueaderosGestion() {
+    const lista = document.getElementById("listaParqueaderosGestion");
+
+    if (!lista) {
+      return;
+    }
+
+    lista.innerHTML = `
+    <div class="gestion-vacio">
+      Cargando parqueaderos...
+    </div>
+  `;
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          lista.innerHTML = `
+            <div class="gestion-vacio">
+              ${
+                respuesta && respuesta.mensaje
+                  ? escaparHTML(respuesta.mensaje)
+                  : "No fue posible cargar los parqueaderos."
+              }
+            </div>
+          `;
+
+          return;
+        }
+
+        const parqueaderos = Array.isArray(respuesta.parqueaderos)
+          ? respuesta.parqueaderos
+          : [];
+
+        if (parqueaderos.length === 0) {
+          lista.innerHTML = `
+            <div class="gestion-vacio">
+              No hay parqueaderos registrados.
+            </div>
+          `;
+
+          return;
+        }
+
+        lista.innerHTML = parqueaderos
+          .map(function (parqueadero) {
+            return `
+                <article class="vehiculo-panel-card">
+
+                  <div class="vehiculo-panel-info">
+
+                    <h3>
+                      ${escaparHTML(parqueadero.nombre || "Ubicacion")}
+                    </h3>
+
+                    <span class="vehiculo-panel-placa">
+                      ${escaparHTML(parqueadero.estado || "SIN ESTADO")}
+                    </span>
+
+                  </div>
+
+                  <div class="vehiculo-panel-acciones">
+
+                    <button
+                      type="button"
+                      class="vehiculo-panel-boton"
+                      onclick="editarParqueaderoGestion('${escaparHTML(
+                        parqueadero.nombre || "",
+                      )}')">
+
+                      Editar
+
+                    </button>
+
+                    <button
+                      type="button"
+                      class="vehiculo-panel-boton"
+                      onclick="eliminarParqueaderoGestion('${escaparHTML(
+                        parqueadero.nombre || "",
+                      )}')">
+
+                      Eliminar
+
+                    </button>
+
+                  </div>
+
+                </article>
+              `;
+          })
+          .join("");
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error al cargar parqueaderos:", error);
+
+        lista.innerHTML = `
+          <div class="gestion-vacio">
+            Ocurrió un error al cargar los parqueaderos.
+          </div>
+        `;
+      })
+      .obtenerParqueaderosAdministracion(tokenSesion);
+  }
+
+  // =====================================================
+  // CREAR PARQUEADERO
+  // =====================================================
+
+  function crearParqueaderoGestion() {
+    const input = document.getElementById("nuevoParqueaderoGestion");
+
+    if (!input) {
+      return;
+    }
+
+    const nombre = input.value.trim();
+
+    if (!nombre) {
+      mostrarAlerta(
+        "⚠️",
+        "Nombre requerido",
+        "<p>Debes indicar el nombre de la Ubicacion.</p>",
+      );
+
+      input.focus();
+
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo crear",
+            "<p>" +
+              (respuesta && respuesta.mensaje
+                ? escaparHTML(respuesta.mensaje)
+                : "No fue posible crear la Ubicacion.") +
+              "</p>",
+          );
+
+          return;
+        }
+
+        input.value = "";
+
+        mostrarAlerta(
+          "✅",
+          "Ubicacion creada",
+          "<p>" +
+            escaparHTML(
+              respuesta.mensaje || "Ubicacion creada correctamente.",
+            ) +
+            "</p>",
+        );
+
+        cargarParqueaderosGestion();
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error al crear Ubicacion:", error);
+
+        mostrarAlerta(
+          "❌",
+          "Error",
+          "<p>Ocurrió un error al crear la Ubicacion.</p>",
+        );
+      })
+      .crearParqueadero(tokenSesion, nombre);
+  }
+
+  // =====================================================
+  // EDITAR PARQUEADERO
+  // =====================================================
+
+  function editarParqueaderoGestion(nombreParqueadero) {
+    const nombre = (nombreParqueadero || "").toString().trim();
+
+    if (!nombre) {
+      return;
+    }
+
+    const lista = document.getElementById("listaParqueaderosGestion");
+
+    if (!lista) {
+      return;
+    }
+
+    const tarjetas = lista.querySelectorAll(".vehiculo-panel-card");
+
+    tarjetas.forEach(function (tarjeta) {
+      const titulo = tarjeta.querySelector(".vehiculo-panel-info h3");
+
+      if (!titulo) {
+        return;
+      }
+
+      const nombreTarjeta = titulo.textContent.trim();
+
+      if (nombreTarjeta.toLowerCase() !== nombre.toLowerCase()) {
+        return;
+      }
+
+      const acciones = tarjeta.querySelector(".vehiculo-panel-acciones");
+
+      if (!acciones) {
+        return;
+      }
+
+      titulo.innerHTML = `
+      <input
+        type="text"
+        class="input-editar-parqueadero"
+        value="${escaparHTML(nombre)}"
+        autocomplete="off"
+      />
+    `;
+
+      acciones.innerHTML = `
+      <button
+        type="button"
+        class="vehiculo-panel-boton"
+        onclick="guardarEdicionParqueaderoGestion(this, '${escaparHTML(
+          nombre,
+        )}')">
+
+        Guardar
+
+      </button>
+
+      <button
+        type="button"
+        class="vehiculo-panel-boton"
+        onclick="cancelarEdicionParqueaderoGestion()">
+
+        Cancelar
+
+      </button>
+    `;
+
+      const input = titulo.querySelector(".input-editar-parqueadero");
+
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    });
+  }
+
+  function guardarEdicionParqueaderoGestion(boton, nombreAnterior) {
+    const tarjeta = boton.closest(".vehiculo-panel-card");
+
+    if (!tarjeta) {
+      return;
+    }
+
+    const input = tarjeta.querySelector(".input-editar-parqueadero");
+
+    if (!input) {
+      return;
+    }
+
+    const nombreNuevo = input.value.trim();
+
+    if (!nombreNuevo) {
+      mostrarAlerta(
+        "⚠️",
+        "Nombre requerido",
+        "<p>Debes indicar el nombre de la ubicacion.</p>",
+      );
+
+      input.focus();
+
+      return;
+    }
+
+    if (nombreNuevo.toLowerCase() === nombreAnterior.toLowerCase()) {
+      cargarParqueaderosGestion();
+
+      return;
+    }
+
+    boton.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        boton.disabled = false;
+
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo actualizar",
+            "<p>" +
+              (respuesta && respuesta.mensaje
+                ? escaparHTML(respuesta.mensaje)
+                : "No fue posible actualizar la Ubicacion.") +
+              "</p>",
+          );
+
+          input.focus();
+
+          return;
+        }
+
+        mostrarAlerta(
+          "✅",
+          "Ubicacion actualizada",
+          "<p>" +
+            escaparHTML(
+              respuesta.mensaje || "Ubicacion actualizada correctamente.",
+            ) +
+            "</p>",
+        );
+
+        cargarParqueaderosGestion();
+      })
+      .withFailureHandler(function (error) {
+        boton.disabled = false;
+
+        console.error("Error al actualizar Ubicacion:", error);
+
+        mostrarAlerta(
+          "❌",
+          "Error",
+          "<p>Ocurrió un error al actualizar la Ubicacion.</p>",
+        );
+      })
+      .actualizarParqueadero(tokenSesion, nombreAnterior, nombreNuevo);
+  }
+
+  function cancelarEdicionParqueaderoGestion() {
+    cargarParqueaderosGestion();
+  }
+
+  // =====================================================
+  // ELIMINAR PARQUEADERO
+  // =====================================================
+
+  function eliminarParqueaderoGestion(nombreParqueadero) {
+    const nombre = (nombreParqueadero || "").toString().trim();
+
+    if (!nombre) {
+      return;
+    }
+
+    abrirConfirmacionEliminarParqueadero(nombre);
+    return;
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo eliminar",
+            `<p>${
+              respuesta && respuesta.mensaje
+                ? escaparHTML(respuesta.mensaje)
+                : "Ocurrió un error al eliminar la Ubicacion."
+            }</p>`,
+          );
+
+          return;
+        }
+
+        mostrarAlerta(
+          "✅",
+          "Ubicacion eliminada",
+          `<p>${escaparHTML(
+            respuesta.mensaje || "La Ubicacion fue eliminada correctamente.",
+          )}</p>`,
+        );
+
+        cargarParqueaderosGestion();
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error al eliminar Ubicacion:", error);
+
+        mostrarAlerta(
+          "⚠️",
+          "Error",
+          "<p>Ocurrió un error al eliminar la Ubicacion.</p>",
+        );
+      })
+      .eliminarParqueadero(tokenSesion, nombre);
+  }
+
+  function abrirConfirmacionEliminarParqueadero(nombre) {
+    let modal = document.getElementById("modalConfirmarEliminarParqueadero");
+
+    if (!modal) {
+      modal = document.createElement("div");
+
+      modal.id = "modalConfirmarEliminarParqueadero";
+
+      modal.className = "modal-confirmar-eliminar-parqueadero";
+
+      modal.innerHTML = `
+      <div class="confirmar-eliminar-parqueadero-contenido">
+
+        <div class="confirmar-eliminar-icono">
+          🗑️
+        </div>
+
+        <h3>
+          ¿Estás seguro?
+        </h3>
+
+        <p>
+          Estás a punto de eliminar la Ubicacion
+        </p>
+
+        <div
+          id="nombreParqueaderoEliminar"
+          class="confirmar-eliminar-nombre">
+        </div>
+
+        <p class="confirmar-eliminar-advertencia">
+          Esta acción no se puede deshacer.
+        </p>
+
+        <div class="confirmar-eliminar-botones">
+
+          <button
+            type="button"
+            class="btn-cancelar-eliminar-parqueadero"
+            onclick="cerrarConfirmacionEliminarParqueadero()">
+
+            Cancelar
+
+          </button>
+
+          <button
+            type="button"
+            class="btn-confirmar-eliminar-parqueadero"
+            onclick="confirmarEliminarParqueaderoGestion()">
+
+            🗑️ Eliminar
+
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+      document.body.appendChild(modal);
+    }
+
+    const nombreElemento = document.getElementById("nombreParqueaderoEliminar");
+
+    if (nombreElemento) {
+      nombreElemento.textContent = nombre;
+    }
+
+    modal.dataset.parqueadero = nombre;
+
+    modal.style.display = "flex";
+  }
+
+  function cerrarConfirmacionEliminarParqueadero() {
+    const modal = document.getElementById("modalConfirmarEliminarParqueadero");
+
+    if (modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  function confirmarEliminarParqueaderoGestion() {
+    const modal = document.getElementById("modalConfirmarEliminarParqueadero");
+
+    if (!modal) {
+      return;
+    }
+
+    const nombre = (modal.dataset.parqueadero || "").toString().trim();
+
+    if (!nombre) {
+      return;
+    }
+
+    const boton = modal.querySelector(".btn-confirmar-eliminar-parqueadero");
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Eliminando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🗑️ Eliminar";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo eliminar",
+            `<p>${escaparHTML(
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible eliminar la Ubicacion.",
+            )}</p>`,
+          );
+
+          return;
+        }
+
+        cerrarConfirmacionEliminarParqueadero();
+
+        mostrarAlerta(
+          "✅",
+          "Ubicacion eliminada",
+          `<p>${escaparHTML(
+            respuesta.mensaje || "La Ubicacion fue eliminado correctamente.",
+          )}</p>`,
+        );
+
+        cargarParqueaderosGestion();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al eliminar Ubicacion:", error);
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🗑️ Eliminar";
+        }
+
+        mostrarAlerta(
+          "⚠️",
+          "Error",
+          "<p>Ocurrió un error al eliminar la Ubicacion.</p>",
+        );
+      })
+
+      .eliminarParqueadero(tokenSesion, nombre);
+  }
+
+  function actualizarListaGestionUbicacion() {
+    const lista = document.getElementById("listaGestionUbicacion");
+
+    if (!lista) {
+      return;
+    }
+
+    const buscador = document.getElementById("buscadorEditarUbicacion");
+
+    const textoBusqueda = buscador
+      ? buscador.value.toString().trim().toUpperCase()
+      : "";
+
+    const vehiculosFiltrados = vehiculosAdministracion.filter(
+      function (vehiculo) {
+        const nombre = String(vehiculo.nombre || "").toUpperCase();
+
+        const placa = String(vehiculo.placa || "").toUpperCase();
+
+        return nombre.includes(textoBusqueda) || placa.includes(textoBusqueda);
+      },
+    );
+
+    const editor = document.getElementById("editorGestionUbicacion");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    lista.style.display = "block";
+
+    lista.innerHTML = "";
+
+    if (
+      !Array.isArray(vehiculosAdministracion) ||
+      vehiculosAdministracion.length === 0
+    ) {
+      lista.innerHTML = `
+      <div class="gestion-vacio">
+        No hay vehículos registrados.
+      </div>
+    `;
+
+      return;
+    }
+
+    vehiculosFiltrados.forEach(function (vehiculo) {
+      const tarjeta = document.createElement("div");
+
+      tarjeta.className = "gestion-ubicacion-item";
+
+      tarjeta.innerHTML = `
+        <div class="gestion-ubicacion-info">
+
+          <div class="gestion-ubicacion-icono">
+            🚗
+          </div>
+
+          <div class="gestion-ubicacion-datos">
+
+            <strong>
+              ${escapeHtml(vehiculo.nombre || "Vehículo")}
+            </strong>
+
+            <span>
+              Placa:
+              ${escapeHtml(vehiculo.placa || "-")}
+            </span>
+
+            <small>
+              📍 ${escapeHtml(vehiculo.ubicacion || "Sin ubicación asignada")}
+
+            </small>
+
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="gestion-ubicacion-boton">
+
+          Editar
+
+        </button>
+      `;
+
+      const botonEditar = tarjeta.querySelector(".gestion-ubicacion-boton");
+
+      if (botonEditar) {
+        botonEditar.addEventListener("click", function () {
+          seleccionarVehiculoGestionUbicacion(vehiculo.placa);
+        });
+      }
+
+      lista.appendChild(tarjeta);
+    });
+  }
+
+  function filtrarEditarUbicacion() {
+    actualizarListaGestionUbicacion();
+  }
+
+  function seleccionarVehiculoGestionUbicacion(placa) {
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return (
+        String(item.placa || "")
+          .trim()
+          .toUpperCase() ===
+        String(placa || "")
+          .trim()
+          .toUpperCase()
+      );
+    });
+
+    if (!vehiculo) {
+      alert("No se encontró el vehículo seleccionado.");
+
+      return;
+    }
+
+    vehiculoSeleccionadoAdministracion = vehiculo;
+
+    mostrarEditorGestionUbicacion();
+  }
+
+  function mostrarEditorGestionUbicacion() {
+    if (!vehiculoSeleccionadoAdministracion) {
+      return;
+    }
+
+    const lista = document.getElementById("listaGestionUbicacion");
+
+    const editor = document.getElementById("editorGestionUbicacion");
+
+    if (lista) {
+      lista.style.display = "none";
+    }
+
+    if (editor) {
+      editor.style.display = "block";
+    }
+
+    const nombre = document.getElementById("gestionUbicacionNombre");
+
+    const placa = document.getElementById("gestionUbicacionPlaca");
+
+    const ubicacion = document.getElementById("gestionUbicacionParqueadero");
+
+    if (nombre) {
+      nombre.textContent =
+        vehiculoSeleccionadoAdministracion.nombre || "Vehículo";
+    }
+
+    if (placa) {
+      placa.textContent =
+        "Placa: " + (vehiculoSeleccionadoAdministracion.placa || "-");
+    }
+
+    if (ubicacion && tokenSesion) {
+      google.script.run
+        .withSuccessHandler(function (respuesta) {
+          if (
+            !respuesta ||
+            !respuesta.success ||
+            !Array.isArray(respuesta.parqueaderos)
+          ) {
+            return;
+          }
+
+          ubicacion.innerHTML = `
+            <option value="">
+              Selecciona una Ubicacion
+            </option>
+          `;
+
+          respuesta.parqueaderos.forEach(function (parqueadero) {
+            const option = document.createElement("option");
+
+            option.value = parqueadero.nombre || "";
+
+            option.textContent = parqueadero.nombre || "";
+
+            ubicacion.appendChild(option);
+          });
+
+          ubicacion.value = vehiculoSeleccionadoAdministracion.ubicacion || "";
+        })
+        .obtenerParqueaderosAdministracion(tokenSesion);
+    }
+
+    const mensaje = document.getElementById("mensajeEditorGestionUbicacion");
+
+    if (mensaje) {
+      mensaje.textContent = "";
+
+      mensaje.className = "editor-ubicacion-mensaje";
+    }
+  }
+
+  function cerrarEditorGestionUbicacion() {
+    const editor = document.getElementById("editorGestionUbicacion");
+
+    const lista = document.getElementById("listaGestionUbicacion");
+
+    if (editor) {
+      editor.style.display = "none";
+    }
+
+    if (lista) {
+      lista.style.display = "block";
+    }
+  }
+
+  /* =====================================================
+   GUARDAR CAMBIOS DE UBICACIÓN
+===================================================== */
+
+  function guardarCambiosGestionUbicacion() {
+    if (!vehiculoSeleccionadoAdministracion) {
+      return;
+    }
+
+    const ubicacion =
+      document.getElementById("gestionUbicacionParqueadero")?.value.trim() ||
+      "";
+
+    const mensaje = document.getElementById("mensajeEditorGestionUbicacion");
+
+    if (!ubicacion) {
+      if (mensaje) {
+        mensaje.textContent = "Ingresa la Ubicacion antes de continuar.";
+
+        mensaje.className = "editor-ubicacion-mensaje error";
+      }
+
+      return;
+    }
+
+    const datos = {
+      placa: vehiculoSeleccionadoAdministracion.placa || "",
+
+      nombre: vehiculoSeleccionadoAdministracion.nombre || "",
+
+      ubicacion: ubicacion,
+    };
+
+    mostrarConfirmacionGestionUbicacion(datos);
+  }
+
+  /* =====================================================
+   CONFIRMACIÓN DE CAMBIO
+===================================================== */
+
+  function mostrarConfirmacionGestionUbicacion(datos) {
+    let modal = document.getElementById("modalConfirmacionGestionUbicacion");
+
+    if (!modal) {
+      modal = document.createElement("div");
+
+      modal.id = "modalConfirmacionGestionUbicacion";
+
+      modal.className = "editor-ubicacion-confirmacion";
+
+      modal.innerHTML = `
+
+      <div class="editor-ubicacion-confirmacion-card">
+
+        <div class="editor-ubicacion-confirmacion-icono">
+          📍
+        </div>
+
+        <h3>
+          Confirmar cambios
+        </h3>
+
+        <p>
+          ¿Deseas actualizar la ubicación de este vehículo?
+        </p>
+
+        <div class="editor-ubicacion-confirmacion-datos">
+
+          <strong id="confirmacionGestionUbicacionNombre">
+            Vehículo
+          </strong>
+
+          <span id="confirmacionGestionUbicacionPlaca">
+            Placa: -
+          </span>
+
+          <div>
+            <small>
+              Ubicacion
+            </small>
+
+            <strong id="confirmacionGestionUbicacionParqueadero">
+              -
+            </strong>
+          </div>
+
+        </div>
+
+
+        <div class="editor-ubicacion-confirmacion-botones">
+
+          <button
+            type="button"
+            class="editor-ubicacion-boton-secundario"
+            onclick="cancelarConfirmacionGestionUbicacion()">
+
+            Cancelar
+
+          </button>
+
+
+          <button
+            type="button"
+            class="editor-ubicacion-boton-principal"
+            onclick="confirmarGuardadoGestionUbicacion()">
+
+            Guardar cambios
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+      document.body.appendChild(modal);
+    }
+
+    const nombre = document.getElementById(
+      "confirmacionGestionUbicacionNombre",
+    );
+
+    const placa = document.getElementById("confirmacionGestionUbicacionPlaca");
+
+    const parqueadero = document.getElementById(
+      "confirmacionGestionUbicacionParqueadero",
+    );
+
+    if (nombre) {
+      nombre.textContent = datos.nombre || "Vehículo";
+    }
+
+    if (placa) {
+      placa.textContent = "Placa: " + (datos.placa || "-");
+    }
+
+    if (parqueadero) {
+      parqueadero.textContent = datos.ubicacion || "Sin ubicación asignada";
+    }
+
+    modal.dataset.datos = JSON.stringify(datos);
+
+    modal.style.display = "flex";
+  }
+
+  /* =====================================================
+   CONFIRMAR GUARDADO
+===================================================== */
+
+  function confirmarGuardadoGestionUbicacion() {
+    const modal = document.getElementById("modalConfirmacionGestionUbicacion");
+
+    if (!modal || !modal.dataset.datos) {
+      return;
+    }
+
+    let datos = null;
+
+    try {
+      datos = JSON.parse(modal.dataset.datos);
+    } catch (error) {
+      console.error("Error leyendo datos de ubicación:", error);
+
+      return;
+    }
+
+    if (!datos || !datos.placa || !tokenSesion) {
+      return;
+    }
+
+    const boton = modal.querySelector(".editor-ubicacion-boton-principal");
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Guardando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Guardar cambios";
+          }
+
+          mostrarMensajeGestionUbicacion(
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No se pudieron guardar los cambios.",
+            "error",
+          );
+
+          return;
+        }
+
+        const vehiculo = vehiculosAdministracion.find(function (item) {
+          return (
+            String(item.placa || "")
+              .trim()
+              .toUpperCase() ===
+            String(datos.placa || "")
+              .trim()
+              .toUpperCase()
+          );
+        });
+
+        if (vehiculo) {
+          vehiculo.ubicacion =
+            respuesta.vehiculo && respuesta.vehiculo.ubicacion
+              ? respuesta.vehiculo.ubicacion
+              : datos.ubicacion;
+
+          vehiculoSeleccionadoAdministracion = vehiculo;
+        }
+
+        cancelarConfirmacionGestionUbicacion();
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        mostrarEditorGestionUbicacion();
+
+        mostrarMensajeGestionUbicacion(
+          "La ubicación fue actualizada correctamente.",
+          "success",
+        );
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al actualizar ubicación:", error);
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Guardar cambios";
+        }
+
+        mostrarMensajeGestionUbicacion(
+          "Ocurrió un error al actualizar la ubicación.",
+          "error",
+        );
+      })
+
+      .actualizarUbicacionVehiculo(tokenSesion, datos.placa, datos.ubicacion);
+  }
+
+  function cancelarConfirmacionGestionUbicacion() {
+    const modal = document.getElementById("modalConfirmacionGestionUbicacion");
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "none";
+
+    modal.dataset.datos = "";
+  }
+
+  function mostrarMensajeGestionUbicacion(texto, tipo) {
+    const mensaje = document.getElementById("mensajeEditorGestionUbicacion");
+
+    if (!mensaje) {
+      return;
+    }
+
+    mensaje.textContent = (tipo === "success" ? "✓ " : "⚠️ ") + texto;
+
+    mensaje.className =
+      "editor-ubicacion-mensaje " + (tipo === "success" ? "success" : "error");
+
+    mensaje.style.display = "block";
+  }
+
+  function abrirGestionUsuarios() {
+    mostrarSubmoduloGestionDebajo("btnGestionUsuarios", "gestionUsuarios");
+  }
+
+  function volverModuloGestion() {
+    const gestion = document.getElementById("moduloGestion");
+
+    const gestionAgregarCarro = document.getElementById("gestionAgregarCarro");
+
+    const gestionEditarCarros = document.getElementById("gestionEditarCarros");
+
+    const gestionEditarUbicacion = document.getElementById(
+      "gestionEditarUbicacion",
+    );
+
+    const gestionUsuarios = document.getElementById("gestionUsuarios");
+
+    const gestionParqueaderos = document.getElementById("gestionParqueaderos");
+
+    const resultadoGuardadoVehiculo = document.getElementById(
+      "resultadoGuardadoVehiculo",
+    );
+
+    if (resultadoGuardadoVehiculo) {
+      resultadoGuardadoVehiculo.style.display = "none";
+    }
+
+    if (gestionAgregarCarro) {
+      gestionAgregarCarro.style.display = "none";
+    }
+
+    if (gestionEditarCarros) {
+      gestionEditarCarros.style.display = "none";
+    }
+
+    if (gestionEditarUbicacion) {
+      gestionEditarUbicacion.style.display = "none";
+    }
+
+    if (gestionUsuarios) {
+      gestionUsuarios.style.display = "none";
+    }
+
+    if (gestionParqueaderos) {
+      gestionParqueaderos.style.display = "none";
+    }
+
+    const opciones = document.querySelector("#moduloGestion .gestion-opciones");
+
+    if (opciones) {
+      opciones.style.display = "flex";
+    }
+
+    const botones = document.querySelectorAll("#moduloGestion .gestion-opcion");
+
+    botones.forEach(function (boton) {
+      boton.classList.remove("gestion-opcion-activa");
+    });
+
+    if (gestion) {
+      gestion.style.display = "block";
+    }
+
+    if (opciones) {
+      opciones.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  /* =====================================================
+   GESTIÓN → EDITAR CARROS
+===================================================== */
+
+  function actualizarListaEditarCarros() {
+    const contenedor = document.getElementById("listaVehiculosEditarCarros");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const buscador = document.getElementById("buscadorEditarVehiculos");
+
+    const textoBusqueda = buscador
+      ? buscador.value.toString().trim().toUpperCase()
+      : "";
+
+    const vehiculosFiltrados = vehiculosAdministracion.filter(
+      function (vehiculo) {
+        const nombre = String(vehiculo.nombre || "").toUpperCase();
+
+        const placa = String(vehiculo.placa || "").toUpperCase();
+
+        return nombre.includes(textoBusqueda) || placa.includes(textoBusqueda);
+      },
+    );
+
+    if (!vehiculosFiltrados.length) {
+      contenedor.innerHTML = `
+      <div class="panel-modulo-placeholder">
+        <strong>No hay vehículos registrados.</strong>
+      </div>
+    `;
+
+      return;
+    }
+
+    contenedor.innerHTML = vehiculosFiltrados
+      .map(function (vehiculo) {
+        return `
+          <article class="vehiculo-panel-card">
+
+            <div class="vehiculo-panel-info">
+
+              <h3>
+                ${escaparHTML(vehiculo.nombre || "Vehículo")}
+              </h3>
+
+              <span class="vehiculo-panel-placa">
+                ${escaparHTML(vehiculo.placa || "-")}
+              </span>
+
+            </div>
+
+              <div class="vehiculo-panel-acciones">
+
+                <button
+                  type="button"
+                  class="vehiculo-panel-boton"
+                  onclick="editarVehiculoAdministracion('${escaparHTML(
+                    vehiculo.placa || "",
+                  )}')">
+
+                  Editar
+
+                </button>
+
+                <button
+                  type="button"
+                  class="vehiculo-panel-boton vehiculo-panel-boton-eliminar"
+                  onclick="abrirConfirmacionEliminarVehiculoPanel(
+                    ${vehiculo.fila},
+                    '${escaparHTML(vehiculo.placa || "")}'
+                  )">
+
+                  Eliminar
+
+                </button>
+
+              </div>
+
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  function filtrarEditarVehiculos() {
+    actualizarListaEditarCarros();
+  }
+
+  /* =====================================================
+   ABRIR CONFIRMACIÓN ELIMINAR VEHÍCULO - PANEL
+===================================================== */
+
+  function abrirConfirmacionEliminarVehiculoPanel(fila, placa) {
+    const vehiculo = vehiculosAdministracion.find(function (item) {
+      return Number(item.fila || 0) === Number(fila || 0);
+    });
+
+    if (!vehiculo) {
+      mostrarAlerta(
+        "⚠️",
+        "Vehículo no encontrado",
+        "<p>No fue posible encontrar el vehículo seleccionado.</p>",
+      );
+
+      return;
+    }
+
+    const modal = document.getElementById("modalEliminarVehiculoPanel");
+
+    const nombre = document.getElementById("nombreVehiculoEliminarPanel");
+
+    const placaElemento = document.getElementById("placaVehiculoEliminarPanel");
+
+    if (!modal) {
+      console.error("No existe modalEliminarVehiculoPanel");
+
+      return;
+    }
+
+    if (nombre) {
+      nombre.textContent = vehiculo.nombre || "Vehículo";
+    }
+
+    if (placaElemento) {
+      placaElemento.textContent = vehiculo.placa
+        ? "Placa: " + vehiculo.placa
+        : "Sin placa registrada";
+    }
+
+    modal.dataset.fila = String(vehiculo.fila || fila || "");
+
+    modal.dataset.placa = String(vehiculo.placa || placa || "");
+
+    modal.style.display = "flex";
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    document.body.classList.add("modal-panel-abierto");
+  }
+
+  /* =====================================================
+   CERRAR CONFIRMACIÓN ELIMINAR VEHÍCULO - PANEL
+===================================================== */
+
+  function cerrarConfirmacionEliminarVehiculoPanel() {
+    const modal = document.getElementById("modalEliminarVehiculoPanel");
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "none";
+
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+
+    document.body.classList.remove("modal-panel-abierto");
+  }
+
+  /* =====================================================
+   CONFIRMAR ELIMINACIÓN VEHÍCULO - PANEL
+===================================================== */
+
+  function confirmarEliminarVehiculoPanel() {
+    const modal = document.getElementById("modalEliminarVehiculoPanel");
+
+    if (!modal) {
+      return;
+    }
+
+    const fila = Number(modal.dataset.fila || 0);
+
+    const placa = String(modal.dataset.placa || "")
+      .trim()
+      .toUpperCase();
+
+    if (!Number.isInteger(fila) || fila < 2) {
+      mostrarAlerta(
+        "⚠️",
+        "No se pudo eliminar",
+        "<p>La fila del vehículo no es válida.</p>",
+      );
+
+      return;
+    }
+
+    const boton = document.getElementById("btnConfirmarEliminarVehiculoPanel");
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Eliminando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Sí, eliminar";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarAlerta(
+            "⚠️",
+            "No se pudo eliminar",
+            "<p>" +
+              escaparHTML(
+                respuesta && respuesta.mensaje
+                  ? respuesta.mensaje
+                  : "Ocurrió un error al eliminar el vehículo.",
+              ) +
+              "</p>",
+          );
+
+          return;
+        }
+
+        cerrarConfirmacionEliminarVehiculoPanel();
+
+        mostrarAlerta(
+          "✓",
+          "Vehículo eliminado",
+          "<p>El vehículo fue eliminado correctamente.</p>",
+        );
+
+        cargarVehiculosAdministracion();
+      })
+
+      .withFailureHandler(function (error) {
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Sí, eliminar";
+        }
+
+        console.error("Error al eliminar vehículo:", error);
+
+        mostrarAlerta(
+          "⚠️",
+          "Error",
+          "<p>No fue posible eliminar el vehículo.</p>",
+        );
+      })
+
+      .eliminarVehiculoAdministracion(tokenSesion, fila, placa);
+  }
+
+  /* =====================================================
+   MÓDULO HISTORIAL
+===================================================== */
+
+  function abrirModuloHistorial() {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR") {
+      alert("No tienes permisos para acceder al historial.");
+
+      return;
+    }
+
+    mostrarModuloPanel("moduloHistorial");
+
+    cargarHistorialMovimientos();
+  }
+
+  /* =====================================================
+   MÓDULO HISTORIAL
+===================================================== */
+
+  let filtroHistorialActual = "TODOS";
+
+  let busquedaHistorialActual = "";
+  window.historialResultadosActuales = [];
+
+  /* =====================================================
+   ABRIR HISTORIAL
+===================================================== */
+
+  function abrirModuloHistorial() {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR") {
+      alert("No tienes permisos para acceder al historial.");
+
+      return;
+    }
+
+    mostrarModuloPanel("moduloHistorial");
+
+    cargarHistorialMovimientos();
+  }
+
+  function iniciarAlertasCitas() {
+    detenerAlertasCitas();
+
+    revisarAlertasCitas();
+
+    intervaloAlertasCitas = setInterval(function () {
+      revisarAlertasCitas();
+    }, 60000);
+  }
+
+  function detenerAlertasCitas() {
+    if (intervaloAlertasCitas) {
+      clearInterval(intervaloAlertasCitas);
+
+      intervaloAlertasCitas = null;
+    }
+  }
+
+  /* =====================================================
+   CARGAR HISTORIAL
+===================================================== */
+
+  function cargarHistorialMovimientos() {
+    const contenedor = document.getElementById("listaHistorialMovimientos");
+
+    if (!contenedor) {
+      return;
+    }
+
+    filtroHistorialActual = "TODOS";
+
+    busquedaHistorialActual = "";
+
+    contenedor.innerHTML = `
+
+    <div class="historial-cargando">
+
+      <div class="historial-cargando-icono">
+        🚗
+      </div>
+
+      <strong>
+        Cargando historial...
+      </strong>
+
+      <span>
+        Por favor espera un momento.
+      </span>
+
+    </div>
+
+  `;
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          contenedor.innerHTML = `
+
+            <div class="historial-vacio">
+
+              <div class="historial-vacio-icono">
+                🕘
+              </div>
+
+              <strong>
+                No se pudo cargar el historial
+              </strong>
+
+              <span>
+                ${
+                  respuesta && respuesta.mensaje
+                    ? escaparHTML(respuesta.mensaje)
+                    : "Intenta nuevamente."
+                }
+              </span>
+
+              <button
+                type="button"
+                class="historial-boton-principal"
+                onclick="cargarHistorialMovimientos()"
+              >
+                Reintentar
+              </button>
+
+            </div>
+
+          `;
+
+          return;
+        }
+
+        const movimientos = Array.isArray(respuesta.movimientos)
+          ? respuesta.movimientos
+          : [];
+
+        window.historialMovimientosActuales = movimientos;
+
+        renderizarPanelCategoriasHistorial();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al cargar historial:", error);
+
+        contenedor.innerHTML = `
+
+          <div class="historial-vacio">
+
+            <div class="historial-vacio-icono">
+              ⚠️
+            </div>
+
+            <strong>
+              No se pudo cargar el historial
+            </strong>
+
+            <span>
+              Ocurrió un error al consultar los movimientos.
+            </span>
+
+            <button
+              type="button"
+              class="historial-boton-principal"
+              onclick="cargarHistorialMovimientos()"
+            >
+              Reintentar
+            </button>
+
+          </div>
+
+        `;
+      })
+
+      .obtenerHistorialMovimientos(tokenSesion);
+  }
+
+  /* =====================================================
+   RENDERIZAR PANEL PRINCIPAL DEL HISTORIAL
+===================================================== */
+
+  function renderizarPanelCategoriasHistorial() {
+    const contenedor = document.getElementById("listaHistorialMovimientos");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const movimientos = Array.isArray(window.historialMovimientosActuales)
+      ? window.historialMovimientosActuales
+      : [];
+
+    const categorias = [
+      {
+        id: "TODOS",
+
+        icono: "📋",
+
+        titulo: "Historial general",
+
+        descripcion: "Todos los movimientos del sistema.",
+      },
+
+      {
+        id: "PARQUEADERO",
+
+        icono: "🅿️",
+
+        titulo: "Ajustes de Ubicación",
+
+        descripcion: "Ubicación de los vehículos.",
+      },
+
+      {
+        id: "USUARIOS",
+
+        icono: "👥",
+
+        titulo: "Ajustes de usuarios",
+
+        descripcion: "Creaciones y eliminaciones.",
+      },
+
+      {
+        id: "VEHICULOS",
+
+        icono: "🚗",
+
+        titulo: "Información de vehículos",
+
+        descripcion: "Datos y modificaciones de vehículos.",
+      },
+
+      {
+        id: "DOCUMENTACION",
+
+        icono: "📄",
+
+        titulo: "Documentación",
+
+        descripcion: "SOAT y tecnomecánica.",
+      },
+    ];
+
+    contenedor.innerHTML = `
+
+    <div class="historial-panel">
+
+      <!-- BUSCADOR GENERAL -->
+
+      <div class="historial-buscador">
+
+        <span class="historial-buscador-icono">
+          🔎
+        </span>
+
+        <input
+          id="buscadorHistorialGeneral"
+          type="search"
+          placeholder="Buscar en todo el historial..."
+          autocomplete="off"
+          value="${escaparHTML(busquedaHistorialActual)}"
+        />
+
+        <button
+          type="button"
+          id="limpiarBusquedaHistorial"
+          class="historial-buscador-limpiar"
+          aria-label="Limpiar búsqueda"
+          style="display:none;"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <!-- CATEGORÍAS -->
+
+      <div class="historial-categorias">
+
+        ${categorias
+          .map(function (categoria) {
+            const activo =
+              filtroHistorialActual === categoria.id ? "activo" : "";
+
+            return `
+
+                  <button
+                    type="button"
+                    class="historial-categoria ${activo}"
+                    onclick="seleccionarCategoriaHistorial('${categoria.id}')"
+                  >
+
+                    <div class="historial-categoria-icono">
+                      ${categoria.icono}
+                    </div>
+
+                    <div class="historial-categoria-texto">
+
+                      <strong>
+                        ${escaparHTML(categoria.titulo)}
+                      </strong>
+
+                      <span>
+                        ${escaparHTML(categoria.descripcion)}
+                      </span>
+
+                    </div>
+
+                    <span class="historial-categoria-flecha">
+                      ›
+                    </span>
+
+                  </button>
+
+                `;
+          })
+          .join("")}
+
+      </div>
+
+
+      <!-- RESULTADOS -->
+
+      <div
+        id="historialResultados"
+        class="historial-resultados"
+      >
+      </div>
+
+    </div>
+
+  `;
+
+    configurarBuscadorHistorial();
+
+    renderizarResultadosHistorial();
+  }
+
+  /* =====================================================
+   CONFIGURAR BUSCADOR
+===================================================== */
+
+  function configurarBuscadorHistorial() {
+    const buscador = document.getElementById("buscadorHistorialGeneral");
+
+    const botonLimpiar = document.getElementById("limpiarBusquedaHistorial");
+
+    if (!buscador) {
+      return;
+    }
+
+    buscador.addEventListener("input", function () {
+      busquedaHistorialActual = buscador.value.trim().toLowerCase();
+
+      if (botonLimpiar) {
+        botonLimpiar.style.display = busquedaHistorialActual ? "flex" : "none";
+      }
+
+      renderizarResultadosHistorial();
+    });
+
+    if (botonLimpiar) {
+      botonLimpiar.addEventListener("click", function () {
+        buscador.value = "";
+
+        busquedaHistorialActual = "";
+
+        botonLimpiar.style.display = "none";
+
+        buscador.focus();
+
+        renderizarResultadosHistorial();
+      });
+    }
+  }
+
+  /* =====================================================
+   SELECCIONAR CATEGORÍA
+===================================================== */
+
+  function seleccionarCategoriaHistorial(categoria) {
+    filtroHistorialActual = categoria;
+
+    const categorias = document.querySelectorAll(".historial-categoria");
+
+    categorias.forEach(function (item) {
+      item.classList.remove("activo");
+    });
+
+    const botones = document.querySelectorAll(".historial-categoria");
+
+    botones.forEach(function (item) {
+      const texto = item.getAttribute("onclick") || "";
+
+      if (texto.includes("'" + categoria + "'")) {
+        item.classList.add("activo");
+      }
+    });
+
+    renderizarResultadosHistorial();
+  }
+
+  /* =====================================================
+   FILTRAR Y MOSTRAR RESULTADOS
+===================================================== */
+
+  function renderizarResultadosHistorial() {
+    const contenedor = document.getElementById("historialResultados");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const movimientos = Array.isArray(window.historialMovimientosActuales)
+      ? window.historialMovimientosActuales
+      : [];
+
+    let resultados = movimientos.filter(function (movimiento) {
+      const categoria = obtenerCategoriaHistorial(movimiento);
+
+      const coincideCategoria =
+        filtroHistorialActual === "TODOS" ||
+        categoria === filtroHistorialActual;
+
+      if (!coincideCategoria) {
+        return false;
+      }
+
+      if (!busquedaHistorialActual) {
+        return true;
+      }
+
+      const textoCompleto = [
+        movimiento.fecha,
+
+        movimiento.usuario,
+
+        movimiento.usuarioSistema,
+
+        movimiento.vehiculo,
+
+        movimiento.placa,
+
+        movimiento.accion,
+
+        movimiento.tipoMovimiento,
+
+        movimiento.campo,
+
+        movimiento.valorAnterior,
+
+        movimiento.valorNuevo,
+
+        movimiento.ubicacionAnterior,
+
+        movimiento.ubicacionNueva,
+      ]
+
+        .map(function (valor) {
+          return String(valor || "").toLowerCase();
+        })
+
+        .join(" ");
+
+      return textoCompleto.includes(busquedaHistorialActual);
+    });
+
+    if (!resultados.length) {
+      contenedor.innerHTML = `
+
+      <div class="historial-vacio">
+
+        <div class="historial-vacio-icono">
+          🔎
+        </div>
+
+        <strong>
+          No se encontraron movimientos
+        </strong>
+
+        <span>
+          ${
+            busquedaHistorialActual
+              ? "Prueba con otro término de búsqueda."
+              : "No hay movimientos en esta categoría."
+          }
+        </span>
+
+      </div>
+
+    `;
+
+      return;
+    }
+
+    contenedor.innerHTML = `
+
+    <div class="historial-resultados-encabezado">
+
+      <strong>
+        ${resultados.length}
+        ${resultados.length === 1 ? "movimiento" : "movimientos"}
+      </strong>
+
+      <span>
+        ${obtenerNombreCategoriaHistorial(filtroHistorialActual)}
+      </span>
+
+    </div>
+
+
+    <div class="historial-listado">
+
+      ${resultados
+        .map(function (movimiento, indice) {
+          return crearTarjetaHistorial(movimiento, indice, resultados);
+        })
+        .join("")}
+
+    </div>
+
+  `;
+  }
+
+  /* =====================================================
+   DETERMINAR CATEGORÍA
+===================================================== */
+
+  function obtenerCategoriaHistorial(movimiento) {
+    const tipo = String(movimiento.tipoMovimiento || "")
+      .trim()
+      .toUpperCase();
+
+    const campo = String(movimiento.campo || "")
+      .trim()
+      .toUpperCase();
+
+    const accion = String(movimiento.accion || "")
+      .trim()
+      .toUpperCase();
+
+    if (tipo.includes("USUARIO") || accion.includes("USUARIO")) {
+      return "USUARIOS";
+    }
+
+    if (
+      tipo.includes("UBICACIÓN") ||
+      tipo.includes("UBICACION") ||
+      tipo.includes("PARQUEADERO") ||
+      campo.includes("UBICACIÓN") ||
+      campo.includes("UBICACION")
+    ) {
+      return "PARQUEADERO";
+    }
+
+    if (
+      tipo.includes("SOAT") ||
+      tipo.includes("TECNOMECÁNICA") ||
+      tipo.includes("TECNOMECANICA") ||
+      campo.includes("SOAT") ||
+      campo.includes("TECNOMECÁNICA") ||
+      campo.includes("TECNOMECANICA") ||
+      accion.includes("SOAT") ||
+      accion.includes("TECNOMECÁNICA") ||
+      accion.includes("TECNOMECANICA")
+    ) {
+      return "DOCUMENTACION";
+    }
+
+    return "VEHICULOS";
+  }
+
+  /* =====================================================
+   NOMBRE DE CATEGORÍA
+===================================================== */
+
+  function obtenerNombreCategoriaHistorial(categoria) {
+    switch (categoria) {
+      case "PARQUEADERO":
+        return "Ajustes de parqueadero";
+
+      case "USUARIOS":
+        return "Ajustes de usuarios";
+
+      case "VEHICULOS":
+        return "Información de vehículos";
+
+      case "DOCUMENTACION":
+        return "Documentación";
+
+      default:
+        return "Historial general";
+    }
+  }
+
+  /* =====================================================
+   CREAR TARJETA
+===================================================== */
+
+  function crearTarjetaHistorial(movimiento, indice, lista) {
+    const accion = movimiento.accion || "Movimiento registrado";
+
+    const icono = obtenerIconoHistorial(movimiento);
+
+    const detalle = obtenerDetalleHistorial(movimiento);
+
+    /*
+     * Guardamos temporalmente la lista filtrada
+     * para que el detalle pueda encontrar
+     * exactamente el movimiento seleccionado.
+     */
+
+    window.historialResultadosActuales = lista;
+
+    return `
+
+    <article
+      class="historial-movimiento-card"
+    >
+
+      <div
+        class="historial-movimiento-icono"
+      >
+        ${icono}
+      </div>
+
+
+      <div
+        class="historial-movimiento-contenido"
+      >
+
+        <div
+          class="historial-movimiento-superior"
+        >
+
+          <div>
+
+            <strong>
+              ${escaparHTML(
+                movimiento.vehiculo ||
+                  (movimiento.campo === "USUARIO" ? "Usuario" : "Vehículo"),
+              )}
+            </strong>
+
+
+            ${
+              movimiento.placa
+                ? `
+                  <span
+                    class="historial-placa"
+                  >
+                    ${escaparHTML(movimiento.placa)}
+                  </span>
+                `
+                : ""
+            }
+
+          </div>
+
+
+          <span
+            class="historial-fecha"
+          >
+            ${escaparHTML(formatearFechaHistorial(movimiento.fecha))}
+          </span>
+
+        </div>
+
+
+        <strong
+          class="historial-accion"
+        >
+          ${escaparHTML(accion)}
+        </strong>
+
+
+        <span
+          class="historial-detalle"
+        >
+          ${escaparHTML(detalle)}
+        </span>
+
+
+        <div
+          class="historial-usuario"
+        >
+
+          <span>
+            👤
+          </span>
+
+          ${escaparHTML(
+            movimiento.usuario || movimiento.usuarioSistema || "Usuario",
+          )}
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="historial-movimiento-flecha"
+        onclick="mostrarDetalleMovimientoHistorial(${indice})"
+        aria-label="Ver detalle"
+      >
+        ›
+      </button>
+
+    </article>
+
+  `;
+  }
+
+  /* =====================================================
+   ICONO SEGÚN MOVIMIENTO
+===================================================== */
+
+  function obtenerIconoHistorial(movimiento) {
+    const categoria = obtenerCategoriaHistorial(movimiento);
+
+    const campo = String(movimiento.campo || "")
+      .trim()
+      .toUpperCase();
+
+    if (campo === "PRECIO") {
+      return "💰";
+    }
+
+    if (campo === "KILOMETRAJE") {
+      return "📏";
+    }
+
+    if (campo.includes("SOAT")) {
+      return "🛡️";
+    }
+
+    if (campo.includes("TECNOMECÁNICA") || campo.includes("TECNOMECANICA")) {
+      return "🔧";
+    }
+
+    if (campo.includes("PICO Y PLACA")) {
+      return "🚦";
+    }
+
+    if (campo.includes("UBICACIÓN") || campo.includes("UBICACION")) {
+      return "📍";
+    }
+
+    if (categoria === "USUARIOS") {
+      return "👥";
+    }
+
+    if (categoria === "DOCUMENTACION") {
+      return "📄";
+    }
+
+    return "🚗";
+  }
+
+  /* =====================================================
+   DETALLE CORTO
+===================================================== */
+
+  function obtenerDetalleHistorial(movimiento) {
+    const campo = String(movimiento.campo || "")
+      .trim()
+      .toUpperCase();
+
+    const anterior =
+      movimiento.valorAnterior !== undefined &&
+      movimiento.valorAnterior !== null
+        ? String(movimiento.valorAnterior)
+        : "";
+
+    const nuevo =
+      movimiento.valorNuevo !== undefined && movimiento.valorNuevo !== null
+        ? String(movimiento.valorNuevo)
+        : "";
+
+    /*
+     * Registros nuevos:
+     * CAMPO + valor anterior → nuevo
+     */
+
+    if (campo && (anterior || nuevo)) {
+      return (
+        campo +
+        ": " +
+        (anterior || "Sin asignar") +
+        " → " +
+        (nuevo || "Sin asignar")
+      );
+    }
+
+    /*
+     * Compatibilidad con registros
+     * antiguos del historial.
+     */
+
+    let detalle = "";
+
+    if (movimiento.ubicacionAnterior || movimiento.ubicacionNueva) {
+      detalle =
+        "Ubicación: " +
+        (movimiento.ubicacionAnterior || "Sin asignar") +
+        " → " +
+        (movimiento.ubicacionNueva || "Sin asignar");
+    }
+
+    return detalle || "Movimiento registrado en el sistema.";
+  }
+
+  /* =====================================================
+   FORMATEAR FECHA DEL HISTORIAL
+===================================================== */
+
+  function formatearFechaHistorial(fecha) {
+    if (!fecha) {
+      return "";
+    }
+
+    const valor = String(fecha).trim();
+
+    if (!valor) {
+      return "";
+    }
+
+    /*
+     * Google Sheets normalmente devuelve
+     * la fecha como dd/MM/yyyy HH:mm:ss.
+     */
+
+    const coincidencia = valor.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/,
+    );
+
+    if (coincidencia) {
+      const dia = coincidencia[1].padStart(2, "0");
+
+      const mes = coincidencia[2].padStart(2, "0");
+
+      const año = coincidencia[3];
+
+      let resultado = `${dia}/${mes}/${año}`;
+
+      if (coincidencia[4] && coincidencia[5]) {
+        resultado += ` · ${coincidencia[4].padStart(2, "0")}:${coincidencia[5]}`;
+      }
+
+      return resultado;
+    }
+
+    return valor;
+  }
+
+  /* =====================================================
+   MOSTRAR DETALLE DE MOVIMIENTO
+===================================================== */
+
+  function mostrarDetalleMovimientoHistorial(indice) {
+    if (!Array.isArray(window.historialResultadosActuales)) {
+      return;
+    }
+
+    const movimiento = window.historialResultadosActuales[indice];
+
+    if (!movimiento) {
+      return;
+    }
+
+    const contenedor = document.getElementById("listaHistorialMovimientos");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const campo = movimiento.campo || "Movimiento";
+
+    const categoria = obtenerCategoriaHistorial(movimiento);
+
+    const icono = obtenerIconoHistorial(movimiento);
+
+    const valorAnterior =
+      movimiento.valorAnterior !== undefined &&
+      movimiento.valorAnterior !== null &&
+      movimiento.valorAnterior !== ""
+        ? String(movimiento.valorAnterior)
+        : "Sin asignar";
+
+    const valorNuevo =
+      movimiento.valorNuevo !== undefined &&
+      movimiento.valorNuevo !== null &&
+      movimiento.valorNuevo !== ""
+        ? String(movimiento.valorNuevo)
+        : "Sin asignar";
+
+    let htmlValores = "";
+
+    if (movimiento.campo) {
+      htmlValores = `
+
+      <div
+        class="historial-detalle-fila"
+      >
+
+        <span>
+          Campo
+        </span>
+
+        <strong>
+          ${escaparHTML(campo)}
+        </strong>
+
+      </div>
+
+
+      <div
+        class="historial-detalle-cambio"
+      >
+
+        <div>
+
+          <small>
+            Valor anterior
+          </small>
+
+          <strong>
+            ${escaparHTML(valorAnterior)}
+          </strong>
+
+        </div>
+
+
+        <div
+          class="historial-detalle-flecha"
+        >
+          →
+        </div>
+
+
+        <div>
+
+          <small>
+            Valor nuevo
+          </small>
+
+          <strong>
+            ${escaparHTML(valorNuevo)}
+          </strong>
+
+        </div>
+
+      </div>
+
+    `;
+    }
+
+    /*
+     * Mostrar ubicación solamente
+     * cuando realmente existan.
+     */
+
+    if (movimiento.ubicacionAnterior || movimiento.ubicacionNueva) {
+      htmlValores += `
+
+      <div
+        class="historial-detalle-fila"
+      >
+
+        <span>
+          Ubicación anterior
+        </span>
+
+        <strong>
+          ${escaparHTML(movimiento.ubicacionAnterior || "Sin asignar")}
+        </strong>
+
+      </div>
+
+
+      <div
+        class="historial-detalle-fila"
+      >
+
+        <span>
+          Ubicación nueva
+        </span>
+
+        <strong>
+          ${escaparHTML(movimiento.ubicacionNueva || "Sin asignar")}
+        </strong>
+
+      </div>
+
+    `;
+    }
+
+    contenedor.innerHTML = `
+
+    <div
+      class="historial-detalle-vista"
+    >
+
+      <button
+        type="button"
+        class="historial-submodulo-volver"
+        onclick="renderizarPanelCategoriasHistorial()"
+      >
+        ← Historial
+      </button>
+
+
+      <div
+        class="historial-detalle-encabezado"
+      >
+
+        <div
+          class="historial-detalle-icono"
+        >
+          ${icono}
+        </div>
+
+
+        <div>
+
+          <h3>
+            ${escaparHTML(movimiento.accion || "Movimiento")}
+          </h3>
+
+          <p>
+            ${escaparHTML(obtenerNombreCategoriaHistorial(categoria))}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="historial-detalle-card"
+      >
+
+        <div
+          class="historial-detalle-fila"
+        >
+
+          <span>
+            Vehículo
+          </span>
+
+          <strong>
+            ${escaparHTML(movimiento.vehiculo || "-")}
+          </strong>
+
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+
+          <span>
+            Placa
+          </span>
+
+          <strong>
+            ${escaparHTML(movimiento.placa || "-")}
+          </strong>
+
+        </div>
+
+
+        ${htmlValores}
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+
+          <span>
+            Usuario responsable
+          </span>
+
+          <strong>
+            ${escaparHTML(
+              movimiento.usuario || movimiento.usuarioSistema || "-",
+            )}
+          </strong>
+
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+
+          <span>
+            Usuario del sistema
+          </span>
+
+          <strong>
+            ${escaparHTML(movimiento.usuarioSistema || "-")}
+          </strong>
+
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+
+          <span>
+            Fecha
+          </span>
+
+          <strong>
+            ${escaparHTML(formatearFechaHistorial(movimiento.fecha))}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function renderizarHistorialMovimientos(movimientos) {
+    const contenedor = document.getElementById("listaHistorialMovimientos");
+
+    if (!contenedor) {
+      return;
+    }
+
+    window.historialMovimientosActuales = Array.isArray(movimientos)
+      ? movimientos
+      : [];
+
+    if (!window.historialMovimientosActuales.length) {
+      contenedor.innerHTML = `
+      <div class="historial-vacio">
+
+        <div class="historial-vacio-icono">
+          🕘
+        </div>
+
+        <strong>
+          No hay movimientos registrados
+        </strong>
+
+        <span>
+          Los cambios realizados aparecerán aquí.
+        </span>
+
+      </div>
+    `;
+
+      return;
+    }
+
+    const tarjetas = window.historialMovimientosActuales
+      .map(function (movimiento, indice) {
+        const accion = movimiento.accion || "Movimiento registrado";
+
+        let detalle = "";
+
+        if (movimiento.ubicacionAnterior || movimiento.ubicacionNueva) {
+          detalle =
+            "Ubicación: " +
+            (movimiento.ubicacionAnterior || "Sin asignar") +
+            " → " +
+            (movimiento.ubicacionNueva || "Sin asignar");
+        }
+        if (!detalle) {
+          detalle = "Movimiento registrado en el sistema.";
+        }
+
+        return `
+          <article
+            class="historial-movimiento-card"
+          >
+
+            <div
+              class="historial-movimiento-icono"
+            >
+              🚗
+            </div>
+
+
+            <div
+              class="historial-movimiento-contenido"
+            >
+
+              <div
+                class="historial-movimiento-superior"
+              >
+
+                <div>
+
+                  <strong>
+                    ${escaparHTML(movimiento.vehiculo || "Vehículo")}
+                  </strong>
+
+                  <span
+                    class="historial-placa"
+                  >
+                    ${escaparHTML(movimiento.placa || "-")}
+                  </span>
+
+                </div>
+
+                <span
+                  class="historial-fecha"
+                >
+                  ${escaparHTML(formatearFechaHistorial(movimiento.fecha))}
+                </span>
+
+              </div>
+
+
+              <strong
+                class="historial-accion"
+              >
+                ${escaparHTML(accion)}
+              </strong>
+
+
+              <span
+                class="historial-detalle"
+              >
+                ${escaparHTML(detalle)}
+              </span>
+
+
+              <div
+                class="historial-usuario"
+              >
+                <span>
+                  👤
+                </span>
+
+                ${escaparHTML(
+                  movimiento.usuario || movimiento.usuarioSistema || "Usuario",
+                )}
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="historial-movimiento-flecha"
+              onclick="mostrarDetalleMovimientoHistorial(${indice})"
+              aria-label="Ver detalle"
+            >
+              ›
+            </button>
+
+          </article>
+        `;
+      })
+      .join("");
+
+    contenedor.innerHTML = `
+    <div class="historial-listado">
+
+      <div
+        class="historial-resumen"
+      >
+        <strong>
+          ${window.historialMovimientosActuales.length}
+          ${
+            window.historialMovimientosActuales.length === 1
+              ? "movimiento"
+              : "movimientos"
+          }
+          encontrados
+        </strong>
+      </div>
+
+      ${tarjetas}
+
+    </div>
+  `;
+  }
+
+  function formatearFechaHistorial(fecha) {
+    if (!fecha) {
+      return "";
+    }
+
+    const valor = fecha.toString().trim();
+
+    if (!valor) {
+      return "";
+    }
+
+    const fechaObjeto = new Date(valor);
+
+    if (!isNaN(fechaObjeto.getTime())) {
+      return fechaObjeto.toLocaleString("es-CO", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    return valor;
+  }
+
+  function mostrarDetalleMovimientoHistorial(indice) {
+    if (!Array.isArray(window.historialMovimientosActuales)) {
+      return;
+    }
+
+    const movimiento = window.historialMovimientosActuales[indice];
+
+    if (!movimiento) {
+      return;
+    }
+
+    const contenedor = document.getElementById("listaHistorialMovimientos");
+
+    window.historialMovimientosActuales = movimientos;
+
+    if (!contenedor) {
+      return;
+    }
+
+    const ubicacionAnterior = movimiento.ubicacionAnterior || "Sin asignar";
+
+    const ubicacionNueva = movimiento.ubicacionNueva || "Sin asignar";
+
+    contenedor.innerHTML = `
+    <div
+      class="historial-detalle-vista"
+    >
+
+      <button
+        type="button"
+        class="historial-submodulo-volver"
+        onclick="cargarHistorialMovimientos()"
+      >
+        ← Historial
+      </button>
+
+
+      <div
+        class="historial-detalle-encabezado"
+      >
+
+        <div
+          class="historial-detalle-icono"
+        >
+          🚗
+        </div>
+
+        <div>
+
+          <h3>
+            ${escaparHTML(movimiento.accion || "Movimiento")}
+          </h3>
+
+          <p>
+            Detalle del movimiento registrado.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="historial-detalle-card"
+      >
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Vehículo</span>
+
+          <strong>
+            ${escaparHTML(movimiento.vehiculo || "-")}
+          </strong>
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Placa</span>
+
+          <strong>
+            ${escaparHTML(movimiento.placa || "-")}
+          </strong>
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Ubicación anterior</span>
+
+          <strong>
+            ${escaparHTML(ubicacionAnterior)}
+          </strong>
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Ubicación nueva</span>
+
+          <strong>
+            ${escaparHTML(ubicacionNueva)}
+          </strong>
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Realizado por</span>
+
+          <strong>
+            ${escaparHTML(
+              movimiento.usuario || movimiento.usuarioSistema || "-",
+            )}
+          </strong>
+        </div>
+
+
+        <div
+          class="historial-detalle-fila"
+        >
+          <span>Fecha</span>
+
+          <strong>
+            ${escaparHTML(formatearFechaHistorial(movimiento.fecha))}
+          </strong>
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="historial-boton-principal"
+        onclick="cargarHistorialMovimientos()"
+      >
+        ← Volver al historial
+      </button>
+
+    </div>
+  `;
+  }
+
+  /* =====================================================
+   VOLVER A LA CONSULTA PÚBLICA
+===================================================== */
+
+  function volverConsultaVehiculos() {
+    // Cerrar menú lateral
+    cerrarMenuAdministrativo();
+
+    const moduloInventario = document.getElementById("moduloInventario");
+
+    if (moduloInventario) {
+      moduloInventario.style.display = "none";
+    }
+
+    // Limpiar datos del panel
+    usuarioPanel = null;
+
+    vehiculosAdministracion = [];
+
+    vehiculoSeleccionadoAdministracion = null;
+
+    // Cerrar sesión
+    tokenSesion = "";
+
+    sessionStorage.removeItem("tokenSesion");
+
+    const panel = document.getElementById("panelAdministrativo");
+
+    const aplicacion = document.querySelector(".app");
+
+    // Ocultar panel administrativo
+    if (panel) {
+      panel.style.display = "none";
+    }
+
+    // Mostrar pantalla pública
+    if (aplicacion) {
+      aplicacion.style.display = "";
+    }
+
+    // Mostrar pantalla pública
+    const historial = document.getElementById("historial");
+
+    if (historial) {
+      historial.style.display = "";
+    }
+
+    const infoInferior = document.querySelector(".info-inferior");
+
+    if (infoInferior) {
+      infoInferior.style.display = "";
+    }
+
+    // Volver arriba
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   MENÚ ADMINISTRATIVO
+===================================================== */
+
+  function alternarMenuAdministrativo() {
+    const menu = document.getElementById("menuAdministrativo");
+
+    const overlay = document.getElementById("menuAdministrativoOverlay");
+
+    if (!menu || !overlay) {
+      return;
+    }
+
+    const abierto = menu.classList.contains("menu-abierto");
+
+    if (abierto) {
+      cerrarMenuAdministrativo();
+    } else {
+      menu.classList.add("menu-abierto");
+
+      animarContenedorVisible(menu);
+
+      overlay.classList.add("menu-abierto");
+
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function cerrarMenuAdministrativo() {
+    const menu = document.getElementById("menuAdministrativo");
+
+    const overlay = document.getElementById("menuAdministrativoOverlay");
+
+    if (menu) {
+      menu.classList.remove("menu-abierto");
+    }
+
+    if (overlay) {
+      overlay.classList.remove("menu-abierto");
+    }
+
+    document.body.style.overflow = "";
+  }
+
+  function actualizarAtencionRapidaUbicacion() {
+    const elemento = document.getElementById("atencionRapidaUbicacion");
+
+    if (!elemento) {
+      return;
+    }
+
+    if (!Array.isArray(vehiculosAdministracion)) {
+      elemento.textContent = "No fue posible consultar ubicaciones";
+
+      return;
+    }
+
+    const sinUbicacion = vehiculosAdministracion.filter(function (vehiculo) {
+      const ubicacion =
+        vehiculo && vehiculo.ubicacion
+          ? vehiculo.ubicacion.toString().trim()
+          : "";
+
+      return !ubicacion;
+    });
+
+    const cantidad = sinUbicacion.length;
+
+    if (cantidad === 0) {
+      elemento.textContent = "Todos los vehículos ubicados ✓";
+
+      return;
+    }
+
+    if (cantidad === 1) {
+      elemento.textContent = "1 vehículo sin ubicación ›";
+
+      return;
+    }
+
+    elemento.textContent = cantidad + " vehículos sin ubicación ›";
+  }
+
+  function abrirAtencionRapidaUbicacion() {
+    const iconoUbicacionRapida = document.getElementById(
+      "lottieUbicacionRapida",
+    );
+
+    if (iconoUbicacionRapida) {
+      iconoUbicacionRapida.stop();
+      iconoUbicacionRapida.play();
+    }
+
+    const sinUbicacion = vehiculosAdministracion.filter(function (vehiculo) {
+      return String(vehiculo.ubicacion || "").trim() === "";
+    });
+
+    abrirModuloUbicacion();
+
+    if (sinUbicacion.length === 0) {
+      return;
+    }
+
+    actualizarListaUbicacion(sinUbicacion);
+
+    const boton = document.getElementById("btnVehiculosSinParqueadero");
+
+    if (boton) {
+      boton.dataset.filtrado = "true";
+
+      boton.innerHTML = `
+      <span>↩️</span>
+      <span>Mostrar todos los vehículos</span>
+    `;
+    }
+  }
+
+  function actualizarAtencionRapidaDocumentacion() {
+    const elemento = document.getElementById("atencionRapidaDocumentacion");
+
+    if (!elemento) {
+      return;
+    }
+
+    if (!Array.isArray(vehiculosAdministracion)) {
+      elemento.textContent = "No fue posible consultar documentos";
+
+      return;
+    }
+
+    const hoy = new Date();
+
+    hoy.setHours(0, 0, 0, 0);
+
+    const limite = new Date(hoy);
+
+    limite.setDate(limite.getDate() + 10);
+
+    let documentosAtencion = 0;
+
+    function requiereAtencion(fechaTexto) {
+      if (!fechaTexto) {
+        return true;
+      }
+
+      const partes = String(fechaTexto).substring(0, 10).split("/");
+
+      if (partes.length !== 3) {
+        return true;
+      }
+
+      const fecha = new Date(
+        Number(partes[2]),
+        Number(partes[1]) - 1,
+        Number(partes[0]),
+      );
+
+      if (isNaN(fecha.getTime())) {
+        return true;
+      }
+
+      return fecha <= limite;
+    }
+
+    vehiculosAdministracion.forEach(function (vehiculo) {
+      if (requiereAtencion(vehiculo.soat)) {
+        documentosAtencion++;
+      }
+
+      if (requiereAtencion(vehiculo.tecnomecanica)) {
+        documentosAtencion++;
+      }
+    });
+
+    if (documentosAtencion === 0) {
+      elemento.textContent = "Todos los documentos al día ✓";
+
+      return;
+    }
+
+    if (documentosAtencion === 1) {
+      elemento.textContent = "1 documento requiere atención ›";
+
+      return;
+    }
+
+    elemento.textContent =
+      documentosAtencion + " documentos requieren atención ›";
+  }
+
+  function cargarDocumentacionAtencion() {
+    const contenedor = document.getElementById("listaDocumentacionAtencion");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const hoy = new Date();
+
+    hoy.setHours(0, 0, 0, 0);
+
+    const limite = new Date(hoy);
+
+    limite.setDate(limite.getDate() + 10);
+
+    function convertirFecha(fechaTexto) {
+      if (!fechaTexto) {
+        return null;
+      }
+
+      const partes = String(fechaTexto).substring(0, 10).split("/");
+
+      if (partes.length !== 3) {
+        return null;
+      }
+
+      const fecha = new Date(
+        Number(partes[2]),
+        Number(partes[1]) - 1,
+        Number(partes[0]),
+      );
+
+      if (isNaN(fecha.getTime())) {
+        return null;
+      }
+
+      fecha.setHours(0, 0, 0, 0);
+
+      return fecha;
+    }
+
+    function obtenerEstadoDocumento(nombreDocumento, fechaTexto) {
+      const fecha = convertirFecha(fechaTexto);
+
+      if (!fecha) {
+        return {
+          requiereAtencion: true,
+          tipo: "SIN_FECHA",
+          icono: nombreDocumento === "SOAT" ? "📄" : "🔧",
+          nombre: nombreDocumento,
+          estado: "Sin fecha registrada",
+        };
+      }
+
+      const diferenciaMs = fecha.getTime() - hoy.getTime();
+
+      const dias = Math.ceil(diferenciaMs / (1000 * 60 * 60 * 24));
+
+      if (dias < 0) {
+        return {
+          requiereAtencion: true,
+          tipo: "VENCIDO",
+          icono: nombreDocumento === "SOAT" ? "📄" : "🔧",
+          nombre: nombreDocumento,
+          estado:
+            "Vencido hace " +
+            Math.abs(dias) +
+            (Math.abs(dias) === 1 ? " día" : " días"),
+        };
+      }
+
+      if (dias === 0) {
+        return {
+          requiereAtencion: true,
+          tipo: "POR_VENCER",
+          icono: nombreDocumento === "SOAT" ? "📄" : "🔧",
+          nombre: nombreDocumento,
+          estado: "Vence hoy",
+        };
+      }
+
+      if (fecha <= limite) {
+        return {
+          requiereAtencion: true,
+          tipo: "POR_VENCER",
+          icono: nombreDocumento === "SOAT" ? "📄" : "🔧",
+          nombre: nombreDocumento,
+          estado: "Vence en " + dias + (dias === 1 ? " día" : " días"),
+        };
+      }
+
+      return {
+        requiereAtencion: false,
+      };
+    }
+
+    const vehiculosConAlertas = vehiculosAdministracion
+      .map(function (vehiculo) {
+        const documentos = [];
+
+        const soat = obtenerEstadoDocumento("SOAT", vehiculo.soat);
+
+        const tecnomecanica = obtenerEstadoDocumento(
+          "Tecnomecánica",
+          vehiculo.tecnomecanica,
+        );
+
+        if (soat.requiereAtencion) {
+          documentos.push(soat);
+        }
+
+        if (tecnomecanica.requiereAtencion) {
+          documentos.push(tecnomecanica);
+        }
+
+        return {
+          vehiculo: vehiculo,
+          documentos: documentos,
+        };
+      })
+      .filter(function (item) {
+        return item.documentos.length > 0;
+      });
+
+    const vehiculosPorVencer = vehiculosConAlertas
+      .map(function (item) {
+        return {
+          vehiculo: item.vehiculo,
+
+          documentos: item.documentos.filter(function (documento) {
+            return documento.tipo === "POR_VENCER";
+          }),
+        };
+      })
+      .filter(function (item) {
+        return item.documentos.length > 0;
+      });
+
+    const vehiculosVencidos = vehiculosConAlertas
+      .map(function (item) {
+        return {
+          vehiculo: item.vehiculo,
+
+          documentos: item.documentos.filter(function (documento) {
+            return (
+              documento.tipo === "VENCIDO" || documento.tipo === "SIN_FECHA"
+            );
+          }),
+        };
+      })
+      .filter(function (item) {
+        return item.documentos.length > 0;
+      });
+
+    if (vehiculosPorVencer.length === 0 && vehiculosVencidos.length === 0) {
+      contenedor.innerHTML = `
+    <div class="documentacion-atencion-vacio">
+
+      <span>
+        ✅
+      </span>
+
+      <strong>
+        Todos los documentos están al día
+      </strong>
+
+      <small>
+        No hay SOAT ni tecnomecánicas próximas a vencer.
+      </small>
+
+    </div>
+  `;
+
+      return;
+    }
+
+    function crearHTMLDocumentacion(lista) {
+      return lista
+        .map(function (item) {
+          const vehiculo = item.vehiculo;
+
+          const documentosHTML = item.documentos
+            .map(function (documento) {
+              return `
+                  <div class="documentacion-documento">
+
+                    <span class="documentacion-documento-icono">
+                      ${documento.icono}
+                    </span>
+
+                    <div class="documentacion-documento-contenido">
+
+                      <strong>
+                        ${escaparHTML(documento.nombre)}
+                      </strong>
+
+                      <small>
+                        ${escaparHTML(documento.estado)}
+                      </small>
+
+                    </div>
+
+                  </div>
+                `;
+            })
+            .join("");
+
+          return `
+          <div class="documentacion-card">
+
+            <div class="documentacion-card-encabezado">
+
+              <div class="documentacion-card-vehiculo">
+
+                <strong>
+                  ${escaparHTML(vehiculo.nombre || "Vehículo")}
+                </strong>
+
+                <small>
+                  ${escaparHTML(vehiculo.placa || "Sin placa")}
+                </small>
+
+              </div>
+
+            </div>
+
+
+            <div class="documentacion-documentos">
+
+              ${documentosHTML}
+
+            </div>
+
+          </div>
+        `;
+        })
+        .join("");
+    }
+
+    let html = "";
+
+    if (vehiculosPorVencer.length > 0) {
+      html += `
+      <div class="documentacion-seccion documentacion-seccion--por-vencer">
+
+        <div class="documentacion-seccion-titulo">
+          <span class="documentacion-seccion-icono">
+            ⚠️
+          </span>
+
+          <span>
+            Por vencer
+          </span>
+
+          <small>
+            ${vehiculosPorVencer.length}
+          </small>
+        </div>
+
+      ${crearHTMLDocumentacion(vehiculosPorVencer)}
+
+    </div>
+  `;
+    }
+
+    if (vehiculosVencidos.length > 0) {
+      html += `
+    <div class="documentacion-seccion documentacion-seccion--vencidos">
+
+      <div class="documentacion-seccion-titulo">
+        <span class="documentacion-seccion-icono">
+          ❌
+        </span>
+
+        <span>
+          Vencidos
+        </span>
+
+        <small>
+          ${vehiculosVencidos.length}
+        </small>
+      </div>
+
+      ${crearHTMLDocumentacion(vehiculosVencidos)}
+
+    </div>
+  `;
+    }
+
+    contenedor.innerHTML = html;
+  }
+
+  function abrirModuloDocumentacion() {
+    mostrarModuloPanel("moduloDocumentacion");
+
+    cargarDocumentacionAtencion();
+  }
+
+  function actualizarAtencionRapidaPicoPlaca() {
+    const elemento = document.getElementById("atencionRapidaPicoPlaca");
+
+    if (!elemento) {
+      return;
+    }
+
+    if (!Array.isArray(vehiculosAdministracion)) {
+      elemento.textContent = "No fue posible consultar la restricción";
+
+      return;
+    }
+
+    const manana = new Date();
+
+    manana.setDate(manana.getDate() + 1);
+
+    const diasSemana = [
+      "domingo",
+      "lunes",
+      "martes",
+      "miércoles",
+      "jueves",
+      "viernes",
+      "sábado",
+    ];
+
+    const diaManana = diasSemana[manana.getDay()];
+
+    function normalizarDiaPico(texto) {
+      return String(texto || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    const diaComparar = normalizarDiaPico(diaManana);
+
+    const vehiculosConPico = vehiculosAdministracion.filter(
+      function (vehiculo) {
+        const pico = normalizarDiaPico(vehiculo.picoYPlaca);
+
+        return pico === diaComparar;
+      },
+    );
+
+    const cantidad = vehiculosConPico.length;
+
+    const nombreDia = diaManana.charAt(0).toUpperCase() + diaManana.slice(1);
+
+    if (cantidad === 0) {
+      elemento.textContent = nombreDia + ": ningún vehículo ✓";
+
+      return;
+    }
+
+    if (cantidad === 1) {
+      elemento.textContent = nombreDia + ": 1 vehículo con restricción ›";
+
+      return;
+    }
+
+    elemento.textContent =
+      nombreDia + ": " + cantidad + " vehículos con restricción ›";
+  }
+
+  function cargarAtencionRapidaCitas() {
+    const item = document.getElementById("atencionRapidaCitasItem");
+
+    const resumen = document.getElementById("atencionRapidaCitasResumen");
+
+    if (!item || !resumen) {
+      return;
+    }
+
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? String(usuarioPanel.rol).trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR" && rol !== "ADMIN") {
+      item.style.display = "none";
+
+      return;
+    }
+
+    item.style.display = "flex";
+
+    resumen.textContent = "Revisando citas de hoy...";
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.citas)
+        ) {
+          resumen.textContent = "No fue posible consultar las citas.";
+
+          return;
+        }
+
+        const ahora = new Date();
+
+        const dia = String(ahora.getDate()).padStart(2, "0");
+
+        const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+
+        const anio = ahora.getFullYear();
+
+        const fechaHoy = dia + "/" + mes + "/" + anio;
+
+        const ahoraMs = Date.now();
+
+        const citasActivas = respuesta.citas.filter(function (cita) {
+          const estado = String(cita.estado || "")
+            .trim()
+            .toUpperCase();
+
+          return estado !== "ATENDIDA" && estado !== "CANCELADA";
+        });
+
+        const citasAtrasadas = citasActivas
+          .filter(function (cita) {
+            const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+            return fechaHora > 0 && fechaHora < ahoraMs;
+          })
+          .sort(function (a, b) {
+            return obtenerFechaHoraCitaMs(b) - obtenerFechaHoraCitaMs(a);
+          });
+
+        const citasHoy = citasActivas
+          .filter(function (cita) {
+            const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+            return (
+              String(cita.fecha || "").trim() === fechaHoy &&
+              fechaHora >= ahoraMs
+            );
+          })
+          .sort(function (a, b) {
+            return obtenerFechaHoraCitaMs(a) - obtenerFechaHoraCitaMs(b);
+          });
+
+        if (citasAtrasadas.length > 0) {
+          if (citasHoy.length > 0) {
+            resumen.textContent =
+              "⚠️ " +
+              citasAtrasadas.length +
+              (citasAtrasadas.length === 1
+                ? " cita atrasada"
+                : " citas atrasadas") +
+              " · " +
+              citasHoy.length +
+              (citasHoy.length === 1 ? " cita hoy" : " citas hoy");
+          } else {
+            resumen.textContent =
+              "⚠️ " +
+              citasAtrasadas.length +
+              (citasAtrasadas.length === 1
+                ? " cita atrasada"
+                : " citas atrasadas");
+          }
+
+          return;
+        }
+
+        if (citasHoy.length === 0) {
+          resumen.textContent = "No hay citas pendientes para hoy ✓";
+
+          return;
+        }
+
+        if (citasHoy.length === 1) {
+          const cita = citasHoy[0];
+
+          resumen.textContent =
+            "1 cita hoy · " +
+            (cita.hora || "") +
+            " · " +
+            (cita.vehiculo || "Vehículo");
+
+          return;
+        }
+
+        const primera = citasHoy[0];
+
+        const segunda = citasHoy[1];
+
+        resumen.textContent =
+          citasHoy.length +
+          " citas hoy · Próxima: " +
+          (primera.hora || "") +
+          " " +
+          (primera.vehiculo || "Vehículo") +
+          " · Luego: " +
+          (segunda.hora || "") +
+          " " +
+          (segunda.vehiculo || "Vehículo");
+      })
+
+      .obtenerCitasAdministracion(tokenSesion);
+  }
+
+  function cargarPicoPlacaManana() {
+    const contenedor = document.getElementById("listaPicoPlacaManana");
+
+    const descripcion = document.getElementById("descripcionPicoPlacaManana");
+
+    if (!contenedor) {
+      return;
+    }
+
+    const manana = new Date();
+
+    manana.setDate(manana.getDate() + 1);
+
+    const diasSemana = [
+      "domingo",
+      "lunes",
+      "martes",
+      "miércoles",
+      "jueves",
+      "viernes",
+      "sábado",
+    ];
+
+    const diaManana = diasSemana[manana.getDay()];
+
+    const nombreDia = diaManana.charAt(0).toUpperCase() + diaManana.slice(1);
+
+    if (descripcion) {
+      descripcion.textContent =
+        "Vehículos con restricción para " + nombreDia + ".";
+    }
+
+    function normalizarDiaPico(texto) {
+      return String(texto || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    const diaComparar = normalizarDiaPico(diaManana);
+
+    const vehiculosConPico = vehiculosAdministracion.filter(
+      function (vehiculo) {
+        const pico = normalizarDiaPico(vehiculo.picoYPlaca);
+
+        return pico === diaComparar;
+      },
+    );
+
+    if (vehiculosConPico.length === 0) {
+      contenedor.innerHTML = `
+      <div class="pico-placa-manana-vacio">
+
+        <span>
+          ✅
+        </span>
+
+        <strong>
+          Ningún vehículo tiene restricción
+        </strong>
+
+        <small>
+          No hay vehículos con pico y placa para ${escaparHTML(nombreDia)}.
+        </small>
+
+      </div>
+    `;
+
+      return;
+    }
+
+    contenedor.innerHTML = vehiculosConPico
+      .map(function (vehiculo) {
+        return `
+            <div class="pico-placa-card">
+
+              <span class="pico-placa-card-icono">
+                🚦
+              </span>
+
+
+              <div class="pico-placa-card-contenido">
+
+                <strong>
+                  ${escaparHTML(vehiculo.nombre || "Vehículo")}
+                </strong>
+
+                <small>
+                  ${escaparHTML(vehiculo.placa || "Sin placa")}
+                </small>
+
+              </div>
+
+
+              <span class="pico-placa-card-estado">
+                ${escaparHTML(nombreDia)}
+              </span>
+
+            </div>
+          `;
+      })
+      .join("");
+  }
+
+  function abrirModuloPicoPlacaManana() {
+    mostrarModuloPanel("moduloPicoPlacaManana");
+
+    cargarPicoPlacaManana();
+  }
+
+  function revisarNuevoVehiculoAntesDeGuardar() {
+    const campos = [
+      { nombre: "Vehículo", id: "agregarVehiculoNombre" },
+      { nombre: "Placa", id: "agregarVehiculoPlaca" },
+      { nombre: "Tránsito", id: "agregarVehiculoTransito" },
+      { nombre: "SOAT", id: "agregarVehiculoSoat" },
+      { nombre: "Tecnomecánica", id: "agregarVehiculoTecnomecanica" },
+      { nombre: "Pico y placa", id: "agregarVehiculoPicoYPlaca" },
+      { nombre: "Precio", id: "agregarVehiculoPrecio" },
+      { nombre: "Kilometraje", id: "agregarVehiculoKilometraje" },
+      { nombre: "Detalles", id: "agregarVehiculoDetalles" },
+      { nombre: "Ubicación", id: "agregarVehiculoUbicacion" },
+    ];
+
+    const faltantes = [];
+    let camposConInformacion = 0;
+
+    campos.forEach(function (campo) {
+      const elemento = document.getElementById(campo.id);
+
+      if (!elemento) {
+        return;
+      }
+
+      const valor = elemento.value.trim();
+
+      if (valor) {
+        camposConInformacion++;
+      } else {
+        faltantes.push(campo.nombre);
+      }
+    });
+
+    const advertencia = document.getElementById("advertenciaNuevoVehiculo");
+
+    const contenido = document.getElementById(
+      "advertenciaNuevoVehiculoContenido",
+    );
+
+    if (!advertencia || !contenido) {
+      return;
+    }
+
+    /* ==========================================
+     TODO EL FORMULARIO ESTÁ VACÍO
+  ========================================== */
+
+    if (camposConInformacion === 0) {
+      contenido.innerHTML = `
+      <strong>
+        ⚠️ No hay información para guardar
+      </strong>
+
+      <div>
+        Ingresa por lo menos un dato del vehículo.
+      </div>
+    `;
+
+      advertencia.style.display = "flex";
+
+      return;
+    }
+
+    /* ==========================================
+     HAY CAMPOS SIN COMPLETAR
+  ========================================== */
+
+    if (faltantes.length > 0) {
+      contenido.innerHTML = `
+      <strong>
+        ⚠️ Información sin completar
+      </strong>
+
+      <div>
+        Vas a guardar este vehículo sin:
+      </div>
+
+      <ul>
+        ${faltantes
+          .map(function (nombre) {
+            return `<li>${nombre}</li>`;
+          })
+          .join("")}
+      </ul>
+
+      <button
+        type="button"
+        class="editor-vehiculo-boton-principal"
+        onclick="confirmarNuevoVehiculo()">
+
+        CONFIRMAR Y GUARDAR
+
+      </button>
+
+      <button
+        type="button"
+        class="editor-vehiculo-boton-secundario"
+        onclick="volverACompletarNuevoVehiculo()">
+
+        VOLVER Y COMPLETAR
+
+      </button>
+    `;
+    } else {
+      /* ==========================================
+     INFORMACIÓN COMPLETA
+  ========================================== */
+
+      contenido.innerHTML = `
+    <strong>
+      ✓ Información completa
+    </strong>
+
+    <div>
+      La información del vehículo está completa.
+    </div>
+
+    <button
+      type="button"
+      class="editor-vehiculo-boton-principal"
+      onclick="confirmarNuevoVehiculo()">
+
+      CONFIRMAR Y GUARDAR
+
+    </button>
+
+    <button
+      type="button"
+      class="editor-vehiculo-boton-secundario"
+      onclick="volverACompletarNuevoVehiculo()">
+
+      VOLVER Y COMPLETAR
+
+    </button>
+  `;
+    }
+
+    advertencia.style.display = "flex";
+  }
+
+  function confirmarNuevoVehiculo() {
+    if (!tokenSesion) {
+      return;
+    }
+
+    const nombre = document.getElementById("agregarVehiculoNombre");
+
+    const placa = document.getElementById("agregarVehiculoPlaca");
+
+    const transito = document.getElementById("agregarVehiculoTransito");
+
+    const ubicacion = document.getElementById("agregarVehiculoUbicacion");
+
+    const soat = document.getElementById("agregarVehiculoSoat");
+
+    const tecnomecanica = document.getElementById(
+      "agregarVehiculoTecnomecanica",
+    );
+
+    const picoYPlaca = document.getElementById("agregarVehiculoPicoYPlaca");
+
+    const precio = document.getElementById("agregarVehiculoPrecio");
+
+    const kilometraje = document.getElementById("agregarVehiculoKilometraje");
+
+    const detalles = document.getElementById("agregarVehiculoDetalles");
+
+    const datos = {
+      nombre: nombre ? nombre.value.trim().toUpperCase() : "",
+
+      placa: placa ? placa.value.trim().toUpperCase() : "",
+
+      transito: transito ? transito.value.trim().toUpperCase() : "",
+
+      ubicacion: ubicacion ? ubicacion.value.trim().toUpperCase() : "",
+
+      soat: soat ? soat.value.trim() : "",
+
+      tecnomecanica: tecnomecanica ? tecnomecanica.value.trim() : "",
+
+      picoYPlaca: picoYPlaca ? picoYPlaca.value.trim().toUpperCase() : "",
+
+      precio: precio ? precio.value.trim() : "",
+
+      kilometraje: kilometraje ? kilometraje.value.trim() : "",
+
+      detalles: detalles ? detalles.value.trim().toUpperCase() : "",
+    };
+
+    const advertencia = document.getElementById("advertenciaNuevoVehiculo");
+
+    if (advertencia) {
+      advertencia.style.display = "none";
+    }
+
+    guardarNuevoVehiculo(datos);
+  }
+
+  /* =====================================================
+   GUARDAR NUEVO VEHÍCULO
+===================================================== */
+
+  function guardarNuevoVehiculo(datos) {
+    if (!datos || !tokenSesion) {
+      return;
+    }
+
+    const mensaje = document.getElementById("mensajeAgregarVehiculo");
+
+    const advertencia = document.getElementById("advertenciaNuevoVehiculo");
+
+    const boton = advertencia
+      ? advertencia.querySelector(".editor-vehiculo-boton-principal")
+      : null;
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "GUARDANDO...";
+    }
+
+    if (mensaje) {
+      mensaje.style.display = "none";
+
+      mensaje.textContent = "";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+            boton.textContent = "CONFIRMAR Y GUARDAR";
+          }
+
+          if (mensaje) {
+            mensaje.textContent =
+              respuesta && respuesta.mensaje
+                ? "⚠️ " + respuesta.mensaje
+                : "⚠️ No fue posible guardar el vehículo.";
+
+            mensaje.style.display = "block";
+          }
+
+          return;
+        }
+
+        /* CERRAR ADVERTENCIA */
+
+        if (advertencia) {
+          advertencia.style.display = "none";
+        }
+
+        /* LIMPIAR FORMULARIO */
+
+        const campos = [
+          "agregarVehiculoNombre",
+          "agregarVehiculoPlaca",
+          "agregarVehiculoTransito",
+          "agregarVehiculoSoat",
+          "agregarVehiculoTecnomecanica",
+          "agregarVehiculoPicoYPlaca",
+          "agregarVehiculoPrecio",
+          "agregarVehiculoKilometraje",
+          "agregarVehiculoDetalles",
+          "agregarVehiculoUbicacion",
+        ];
+
+        campos.forEach(function (id) {
+          const elemento = document.getElementById(id);
+
+          if (elemento) {
+            elemento.value = "";
+          }
+        });
+
+        /* ACTUALIZAR VEHÍCULOS */
+
+        cargarVehiculosAdministracion();
+
+        /* MENSAJE FINAL */
+
+        if (mensaje) {
+          mensaje.textContent = "✓ Vehículo agregado correctamente.";
+
+          mensaje.style.display = "block";
+        }
+
+        mostrarAlerta(
+          "✅",
+          "Vehículo agregado",
+          "<p>El vehículo fue guardado correctamente.</p>",
+        );
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al crear vehículo:", error);
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "CONFIRMAR Y GUARDAR";
+        }
+
+        if (mensaje) {
+          mensaje.textContent = "⚠️ Ocurrió un error al guardar el vehículo.";
+
+          mensaje.style.display = "block";
+        }
+      })
+
+      .crearVehiculoAdministracion(
+        tokenSesion,
+
+        datos.nombre,
+
+        datos.placa,
+
+        datos.transito,
+
+        datos.soat,
+
+        datos.tecnomecanica,
+
+        datos.picoYPlaca,
+
+        datos.precio,
+
+        datos.kilometraje,
+
+        datos.detalles,
+
+        datos.ubicacion,
+      );
+  }
+
+  function volverACompletarNuevoVehiculo() {
+    const advertencia = document.getElementById("advertenciaNuevoVehiculo");
+
+    const contenido = document.getElementById(
+      "advertenciaNuevoVehiculoContenido",
+    );
+
+    if (contenido) {
+      contenido.innerHTML = "";
+    }
+
+    if (advertencia) {
+      advertencia.style.display = "none";
+    }
+  }
+
+  /* =====================================================
+   RECORDAR PANTALLA ACTUAL
+===================================================== */
+
+  function guardarPantallaActual(pantalla) {
+    if (!pantalla) {
+      return;
+    }
+
+    sessionStorage.setItem("pantallaActual", pantalla);
+  }
+
+  function obtenerPantallaActual() {
+    return sessionStorage.getItem("pantallaActual");
+  }
+
+  // =====================================================
+  // RESTAURAR PANEL DESPUÉS DE RECARGAR LA PÁGINA
+  // =====================================================
+
+  window.addEventListener("load", function () {
+    if (!tokenSesion) {
+      return;
+    }
+
+    console.log(
+      "RECARGA - módulo guardado:",
+      sessionStorage.getItem("moduloPanelActivo"),
+    );
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        console.log("SESIÓN RESTAURADA:", respuesta);
+
+        if (!respuesta || !respuesta.success || !respuesta.usuario) {
+          return;
+        }
+
+        abrirPanelAdministrativo(respuesta.usuario, true);
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("ERROR RESTAURANDO SESIÓN:", error);
+      })
+
+      .validarSesion(tokenSesion);
+  });
+
+  function reproducirLottiesDelContenedor(contenedor) {
+    if (!contenedor) {
+      return;
+    }
+
+    const lotties = contenedor.querySelectorAll("lottie-player");
+
+    lotties.forEach(function (lottie) {
+      // Nunca permitir loop automático
+      lottie.removeAttribute("loop");
+
+      // Nunca depender de autoplay
+      lottie.removeAttribute("autoplay");
+
+      const reproducir = function () {
+        try {
+          lottie.stop();
+          lottie.seek(0);
+          lottie.play();
+        } catch (error) {
+          console.warn("No se pudo reproducir Lottie:", error);
+        }
+      };
+
+      if (typeof lottie.play === "function") {
+        reproducir();
+      } else {
+        lottie.addEventListener("ready", reproducir, {
+          once: true,
+        });
+      }
+    });
+  }
+
+  function animarContenedorVisible(contenedor) {
+    if (!contenedor) {
+      return;
+    }
+
+    setTimeout(function () {
+      reproducirLottiesDelContenedor(contenedor);
+    }, 100);
+  }
+
+  function cargarOrdenParqueaderosAdministracion() {
+    if (!tokenSesion) {
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.parqueaderos)
+        ) {
+          return;
+        }
+
+        ordenParqueaderosAdministracion = respuesta.parqueaderos
+          .map(function (parqueadero) {
+            return String(parqueadero.nombre || "").trim();
+          })
+          .filter(function (nombre) {
+            return nombre !== "";
+          });
+      })
+      .obtenerParqueaderosAdministracion(tokenSesion);
+  }
+
+  // =====================================================
+  // CITAS - PANEL ADMINISTRATIVO
+  // SOLO ADMINISTRADOR
+  // =====================================================
+
+  function abrirModuloCitas() {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR" && rol !== "ADMIN") {
+      alert("No tienes permisos para acceder a citas.");
+
+      return;
+    }
+
+    mostrarModuloPanel("moduloCitas");
+
+    cargarCitasAdministracion();
+
+    iniciarAlertasCitas();
+
+    cargarAtencionRapidaCitas();
+  }
+
+  function abrirNuevaCita() {
+    const contenido = document.getElementById("contenidoCitasAdministracion");
+
+    const formulario = document.getElementById("formularioNuevaCita");
+
+    if (contenido) {
+      contenido.style.display = "none";
+    }
+
+    if (formulario) {
+      formulario.style.display = "block";
+    }
+
+    // ===================================================
+    // CARGAR VEHÍCULOS SI TODAVÍA NO ESTÁN DISPONIBLES
+    // ===================================================
+
+    if (
+      !Array.isArray(vehiculosAdministracion) ||
+      vehiculosAdministracion.length === 0
+    ) {
+      if (!tokenSesion) {
+        alert("La sesión no está disponible.");
+
+        return;
+      }
+
+      google.script.run
+
+        .withSuccessHandler(function (respuesta) {
+          if (!respuesta || !respuesta.success) {
+            alert(
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible cargar los vehículos.",
+            );
+
+            return;
+          }
+
+          vehiculosAdministracion = Array.isArray(respuesta.vehiculos)
+            ? respuesta.vehiculos
+            : [];
+
+          console.log(
+            "Vehículos disponibles para citas:",
+            vehiculosAdministracion.length,
+          );
+        })
+
+        .withFailureHandler(function (error) {
+          console.error("Error cargando vehículos para citas:", error);
+
+          alert("No fue posible cargar los vehículos.");
+        })
+
+        .obtenerVehiculosAdministracion(tokenSesion);
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cerrarNuevaCita() {
+    const contenido = document.getElementById("contenidoCitasAdministracion");
+
+    const formulario = document.getElementById("formularioNuevaCita");
+
+    if (formulario) {
+      formulario.style.display = "none";
+    }
+
+    if (contenido) {
+      contenido.style.display = "flex";
+    }
+
+    citaEditandoId = null;
+    modoEdicionCita = false;
+
+    const botonGuardar = formulario
+      ? formulario.querySelector(".editor-panel-boton")
+      : null;
+
+    if (botonGuardar) {
+      botonGuardar.textContent = "Guardar cita";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function convertirFechaCitaParaBackend(fecha) {
+    if (!fecha) {
+      return "";
+    }
+
+    const partes = fecha.split("-");
+
+    if (partes.length !== 3) {
+      return "";
+    }
+
+    return partes[2] + "/" + partes[1] + "/" + partes[0];
+  }
+
+  function guardarNuevaCita() {
+    // ===================================================
+    // VALIDAR ADMINISTRADOR
+    // ===================================================
+
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? usuarioPanel.rol.toString().trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR" && rol !== "ADMIN") {
+      alert("No tienes permisos para crear citas.");
+
+      return;
+    }
+
+    // ===================================================
+    // OBTENER CAMPOS
+    // ===================================================
+
+    const inputFecha = document.getElementById("citaFecha");
+
+    const inputHora = document.getElementById("citaHora");
+
+    const inputVehiculo = document.getElementById("citaVehiculo");
+
+    const inputPlaca = document.getElementById("citaPlaca");
+
+    const inputCliente = document.getElementById("citaCliente");
+
+    const inputTelefono = document.getElementById("citaTelefono");
+
+    const inputTipo = document.getElementById("citaTipo");
+
+    const inputObservaciones = document.getElementById("citaObservaciones");
+
+    if (!inputFecha || !inputHora || !inputVehiculo) {
+      alert("No se encontraron los campos del formulario.");
+
+      return;
+    }
+
+    // ===================================================
+    // OBTENER VALORES
+    // ===================================================
+
+    const fechaOriginal = inputFecha.value.trim();
+
+    const hora = inputHora.value.trim();
+
+    const vehiculo = inputVehiculo.value.trim();
+
+    const placa = inputPlaca ? inputPlaca.value.trim().toUpperCase() : "";
+
+    const cliente = inputCliente ? inputCliente.value.trim() : "";
+
+    const telefono = inputTelefono ? inputTelefono.value.trim() : "";
+
+    const tipo = inputTipo ? inputTipo.value.trim() : "";
+
+    const observaciones = inputObservaciones
+      ? inputObservaciones.value.trim()
+      : "";
+
+    // ===================================================
+    // CAMPOS OBLIGATORIOS
+    // ===================================================
+
+    if (!fechaOriginal) {
+      alert("Debes seleccionar una fecha.");
+
+      inputFecha.focus();
+
+      return;
+    }
+
+    if (!hora) {
+      alert("Debes seleccionar una hora.");
+
+      inputHora.focus();
+
+      return;
+    }
+
+    if (!vehiculo) {
+      alert("Debes seleccionar un vehículo.");
+
+      inputVehiculo.focus();
+
+      return;
+    }
+
+    // ===================================================
+    // VALIDAR TIPO
+    // ===================================================
+
+    const tiposPermitidos = [
+      "",
+      "Ver vehículo",
+      "Prueba de manejo",
+      "Negociación",
+      "Peritaje",
+      "Recibir vehículo",
+      "Otro",
+    ];
+
+    if (!tiposPermitidos.includes(tipo)) {
+      alert("El tipo de cita no es válido.");
+
+      return;
+    }
+
+    // ===================================================
+    // CONVERTIR FECHA
+    // yyyy-MM-dd -> dd/MM/yyyy
+    // ===================================================
+
+    const fecha = convertirFechaCitaParaBackend(fechaOriginal);
+
+    if (!fecha) {
+      alert("La fecha seleccionada no es válida.");
+
+      return;
+    }
+
+    // ===================================================
+    // BLOQUEAR BOTÓN
+    // ===================================================
+
+    const formulario = document.getElementById("formularioNuevaCita");
+
+    const botonGuardar = formulario
+      ? formulario.querySelector(".editor-panel-boton")
+      : null;
+
+    if (botonGuardar) {
+      botonGuardar.disabled = true;
+
+      botonGuardar.textContent = "Guardando...";
+    }
+
+    // ===================================================
+    // GUARDAR EN BACKEND
+    // ===================================================
+
+    if (modoEdicionCita && citaEditandoId) {
+      google.script.run
+
+        .withSuccessHandler(function (respuesta) {
+          if (botonGuardar) {
+            botonGuardar.disabled = false;
+
+            botonGuardar.textContent = "Guardar cita";
+          }
+
+          if (!respuesta || !respuesta.success) {
+            mostrarAlertaCitas(
+              "error",
+              "No se pudo actualizar",
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible actualizar la cita.",
+            );
+
+            return;
+          }
+
+          citaEditandoId = null;
+          modoEdicionCita = false;
+
+          inputFecha.value = "";
+          inputHora.value = "";
+          inputVehiculo.value = "";
+
+          if (inputPlaca) {
+            inputPlaca.value = "";
+          }
+
+          if (inputCliente) {
+            inputCliente.value = "";
+          }
+
+          if (inputTelefono) {
+            inputTelefono.value = "";
+          }
+
+          if (inputTipo) {
+            inputTipo.value = "";
+          }
+
+          if (inputObservaciones) {
+            inputObservaciones.value = "";
+          }
+
+          mostrarAlertaCitas(
+            "success",
+            "Cita actualizada",
+            respuesta.mensaje || "La cita fue actualizada correctamente.",
+          );
+
+          cerrarNuevaCita();
+
+          cargarCitasAdministracion();
+
+          cargarAtencionRapidaCitas();
+        })
+
+        .withFailureHandler(function (error) {
+          if (botonGuardar) {
+            botonGuardar.disabled = false;
+
+            botonGuardar.textContent = "Guardar cambios";
+          }
+
+          console.error("Error actualizando cita:", error);
+
+          mostrarAlertaCitas(
+            "error",
+            "Error al actualizar",
+            "Ocurrió un error al actualizar la cita.",
+          );
+        })
+
+        .actualizarCitaAdministracion(
+          tokenSesion,
+          citaEditandoId,
+          fecha,
+          hora,
+          vehiculo,
+          placa,
+          cliente,
+          telefono,
+          tipo,
+          observaciones,
+        );
+    } else {
+      google.script.run
+
+        .withSuccessHandler(function (respuesta) {
+          if (botonGuardar) {
+            botonGuardar.disabled = false;
+
+            botonGuardar.textContent = "Guardar cita";
+          }
+
+          if (!respuesta || !respuesta.success) {
+            mostrarAlertaCitas(
+              "error",
+              "No se pudo crear",
+              respuesta && respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible crear la cita.",
+            );
+
+            return;
+          }
+
+          inputFecha.value = "";
+          inputHora.value = "";
+          inputVehiculo.value = "";
+
+          if (inputPlaca) {
+            inputPlaca.value = "";
+          }
+
+          if (inputCliente) {
+            inputCliente.value = "";
+          }
+
+          if (inputTelefono) {
+            inputTelefono.value = "";
+          }
+
+          if (inputTipo) {
+            inputTipo.value = "";
+          }
+
+          if (inputObservaciones) {
+            inputObservaciones.value = "";
+          }
+
+          mostrarAlertaCitas(
+            "success",
+            "Cita creada",
+            respuesta.mensaje || "La cita fue creada correctamente.",
+          );
+
+          cerrarNuevaCita();
+
+          cargarCitasAdministracion();
+
+          cargarAtencionRapidaCitas();
+        })
+
+        .withFailureHandler(function (error) {
+          if (botonGuardar) {
+            botonGuardar.disabled = false;
+
+            botonGuardar.textContent = "Guardar cita";
+          }
+
+          console.error("Error al crear cita:", error);
+
+          mostrarAlertaCitas(
+            "error",
+            "Error al guardar",
+            "Ocurrió un error al guardar la cita.",
+          );
+        })
+
+        .crearCitaAdministracion(
+          tokenSesion,
+          fecha,
+          hora,
+          vehiculo,
+          placa,
+          cliente,
+          telefono,
+          tipo,
+          observaciones,
+        );
+    }
+  }
+
+  function buscarVehiculosParaCita() {
+    const input = document.getElementById("citaVehiculo");
+
+    const resultados = document.getElementById("resultadosVehiculosCita");
+
+    if (!input || !resultados) {
+      return;
+    }
+
+    const texto = input.value.trim().toLowerCase();
+
+    if (!texto) {
+      resultados.innerHTML = "";
+
+      resultados.style.display = "none";
+
+      return;
+    }
+
+    const coincidencias = vehiculosAdministracion
+      .filter(function (vehiculo) {
+        const nombre = String(vehiculo.nombre || "").toLowerCase();
+
+        const placa = String(vehiculo.placa || "").toLowerCase();
+
+        return nombre.includes(texto) || placa.includes(texto);
+      })
+      .slice(0, 8);
+
+    if (coincidencias.length === 0) {
+      resultados.innerHTML = `
+      <div class="citas-buscador-vacio">
+        No se encontraron vehículos.
+      </div>
+    `;
+
+      resultados.style.display = "block";
+
+      return;
+    }
+
+    resultados.innerHTML = "";
+
+    coincidencias.forEach(function (vehiculo) {
+      const opcion = document.createElement("button");
+
+      opcion.type = "button";
+
+      opcion.className = "citas-buscador-opcion";
+
+      opcion.innerHTML = `
+        <strong>
+          ${vehiculo.nombre || "Vehículo"}
+        </strong>
+
+        <small>
+          ${vehiculo.placa || ""}
+        </small>
+      `;
+
+      opcion.onclick = function () {
+        seleccionarVehiculoParaCita(vehiculo);
+      };
+
+      resultados.appendChild(opcion);
+    });
+
+    resultados.style.display = "block";
+  }
+
+  function seleccionarVehiculoParaCita(vehiculo) {
+    const inputVehiculo = document.getElementById("citaVehiculo");
+
+    const inputPlaca = document.getElementById("citaPlaca");
+
+    const resultados = document.getElementById("resultadosVehiculosCita");
+
+    if (inputVehiculo) {
+      inputVehiculo.value = vehiculo.nombre || "";
+    }
+
+    if (inputPlaca) {
+      inputPlaca.value = String(vehiculo.placa || "").toUpperCase();
+    }
+
+    if (resultados) {
+      resultados.innerHTML = "";
+
+      resultados.style.display = "none";
+    }
+  }
+
+  // =====================================================
+  // CARGAR CITAS
+  // =====================================================
+
+  function cargarCitasAdministracion() {
+    if (!tokenSesion) {
+      return;
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          console.error(
+            respuesta ? respuesta.mensaje : "No fue posible cargar las citas.",
+          );
+
+          return;
+        }
+
+        citasAdministracion = Array.isArray(respuesta.citas)
+          ? respuesta.citas
+          : [];
+
+        actualizarListasCitasAdministracion();
+
+        revisarAlertasCitas();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error cargando citas:", error);
+      })
+
+      .obtenerCitasAdministracion(tokenSesion);
+  }
+
+  function revisarAlertasCitas() {
+    if (
+      !Array.isArray(citasAdministracion) ||
+      citasAdministracion.length === 0
+    ) {
+      return;
+    }
+
+    const ahora = Date.now();
+
+    citasAdministracion.forEach(function (cita) {
+      const estado = String(cita.estado || "")
+        .trim()
+        .toUpperCase();
+
+      if (estado === "ATENDIDA" || estado === "CANCELADA") {
+        return;
+      }
+
+      const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+      if (!fechaHora) {
+        return;
+      }
+
+      const diferenciaMs = fechaHora - ahora;
+
+      const minutos = Math.ceil(diferenciaMs / (1000 * 60));
+
+      if (minutos < 0) {
+        return;
+      }
+
+      const id = String(cita.id || "");
+
+      if (!id) {
+        return;
+      }
+
+      if (minutos <= 60 && minutos > 30) {
+        const clave = id + "_60";
+
+        if (!alertasCitasMostradas[clave]) {
+          alertasCitasMostradas[clave] = true;
+
+          mostrarAlertaInternaCita(cita, "Falta aproximadamente 1 hora");
+        }
+      } else if (minutos <= 30) {
+        const clave = id + "_30";
+
+        if (!alertasCitasMostradas[clave]) {
+          alertasCitasMostradas[clave] = true;
+
+          mostrarAlertaInternaCita(cita, "Faltan 30 minutos o menos");
+        }
+      }
+    });
+  }
+
+  // =====================================================
+  // CONVERTIR FECHA + HORA DE CITA
+  // =====================================================
+
+  function obtenerFechaHoraCitaMs(cita) {
+    const fecha = String(cita.fecha || "").split("/");
+
+    const hora = String(cita.hora || "").split(":");
+
+    if (fecha.length !== 3 || hora.length !== 2) {
+      return 0;
+    }
+
+    return new Date(
+      Number(fecha[2]),
+      Number(fecha[1]) - 1,
+      Number(fecha[0]),
+      Number(hora[0]),
+      Number(hora[1]),
+      0,
+      0,
+    ).getTime();
+  }
+
+  function crearTarjetaCita(cita) {
+    const vehiculo = escaparHTML(cita.vehiculo || "Vehículo");
+
+    const placa = escaparHTML(cita.placa || "-");
+
+    const cliente = escaparHTML(cita.cliente || "Sin cliente");
+
+    const tipo = escaparHTML(cita.tipo || "Sin tipo");
+
+    const estado = String(cita.estado || "PENDIENTE")
+      .trim()
+      .toUpperCase();
+
+    let claseEstado = "cita-estado-pendiente";
+
+    if (estado === "CONFIRMADA") {
+      claseEstado = "cita-estado-confirmada";
+    } else if (estado === "ATENDIDA") {
+      claseEstado = "cita-estado-atendida";
+    } else if (estado === "CANCELADA") {
+      claseEstado = "cita-estado-cancelada";
+    }
+
+    const estadoSeguro = escaparHTML(estado);
+
+    const idSeguro = escaparHTML(cita.id || "");
+
+    let botonesEstado = "";
+
+    if (estado === "PENDIENTE") {
+      botonesEstado = `
+      <button
+        type="button"
+        class="cita-accion cita-accion-confirmar"
+        onclick="cambiarEstadoCitaFront('${idSeguro}', 'CONFIRMADA')">
+        Confirmar
+      </button>
+    `;
+    }
+
+    if (estado === "PENDIENTE" || estado === "CONFIRMADA") {
+      botonesEstado += `
+      <button
+        type="button"
+        class="cita-accion cita-accion-atender"
+        onclick="cambiarEstadoCitaFront('${idSeguro}', 'ATENDIDA')">
+        Atendida
+      </button>
+
+      <button
+        type="button"
+        class="cita-accion cita-accion-cancelar"
+        onclick="cambiarEstadoCitaFront('${idSeguro}', 'CANCELADA')">
+        Cancelar
+      </button>
+    `;
+    }
+
+    return `
+    <article class="cita-card">
+
+      <div class="cita-card-superior">
+
+        <div>
+
+          <strong class="cita-card-vehiculo">
+            ${vehiculo}
+          </strong>
+
+          <small class="cita-card-placa">
+            ${placa}
+          </small>
+
+        </div>
+
+        <span
+          class="cita-card-estado ${claseEstado}">
+          ${estadoSeguro}
+        </span>
+
+      </div>
+
+
+      <div class="cita-card-fecha">
+        📅 ${escaparHTML(cita.fecha || "")}
+        &nbsp;•&nbsp;
+        🕐 ${escaparHTML(cita.hora || "")}
+      </div>
+
+
+      <div class="cita-card-detalles">
+
+        <span>
+          👤 ${cliente}
+        </span>
+
+        <span>
+          📌 ${tipo}
+        </span>
+
+      </div>
+
+
+      <div class="cita-card-acciones">
+
+        ${botonesEstado}
+
+        <button
+          type="button"
+          class="cita-accion cita-accion-editar"
+          onclick="abrirEditarCita('${idSeguro}')">
+          Editar
+        </button>
+
+        <button
+          type="button"
+          class="cita-accion cita-accion-eliminar"
+          onclick="eliminarCitaFront('${idSeguro}')">
+          Eliminar
+        </button>
+
+      </div>
+
+    </article>
+  `;
+  }
+
+  function mostrarAlertaCitas(tipo, titulo, mensaje) {
+    let icono = "📅";
+
+    if (tipo === "success") {
+      icono = "✅";
+    } else if (tipo === "error") {
+      icono = "⚠️";
+    } else if (tipo === "info") {
+      icono = "ℹ️";
+    }
+
+    mostrarAlerta(
+      icono,
+      titulo,
+      `
+      <div style="
+        text-align:center;
+        line-height:1.5;
+        padding:4px 2px;
+      ">
+        ${escaparHTML(mensaje || "")}
+      </div>
+    `,
+    );
+  }
+
+  function cambiarEstadoCitaFront(idCita, nuevoEstado) {
+    if (!idCita || !nuevoEstado) {
+      return;
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          mostrarAlertaCitas(
+            "error",
+            "No se pudo actualizar",
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible actualizar la cita.",
+          );
+
+          return;
+        }
+
+        let mensajeEstado = "La cita fue actualizada correctamente.";
+
+        if (nuevoEstado === "CONFIRMADA") {
+          mensajeEstado = "La cita fue confirmada correctamente.";
+        } else if (nuevoEstado === "ATENDIDA") {
+          mensajeEstado = "La cita fue marcada como atendida.";
+        } else if (nuevoEstado === "CANCELADA") {
+          mensajeEstado = "La cita fue cancelada correctamente.";
+        }
+
+        mostrarAlertaCitas("success", "Cita actualizada", mensajeEstado);
+
+        cargarCitasAdministracion();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error actualizando estado de cita:", error);
+
+        mostrarAlertaCitas(
+          "error",
+          "Error",
+          "Ocurrió un error al actualizar la cita.",
+        );
+      })
+
+      .cambiarEstadoCitaAdministracion(tokenSesion, idCita, nuevoEstado);
+  }
+
+  function eliminarCitaFront(idCita) {
+    if (!idCita) {
+      return;
+    }
+
+    const cita = citasAdministracion.find(function (item) {
+      return String(item.id || "") === String(idCita);
+    });
+
+    const anterior = document.getElementById("modalEliminarCita");
+
+    if (anterior) {
+      anterior.remove();
+    }
+
+    const modal = document.createElement("div");
+
+    modal.id = "modalEliminarCita";
+
+    modal.className = "modal-eliminar-cita";
+
+    const vehiculo =
+      cita && cita.vehiculo ? escaparHTML(cita.vehiculo) : "esta cita";
+
+    const placa = cita && cita.placa ? escaparHTML(cita.placa) : "";
+
+    modal.innerHTML = `
+    <div class="modal-eliminar-cita-contenido">
+
+      <div class="modal-eliminar-cita-icono">
+        🗑️
+      </div>
+
+      <h3>
+        Eliminar cita
+      </h3>
+
+      <p>
+        ¿Seguro que deseas eliminar
+        <strong>${vehiculo}</strong>
+        ${placa ? ` · ${placa}` : ""}?
+      </p>
+
+      <small>
+        Esta acción no se puede deshacer.
+      </small>
+
+
+      <div class="modal-eliminar-cita-acciones">
+
+        <button
+          type="button"
+          class="modal-eliminar-cita-cancelar"
+          onclick="cerrarConfirmacionEliminarCita()">
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="modal-eliminar-cita-confirmar"
+          onclick="confirmarEliminacionCita('${escaparHTML(idCita)}', this)">
+          Sí, eliminar
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+    document.body.appendChild(modal);
+  }
+
+  function cerrarConfirmacionEliminarCita() {
+    const modal = document.getElementById("modalEliminarCita");
+
+    if (modal) {
+      modal.remove();
+    }
+  }
+
+  function confirmarEliminacionCita(idCita, boton) {
+    if (!idCita) {
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Eliminando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Sí, eliminar";
+          }
+
+          mostrarAlertaCitas(
+            "error",
+            "No se pudo eliminar",
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible eliminar la cita.",
+          );
+
+          return;
+        }
+
+        cerrarConfirmacionEliminarCita();
+
+        mostrarAlertaCitas(
+          "success",
+          "Cita eliminada",
+          respuesta.mensaje || "La cita fue eliminada correctamente.",
+        );
+
+        cargarCitasAdministracion();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error eliminando cita:", error);
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Sí, eliminar";
+        }
+
+        mostrarAlertaCitas(
+          "error",
+          "Error al eliminar",
+          "Ocurrió un error al eliminar la cita.",
+        );
+      })
+
+      .eliminarCitaAdministracion(tokenSesion, idCita);
+  }
+
+  // =====================================================
+  // ACTUALIZAR LISTAS DE CITAS
+  // =====================================================
+
+  function actualizarListasCitasAdministracion() {
+    const listaProximas = document.getElementById("listaCitasProximas");
+
+    const listaAtrasadas = document.getElementById("listaCitasAtrasadas");
+
+    const listaHistorial = document.getElementById("listaCitasHistorial");
+
+    const totalProximas = document.getElementById("citasTotalProximas");
+
+    const totalAtrasadas = document.getElementById("citasTotalAtrasadas");
+
+    const ahora = Date.now();
+
+    const proximas = [];
+    const atrasadas = [];
+    const historial = [];
+
+    citasAdministracion.forEach(function (cita) {
+      const estado = String(cita.estado || "")
+        .trim()
+        .toUpperCase();
+
+      const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+      if (estado === "ATENDIDA" || estado === "CANCELADA") {
+        historial.push(cita);
+
+        return;
+      }
+
+      if (fechaHora > 0 && fechaHora < ahora) {
+        atrasadas.push(cita);
+      } else {
+        proximas.push(cita);
+      }
+    });
+
+    proximas.sort(function (a, b) {
+      return obtenerFechaHoraCitaMs(a) - obtenerFechaHoraCitaMs(b);
+    });
+
+    atrasadas.sort(function (a, b) {
+      return obtenerFechaHoraCitaMs(b) - obtenerFechaHoraCitaMs(a);
+    });
+
+    historial.sort(function (a, b) {
+      return obtenerFechaHoraCitaMs(b) - obtenerFechaHoraCitaMs(a);
+    });
+
+    if (totalProximas) {
+      totalProximas.textContent = proximas.length;
+    }
+
+    if (totalAtrasadas) {
+      totalAtrasadas.textContent = atrasadas.length;
+    }
+
+    if (listaProximas) {
+      listaProximas.innerHTML =
+        proximas.length > 0
+          ? proximas.map(crearTarjetaCita).join("")
+          : `
+          <div class="citas-lista-vacia">
+            No hay citas próximas.
+          </div>
+        `;
+    }
+
+    if (listaAtrasadas) {
+      listaAtrasadas.innerHTML =
+        atrasadas.length > 0
+          ? atrasadas.map(crearTarjetaCita).join("")
+          : `
+          <div class="citas-lista-vacia">
+            No hay citas atrasadas.
+          </div>
+        `;
+    }
+
+    if (listaHistorial) {
+      listaHistorial.innerHTML =
+        historial.length > 0
+          ? historial.map(crearTarjetaCita).join("")
+          : `
+          <div class="citas-lista-vacia">
+            No hay citas en el historial.
+          </div>
+        `;
+    }
+  }
+
+  function abrirEditarCita(idCita) {
+    const cita = citasAdministracion.find(function (item) {
+      return item.id === idCita;
+    });
+
+    if (!cita) {
+      alert("No se encontró la cita.");
+
+      return;
+    }
+
+    citaEditandoId = cita.id;
+
+    modoEdicionCita = true;
+
+    const contenido = document.getElementById("contenidoCitasAdministracion");
+
+    const formulario = document.getElementById("formularioNuevaCita");
+
+    if (contenido) {
+      contenido.style.display = "none";
+    }
+
+    if (formulario) {
+      formulario.style.display = "block";
+    }
+
+    const inputFecha = document.getElementById("citaFecha");
+
+    const inputHora = document.getElementById("citaHora");
+
+    const inputVehiculo = document.getElementById("citaVehiculo");
+
+    const inputPlaca = document.getElementById("citaPlaca");
+
+    const inputCliente = document.getElementById("citaCliente");
+
+    const inputTelefono = document.getElementById("citaTelefono");
+
+    const inputTipo = document.getElementById("citaTipo");
+
+    const inputObservaciones = document.getElementById("citaObservaciones");
+
+    if (inputFecha) {
+      const partesFecha = String(cita.fecha || "").split("/");
+
+      if (partesFecha.length === 3) {
+        inputFecha.value =
+          partesFecha[2] + "-" + partesFecha[1] + "-" + partesFecha[0];
+      }
+    }
+
+    if (inputHora) {
+      inputHora.value = cita.hora || "";
+    }
+
+    if (inputVehiculo) {
+      inputVehiculo.value = cita.vehiculo || "";
+    }
+
+    if (inputPlaca) {
+      inputPlaca.value = cita.placa || "";
+    }
+
+    if (inputCliente) {
+      inputCliente.value = cita.cliente || "";
+    }
+
+    if (inputTelefono) {
+      inputTelefono.value = cita.telefono || "";
+    }
+
+    if (inputTipo) {
+      const tipo = String(cita.tipo || "")
+        .trim()
+        .toUpperCase();
+
+      const mapaTipos = {
+        "VER VEHÍCULO": "Ver vehículo",
+
+        "PRUEBA DE MANEJO": "Prueba de manejo",
+
+        NEGOCIACIÓN: "Negociación",
+
+        PERITAJE: "Peritaje",
+
+        "RECIBIR VEHÍCULO": "Recibir vehículo",
+
+        OTRO: "Otro",
+      };
+
+      inputTipo.value = mapaTipos[tipo] || "";
+    }
+
+    if (inputObservaciones) {
+      inputObservaciones.value = cita.observaciones || "";
+    }
+
+    const botonGuardar = formulario
+      ? formulario.querySelector(".editor-panel-boton")
+      : null;
+
+    if (botonGuardar) {
+      botonGuardar.textContent = "Guardar cambios";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function mostrarAlertaInternaCita(cita, mensaje) {
+    const toast = document.getElementById("toastCita");
+
+    const titulo = document.getElementById("toastCitaTitulo");
+
+    const contenido = document.getElementById("toastCitaMensaje");
+
+    if (!toast || !titulo || !contenido) {
+      return;
+    }
+
+    const vehiculo = cita.vehiculo || "Vehículo";
+
+    const placa = cita.placa || "";
+
+    const fecha = cita.fecha || "";
+
+    const hora = cita.hora || "";
+
+    titulo.textContent = mensaje;
+
+    contenido.textContent =
+      vehiculo + (placa ? " · " + placa : "") + " · " + fecha + " · " + hora;
+
+    toast.style.display = "flex";
+
+    clearTimeout(toast._timeoutCita);
+
+    toast._timeoutCita = setTimeout(function () {
+      cerrarToastCita();
+    }, 10000);
+  }
+
+  function cerrarToastCita() {
+    const toast = document.getElementById("toastCita");
+
+    if (!toast) {
+      return;
+    }
+
+    toast.style.display = "none";
+
+    clearTimeout(toast._timeoutCita);
+  }
+
+  function mostrarAlertaCitas(tipo, titulo, mensaje) {
+    let icono = "📅";
+
+    if (tipo === "success") {
+      icono = "✅";
+    } else if (tipo === "error") {
+      icono = "⚠️";
+    } else if (tipo === "info") {
+      icono = "ℹ️";
+    }
+
+    mostrarAlerta(
+      icono,
+      titulo,
+      `
+      <div style="
+        text-align:center;
+        line-height:1.5;
+        padding:4px 2px;
+      ">
+        ${escaparHTML(mensaje || "")}
+      </div>
+    `,
+    );
+  }
+
+  function abrirAtencionRapidaCitas() {
+    const rol =
+      usuarioPanel && usuarioPanel.rol
+        ? String(usuarioPanel.rol).trim().toUpperCase()
+        : "";
+
+    if (rol !== "ADMINISTRADOR" && rol !== "ADMIN") {
+      return;
+    }
+
+    mostrarModuloPanel("moduloAtencionRapidaCitas");
+
+    cargarDetalleAtencionRapidaCitas();
+
+    console.log(
+      "PRUEBA abrirAtencionRapidaCitas:",
+      typeof abrirAtencionRapidaCitas,
+    );
+  }
+
+  function cargarDetalleAtencionRapidaCitas() {
+    const resumen = document.getElementById("citasRapidasDetalleResumen");
+
+    const lista = document.getElementById("citasRapidasDetalleLista");
+
+    if (!resumen || !lista) {
+      return;
+    }
+
+    resumen.textContent = "Consultando citas...";
+
+    lista.innerHTML = "";
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (
+          !respuesta ||
+          !respuesta.success ||
+          !Array.isArray(respuesta.citas)
+        ) {
+          resumen.textContent = "No fue posible consultar las citas.";
+
+          return;
+        }
+
+        const ahora = new Date();
+
+        const dia = String(ahora.getDate()).padStart(2, "0");
+
+        const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+
+        const anio = ahora.getFullYear();
+
+        const fechaHoy = dia + "/" + mes + "/" + anio;
+
+        const ahoraMs = Date.now();
+
+        const citasActivas = respuesta.citas.filter(function (cita) {
+          const estado = String(cita.estado || "")
+            .trim()
+            .toUpperCase();
+
+          return estado !== "ATENDIDA" && estado !== "CANCELADA";
+        });
+
+        /* ==========================================
+              PRÓXIMAS DE HOY
+            ========================================== */
+
+        const citasProximasHoy = citasActivas
+          .filter(function (cita) {
+            const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+            return (
+              String(cita.fecha || "").trim() === fechaHoy &&
+              fechaHora >= ahoraMs
+            );
+          })
+          .sort(function (a, b) {
+            return obtenerFechaHoraCitaMs(a) - obtenerFechaHoraCitaMs(b);
+          });
+
+        /* ==========================================
+              ATRASADAS
+            ========================================== */
+
+        const citasAtrasadas = citasActivas
+          .filter(function (cita) {
+            const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+            return fechaHora > 0 && fechaHora < ahoraMs;
+          })
+          .sort(function (a, b) {
+            return obtenerFechaHoraCitaMs(b) - obtenerFechaHoraCitaMs(a);
+          });
+
+        /* ==========================================
+              PRÓXIMAS FECHAS
+            ========================================== */
+
+        const citasFuturas = citasActivas
+          .filter(function (cita) {
+            const fechaHora = obtenerFechaHoraCitaMs(cita);
+
+            return (
+              String(cita.fecha || "").trim() !== fechaHoy &&
+              fechaHora >= ahoraMs
+            );
+          })
+          .sort(function (a, b) {
+            return obtenerFechaHoraCitaMs(a) - obtenerFechaHoraCitaMs(b);
+          });
+
+        const totalCitas =
+          citasProximasHoy.length + citasAtrasadas.length + citasFuturas.length;
+
+        if (totalCitas === 0) {
+          resumen.textContent = "No hay citas pendientes.";
+
+          lista.innerHTML = `
+                <div class="citas-lista-vacia">
+                  No hay citas para mostrar.
+                </div>
+              `;
+
+          return;
+        }
+
+        resumen.textContent =
+          totalCitas === 1
+            ? "1 cita pendiente"
+            : totalCitas + " citas pendientes";
+
+        function crearTarjetaCitaRapida(cita, etiquetaTiempo) {
+          return `
+                <article class="cita-rapida-detalle-card">
+
+                  <div class="cita-rapida-detalle-hora-bloque">
+
+                    <div class="cita-rapida-detalle-hora">
+                      ${escaparHTML(cita.hora || "")}
+                    </div>
+
+                    <div class="cita-rapida-detalle-hora-sub">
+                      ${escaparHTML(etiquetaTiempo)}
+                    </div>
+
+                  </div>
+
+
+                  <div class="cita-rapida-detalle-info">
+
+                    <strong class="cita-rapida-detalle-titulo">
+                      ${escaparHTML(cita.vehiculo || "Vehículo")}
+                    </strong>
+
+
+                    <div class="cita-rapida-detalle-grid">
+
+                      <div class="cita-rapida-dato">
+                        <span class="cita-rapida-label">
+                          Fecha
+                        </span>
+
+                        <span class="cita-rapida-value">
+                          ${escaparHTML(cita.fecha || "-")}
+                        </span>
+                      </div>
+
+
+                      <div class="cita-rapida-dato">
+                        <span class="cita-rapida-label">
+                          Placa
+                        </span>
+
+                        <span class="cita-rapida-value">
+                          ${escaparHTML(cita.placa || "-")}
+                        </span>
+                      </div>
+
+
+                      <div class="cita-rapida-dato">
+                        <span class="cita-rapida-label">
+                          Cliente
+                        </span>
+
+                        <span class="cita-rapida-value">
+                          ${escaparHTML(cita.cliente || "Sin cliente")}
+                        </span>
+                      </div>
+
+
+                      <div class="cita-rapida-dato">
+                        <span class="cita-rapida-label">
+                          Teléfono
+                        </span>
+
+                        <span class="cita-rapida-value">
+                          ${escaparHTML(cita.telefono || "Sin teléfono")}
+                        </span>
+                      </div>
+
+
+                      <div class="cita-rapida-dato">
+                        <span class="cita-rapida-label">
+                          Tipo
+                        </span>
+
+                        <span class="cita-rapida-value">
+                          ${escaparHTML(cita.tipo || "Sin tipo")}
+                        </span>
+                      </div>
+
+
+                      <div class="cita-rapida-dato cita-rapida-dato-estado">
+                        <span class="cita-rapida-label">
+                          Estado
+                        </span>
+
+                        <span class="cita-rapida-value cita-rapida-estado">
+                          ${escaparHTML(cita.estado || "PENDIENTE")}
+                        </span>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </article>
+              `;
+        }
+
+        let html = "";
+
+        /* PRÓXIMAS HOY */
+
+        if (citasProximasHoy.length > 0) {
+          html += `
+                <div class="citas-rapidas-seccion">
+
+                  <div class="citas-rapidas-seccion-titulo">
+                    <strong>PRÓXIMAS DE HOY</strong>
+                    <span>
+                      ${citasProximasHoy.length}
+                    </span>
+                  </div>
+
+                  ${citasProximasHoy
+                    .map(function (cita) {
+                      return crearTarjetaCitaRapida(cita, "HOY");
+                    })
+                    .join("")}
+
+                </div>
+              `;
+        }
+
+        /* ATRASADAS */
+
+        if (citasAtrasadas.length > 0) {
+          html += `
+                <div class="citas-rapidas-seccion citas-rapidas-seccion-atrasadas">
+
+                  <div class="citas-rapidas-seccion-titulo">
+                    <strong>ATRASADAS</strong>
+                    <span>
+                      ${citasAtrasadas.length}
+                    </span>
+                  </div>
+
+                  ${citasAtrasadas
+                    .map(function (cita) {
+                      return crearTarjetaCitaRapida(cita, "ATRASADA");
+                    })
+                    .join("")}
+
+                </div>
+              `;
+        }
+
+        /* PRÓXIMAS FECHAS */
+
+        if (citasFuturas.length > 0) {
+          html += `
+                <div class="citas-rapidas-seccion">
+
+                  <div class="citas-rapidas-seccion-titulo">
+                    <strong>PRÓXIMAS FECHAS</strong>
+                    <span>
+                      ${citasFuturas.length}
+                    </span>
+                  </div>
+
+                  ${citasFuturas
+                    .map(function (cita) {
+                      return crearTarjetaCitaRapida(
+                        cita,
+                        cita.fecha || "PRÓXIMA",
+                      );
+                    })
+                    .join("")}
+
+                </div>
+              `;
+        }
+
+        lista.innerHTML = html;
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error cargando detalle de citas:", error);
+
+        resumen.textContent = "No fue posible consultar las citas.";
+      })
+
+      .obtenerCitasAdministracion(tokenSesion);
+  }
+</script>

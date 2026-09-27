@@ -1,0 +1,1871 @@
+<script>
+  // =====================================================
+  // VARIABLES GLOBALES
+  // =====================================================
+
+  let tokenSesion = sessionStorage.getItem("tokenSesion") || "";
+  let tokenRecuperacion = "";
+  let emailRecuperacion = "";
+  let input = null;
+  let modal = null;
+  let alertaIcono = null;
+  let alertaTitulo = null;
+  let alertaContenido = null;
+  let loading = null;
+
+  // Posición del scroll antes de abrir el modal
+  let posicionScrollModal = 0;
+
+  // Estado del bloqueo del scroll
+  let scrollBloqueado = false;
+
+  // Lista utilizada por el autocompletado
+  window.vehiculosAutocompletado = [];
+
+  // =====================================================
+  // INICIALIZAR APLICACIÓN
+  // =====================================================
+
+  document.addEventListener("DOMContentLoaded", function () {
+    input = document.getElementById("pregunta");
+
+    modal = document.getElementById("modal");
+
+    alertaIcono = document.getElementById("alertaIcono");
+
+    alertaTitulo = document.getElementById("alertaTitulo");
+
+    alertaContenido = document.getElementById("alertaContenido");
+
+    loading = document.getElementById("loading");
+
+    // ---------------------------------------------------
+    // CARGAR HISTORIAL
+    // ---------------------------------------------------
+
+    cargarHistorial();
+
+    // ---------------------------------------------------
+    // VERIFICAR ELEMENTOS
+    // ---------------------------------------------------
+
+    console.log("input:", input);
+    console.log("modal:", modal);
+    console.log("alertaIcono:", alertaIcono);
+    console.log("alertaTitulo:", alertaTitulo);
+    console.log("alertaContenido:", alertaContenido);
+    console.log("loading:", loading);
+
+    // ---------------------------------------------------
+    // CLICK FUERA DEL POPUP
+    // ---------------------------------------------------
+
+    if (modal) {
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          cerrarModal();
+        }
+      });
+    }
+
+    // ---------------------------------------------------
+    // ENTER EN EL INPUT
+    // ---------------------------------------------------
+
+    if (input) {
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+
+          ocultarAutocompletado();
+
+          consultarCirculacion();
+        }
+
+        // ESC
+        if (event.key === "Escape") {
+          ocultarAutocompletado();
+
+          cerrarModal();
+        }
+      });
+
+      // -------------------------------------------------
+      // AUTOCOMPLETADO
+      // -------------------------------------------------
+
+      input.addEventListener("input", function () {
+        autocompletarVehiculo();
+      });
+
+      // -------------------------------------------------
+      // BLUR
+      // -------------------------------------------------
+
+      input.addEventListener("blur", function () {
+        setTimeout(function () {
+          ocultarAutocompletado();
+        }, 200);
+      });
+    }
+  });
+
+  // =====================================================
+  // CONSULTAR CIRCULACIÓN
+  // =====================================================
+
+  function consultarCirculacion() {
+    if (!input) {
+      console.error('No se encontró el elemento con id="pregunta".');
+
+      return;
+    }
+
+    const vehiculo = input.value.trim();
+
+    // ---------------------------------------------------
+    // VALIDAR
+    // ---------------------------------------------------
+
+    if (!vehiculo) {
+      mostrarAlerta(
+        "⚠️",
+        "Falta el vehículo",
+        `
+        <div class="fila">
+          Escribe el vehículo que deseas consultar.
+        </div>
+      `,
+      );
+
+      input.focus();
+
+      return;
+    }
+
+    ocultarAutocompletado();
+
+    // ---------------------------------------------------
+    // LOADING
+    // ---------------------------------------------------
+
+    mostrarLoading();
+
+    // ---------------------------------------------------
+    // GOOGLE APPS SCRIPT
+    // ---------------------------------------------------
+
+    google.script.run
+
+      .withSuccessHandler(function (resultado) {
+        ocultarLoading();
+
+        mostrarResultado(resultado);
+      })
+
+      .withFailureHandler(function (error) {
+        ocultarLoading();
+
+        mostrarAlerta(
+          "❌",
+          "Error",
+          `
+            <div class="fila">
+              No fue posible realizar la consulta.
+            </div>
+
+            <div class="fila">
+              ${escapeHtml(
+                error && error.message ? error.message : "Error desconocido.",
+              )}
+            </div>
+          `,
+        );
+      })
+
+      .consultarDesdeApp("PUEDO LLEVARME " + vehiculo);
+  }
+
+  // =====================================================
+  // CONSULTAR INFORMACIÓN
+  // =====================================================
+
+  function consultarInformacion() {
+    if (!input) {
+      console.error('No se encontró el elemento con id="pregunta".');
+
+      return;
+    }
+
+    const vehiculo = input.value.trim();
+
+    // ---------------------------------------------------
+    // VALIDAR
+    // ---------------------------------------------------
+
+    if (!vehiculo) {
+      mostrarAlerta(
+        "⚠️",
+        "Falta el vehículo",
+        `
+        <div class="fila">
+          Escribe el vehículo que deseas consultar.
+        </div>
+      `,
+      );
+
+      input.focus();
+
+      return;
+    }
+
+    ocultarAutocompletado();
+
+    // ---------------------------------------------------
+    // LOADING
+    // ---------------------------------------------------
+
+    mostrarLoading();
+
+    // ---------------------------------------------------
+    // GOOGLE APPS SCRIPT
+    // ---------------------------------------------------
+
+    google.script.run
+
+      .withSuccessHandler(function (resultado) {
+        ocultarLoading();
+
+        mostrarResultado(resultado);
+      })
+
+      .withFailureHandler(function (error) {
+        ocultarLoading();
+
+        mostrarAlerta(
+          "❌",
+          "Error",
+          `
+            <div class="fila">
+              No fue posible realizar la consulta.
+            </div>
+
+            <div class="fila">
+              ${escapeHtml(
+                error && error.message ? error.message : "Error desconocido.",
+              )}
+            </div>
+          `,
+        );
+      })
+
+      .consultarDesdeApp("INFO " + vehiculo);
+  }
+
+  // =====================================================
+  // MOSTRAR RESULTADO
+  // =====================================================
+
+  function mostrarResultado(resultado) {
+    if (!resultado) {
+      mostrarAlerta(
+        "❌",
+        "Sin respuesta",
+        `
+        <div class="fila">
+          El sistema no devolvió información.
+        </div>
+      `,
+      );
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // ERROR
+    // ---------------------------------------------------
+
+    if (resultado.error) {
+      mostrarAlerta(
+        "❌",
+        "Error",
+        `
+        <div class="fila">
+          ${escapeHtml(resultado.error)}
+        </div>
+      `,
+      );
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // VEHÍCULO NO ENCONTRADO
+    // ---------------------------------------------------
+
+    if (resultado.encontrado === false) {
+      mostrarAlerta(
+        "🔎",
+        "Vehículo no encontrado",
+        `
+        <div class="fila">
+          ${escapeHtml(
+            resultado.mensaje || "No encontré ese vehículo en la lista.",
+          )}
+        </div>
+      `,
+      );
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // GUARDAR HISTORIAL
+    // ---------------------------------------------------
+
+    if (input) {
+      guardarEnHistorial(input.value.trim());
+    }
+
+    // ---------------------------------------------------
+    // CIRCULACIÓN
+    // ---------------------------------------------------
+
+    if (resultado.tipo === "CIRCULACION") {
+      mostrarCirculacion(resultado);
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // INFORMACIÓN
+    // ---------------------------------------------------
+
+    if (resultado.tipo === "INFORMACION") {
+      mostrarInformacion(resultado);
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // DESCONOCIDO
+    // ---------------------------------------------------
+
+    mostrarAlerta(
+      "ℹ️",
+      "Resultado",
+      `
+      <div class="fila">
+        ${escapeHtml(resultado.mensaje || "No hay información disponible.")}
+      </div>
+    `,
+    );
+  }
+
+  // =====================================================
+  // MOSTRAR INFORMACIÓN
+  // =====================================================
+
+  function mostrarInformacion(resultado) {
+    if (!alertaIcono || !alertaTitulo || !alertaContenido) {
+      console.error("No se encontraron los elementos del popup.");
+
+      return;
+    }
+
+    alertaIcono.textContent = "🚗";
+
+    alertaTitulo.textContent = resultado.nombre || "Información del vehículo";
+
+    let html = "";
+
+    // ---------------------------------------------------
+    // VEHÍCULO
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        🚗 Vehículo
+      </div>
+
+      <strong>
+        ${escapeHtml(resultado.nombre)}
+      </strong>
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // PLACA
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        🔢 Placa
+      </div>
+
+      ${escapeHtml(resultado.placa)}
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // TRÁNSITO
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        🏛️ Tránsito
+      </div>
+
+      ${escapeHtml(resultado.transito || "No registrado")}
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // PRECIO
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        💰 Precio
+      </div>
+
+      <strong>
+        $${formatearNumero(resultado.precio)}
+      </strong>
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // KILOMETRAJE
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        📏 Kilometraje
+      </div>
+
+      ${formatearNumero(resultado.kilometraje)} km
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // DETALLES
+    // ---------------------------------------------------
+
+    if (resultado.detalles && resultado.detalles.trim() !== "") {
+      html += `
+      <div class="fila">
+
+        <div class="fila-titulo">
+          📝 Detalles
+        </div>
+
+        <div class="detalles-texto">
+          ${escapeHtml(resultado.detalles)}
+        </div>
+
+      </div>
+    `;
+    }
+
+    // ---------------------------------------------------
+    // SOAT
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        📄 SOAT
+      </div>
+
+      <span
+        class="${
+          resultado.soat && resultado.soat.vigente
+            ? "resultado si"
+            : "resultado no"
+        }"
+      >
+
+        ${
+          resultado.soat && resultado.soat.vigente ? "✅ VIGENTE" : "❌ VENCIDO"
+        }
+
+      </span>
+
+      <br>
+
+      Hasta el
+
+      ${resultado.soat ? escapeHtml(resultado.soat.fecha) : "SIN FECHA"}
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // TECNOMECÁNICA
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        🔧 Tecnomecánica
+      </div>
+
+      <span
+        class="${
+          resultado.tecnomecanica && resultado.tecnomecanica.vigente
+            ? "resultado si"
+            : "resultado no"
+        }"
+      >
+
+        ${
+          resultado.tecnomecanica && resultado.tecnomecanica.vigente
+            ? "✅ VIGENTE"
+            : "❌ VENCIDA"
+        }
+
+      </span>
+
+      <br>
+
+      Hasta el
+
+      ${
+        resultado.tecnomecanica
+          ? escapeHtml(resultado.tecnomecanica.fecha)
+          : "SIN FECHA"
+      }
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // PICO Y PLACA
+    // ---------------------------------------------------
+
+    html += `
+    <div class="fila">
+
+      <div class="fila-titulo">
+        🚦 Pico y placa
+      </div>
+
+      ${escapeHtml(resultado.picoYPlaca || "No registrado")}
+
+    </div>
+  `;
+
+    alertaContenido.innerHTML = html;
+
+    // ---------------------------------------------------
+    // ABRIR POPUP
+    // ---------------------------------------------------
+
+    abrirModal();
+  }
+
+  // =====================================================
+  // MOSTRAR CIRCULACIÓN
+  // =====================================================
+  //
+  // IMPORTANTE:
+  // Este apartado ahora muestra ÚNICAMENTE:
+  //
+  // 1. Si se puede llevar el vehículo.
+  // 2. Si NO se puede llevar, la razón.
+  //
+  // Toda la información adicional permanece
+  // disponible en "Información".
+  // =====================================================
+
+  function mostrarCirculacion(resultado) {
+    if (!alertaIcono || !alertaTitulo || !alertaContenido) {
+      console.error("No se encontraron los elementos del popup.");
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // ICONO
+    // ---------------------------------------------------
+
+    alertaIcono.textContent = resultado.puedeSalir ? "✅" : "❌";
+
+    // ---------------------------------------------------
+    // TÍTULO
+    // ---------------------------------------------------
+
+    alertaTitulo.textContent = resultado.puedeSalir
+      ? "Sí te lo puedes llevar"
+      : "No te lo puedes llevar";
+
+    let html = "";
+
+    // ---------------------------------------------------
+    // RESULTADO PRINCIPAL
+    // ---------------------------------------------------
+
+    html += `
+    <div
+      class="resultado ${resultado.puedeSalir ? "si" : "no"}"
+    >
+
+      ${
+        resultado.puedeSalir
+          ? "✅ SÍ, TE PUEDES LLEVAR EL "
+          : "❌ NO, NO TE PUEDES LLEVAR EL "
+      }
+
+      <strong>
+        ${escapeHtml(resultado.nombre)}
+      </strong>
+
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // MOTIVO
+    // ---------------------------------------------------
+    //
+    // SOLO aparece cuando NO puede salir.
+    //
+    // No mostramos:
+    // - Pico y placa
+    // - Hoy
+    // - Próximo día
+    // - SOAT
+    // - Tecnomecánica
+    //
+    // Esa información pertenece a "Información".
+    // ---------------------------------------------------
+
+    if (!resultado.puedeSalir && resultado.motivo) {
+      html += `
+      <div class="motivo">
+
+        <div class="fila-titulo">
+          ⚠️ Motivo
+        </div>
+
+        ${escapeHtml(resultado.motivo)}
+
+      </div>
+    `;
+    }
+
+    alertaContenido.innerHTML = html;
+
+    // ---------------------------------------------------
+    // ABRIR POPUP
+    // ---------------------------------------------------
+
+    abrirModal();
+  }
+
+  // =====================================================
+  // MOSTRAR ALERTA
+  // =====================================================
+
+  function mostrarAlerta(icono, titulo, contenido) {
+    if (!alertaIcono || !alertaTitulo || !alertaContenido) {
+      console.error("No se encontraron los elementos del popup.");
+
+      return;
+    }
+
+    alertaIcono.textContent = icono;
+
+    alertaTitulo.textContent = titulo;
+
+    alertaContenido.innerHTML = contenido;
+
+    abrirModal();
+  }
+
+  // =====================================================
+  // ABRIR POPUP
+  // =====================================================
+
+  function abrirModal() {
+    if (!modal) {
+      console.error('No se encontró el elemento con id="modal".');
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // EVITAR ABRIR DOS VECES
+    // ---------------------------------------------------
+
+    if (scrollBloqueado) {
+      modal.classList.add("activo");
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // GUARDAR POSICIÓN ACTUAL DEL SCROLL
+    // ---------------------------------------------------
+
+    posicionScrollModal =
+      window.pageYOffset ||
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      0;
+
+    // ---------------------------------------------------
+    // FIJAR EL DOCUMENTO
+    // ---------------------------------------------------
+
+    document.body.style.position = "fixed";
+
+    document.body.style.top = `-${posicionScrollModal}px`;
+
+    document.body.style.left = "0";
+
+    document.body.style.right = "0";
+
+    document.body.style.width = "100%";
+
+    document.body.style.overflow = "hidden";
+
+    // También bloqueamos el scroll del HTML
+    document.documentElement.style.overflow = "hidden";
+
+    scrollBloqueado = true;
+
+    // ---------------------------------------------------
+    // MOSTRAR MODAL
+    // ---------------------------------------------------
+
+    modal.classList.add("activo");
+  }
+
+  // =====================================================
+  // CERRAR POPUP
+  // =====================================================
+
+  function cerrarModal() {
+    if (!modal) {
+      return;
+    }
+
+    // ---------------------------------------------------
+    // OCULTAR MODAL
+    // ---------------------------------------------------
+
+    modal.classList.remove("activo");
+
+    // ---------------------------------------------------
+    // SI NO ESTABA BLOQUEADO
+    // ---------------------------------------------------
+
+    if (!scrollBloqueado) {
+      return;
+    }
+
+    // ---------------------------------------------------
+    // QUITAR FIJACIÓN DEL BODY
+    // ---------------------------------------------------
+
+    document.body.style.position = "";
+
+    document.body.style.top = "";
+
+    document.body.style.left = "";
+
+    document.body.style.right = "";
+
+    document.body.style.width = "";
+
+    document.body.style.overflow = "";
+
+    document.documentElement.style.overflow = "";
+
+    // ---------------------------------------------------
+    // RESTAURAR POSICIÓN DEL SCROLL
+    // ---------------------------------------------------
+
+    window.scrollTo(0, posicionScrollModal);
+
+    scrollBloqueado = false;
+  }
+
+  // =====================================================
+  // BLOQUEAR SCROLL DEL FONDO
+  // =====================================================
+
+  function bloquearScrollFondo(event) {
+    if (!scrollBloqueado) {
+      return;
+    }
+
+    // Si el evento ocurre dentro del contenido
+    // desplazable del modal, permitirlo.
+
+    if (modal && modal.contains(event.target)) {
+      return;
+    }
+
+    event.preventDefault();
+  }
+
+  // =====================================================
+  // BLOQUEAR TECLAS DE SCROLL
+  // =====================================================
+
+  function bloquearTeclasScroll(event) {
+    if (!scrollBloqueado) {
+      return;
+    }
+
+    // Si el usuario está escribiendo en un input,
+    // no interferir.
+
+    const elemento = event.target;
+
+    if (
+      elemento &&
+      (elemento.tagName === "INPUT" ||
+        elemento.tagName === "TEXTAREA" ||
+        elemento.tagName === "SELECT")
+    ) {
+      return;
+    }
+
+    const teclasScroll = [
+      " ",
+      "ArrowUp",
+      "ArrowDown",
+      "PageUp",
+      "PageDown",
+      "Home",
+      "End",
+    ];
+
+    if (teclasScroll.includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  // =====================================================
+  // EVENTOS GLOBALES PARA BLOQUEAR SCROLL
+  // =====================================================
+
+  document.addEventListener("wheel", bloquearScrollFondo, {
+    passive: false,
+  });
+
+  document.addEventListener("touchmove", bloquearScrollFondo, {
+    passive: false,
+  });
+
+  document.addEventListener("keydown", bloquearTeclasScroll, false);
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  function mostrarLoading() {
+    if (!loading) {
+      return;
+    }
+
+    loading.classList.add("activo");
+  }
+
+  function ocultarLoading() {
+    if (!loading) {
+      return;
+    }
+
+    loading.classList.remove("activo");
+  }
+
+  // =====================================================
+  // FORMATEAR NÚMERO
+  // =====================================================
+
+  function formatearNumero(numero) {
+    if (numero === null || numero === undefined || numero === "") {
+      return "0";
+    }
+
+    const numeroConvertido = Number(numero);
+
+    if (Number.isNaN(numeroConvertido)) {
+      return escapeHtml(numero);
+    }
+
+    return numeroConvertido.toLocaleString("es-CO");
+  }
+
+  // =====================================================
+  // ESCAPAR HTML
+  // =====================================================
+
+  function escapeHtml(texto) {
+    if (texto === null || texto === undefined) {
+      return "";
+    }
+
+    return String(texto)
+      .replace(/&/g, "&amp;")
+
+      .replace(/</g, "&lt;")
+
+      .replace(/>/g, "&gt;")
+
+      .replace(/"/g, "&quot;")
+
+      .replace(/'/g, "&#039;");
+  }
+
+  // =====================================================
+  // CARGAR HISTORIAL GLOBAL
+  // =====================================================
+
+  function cargarHistorial() {
+    const lista = document.getElementById("historialLista");
+
+    // ---------------------------------------------------
+    // INICIALIZAR AUTOCOMPLETADO
+    // ---------------------------------------------------
+
+    window.vehiculosAutocompletado = [];
+
+    // ---------------------------------------------------
+    // CARGAR TODOS LOS VEHÍCULOS
+    // PARA EL AUTOCOMPLETADO
+    // ---------------------------------------------------
+
+    google.script.run
+
+      .withSuccessHandler(function (vehiculos) {
+        if (vehiculos && vehiculos.length) {
+          window.vehiculosAutocompletado = vehiculos.slice();
+        }
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error cargando vehículos para autocompletado:", error);
+      })
+
+      .obtenerVehiculosAutocompletado();
+
+    // ---------------------------------------------------
+    // SI NO EXISTE EL HISTORIAL
+    // ---------------------------------------------------
+
+    if (!lista) {
+      return;
+    }
+
+    lista.innerHTML = `
+    <div class="historial-vacio">
+      Cargando búsquedas...
+    </div>
+  `;
+
+    // ---------------------------------------------------
+    // CARGAR HISTORIAL
+    // ---------------------------------------------------
+
+    google.script.run
+
+      .withSuccessHandler(function (historial) {
+        lista.innerHTML = "";
+
+        // ------------------------------------------------
+        // SIN BÚSQUEDAS
+        // ------------------------------------------------
+
+        if (!historial || !historial.length) {
+          lista.innerHTML = `
+            <div class="historial-vacio">
+            </div>
+          `;
+
+          return;
+        }
+
+        // ------------------------------------------------
+        // CREAR HISTORIAL
+        // ------------------------------------------------
+
+        historial.forEach(function (vehiculo) {
+          crearItemHistorial(lista, vehiculo);
+        });
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error cargando historial global:", error);
+
+        lista.innerHTML = `
+          <div class="historial-vacio">
+            No fue posible cargar las búsquedas recientes.
+          </div>
+        `;
+      })
+
+      .obtenerHistorialGlobal();
+  }
+
+  // =====================================================
+  // CREAR ITEM DEL HISTORIAL
+  // =====================================================
+
+  function crearItemHistorial(lista, vehiculo) {
+    const item = document.createElement("div");
+
+    item.className = "historial-item";
+
+    item.innerHTML = `
+
+    <span class="historial-icono">
+      🚗
+    </span>
+
+    <span class="historial-contenido">
+
+      <span class="historial-texto">
+        ${escapeHtml(vehiculo)}
+      </span>
+
+      <span class="historial-tiempo">
+        Consultado recientemente
+      </span>
+
+    </span>
+
+    <span class="historial-flecha">
+      ›
+    </span>
+
+  `;
+
+    // ---------------------------------------------------
+    // CLICK EN VEHÍCULO
+    // ---------------------------------------------------
+
+    item.addEventListener("click", function () {
+      if (!input) {
+        return;
+      }
+
+      input.value = vehiculo;
+
+      input.focus();
+
+      ocultarAutocompletado();
+    });
+
+    lista.appendChild(item);
+  }
+
+  // =====================================================
+  // GUARDAR VEHÍCULO EN HISTORIAL GLOBAL
+  // =====================================================
+
+  function guardarEnHistorial(vehiculo) {
+    if (!vehiculo) {
+      return;
+    }
+
+    vehiculo = vehiculo.trim();
+
+    if (!vehiculo) {
+      return;
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (historial) {
+        const lista = document.getElementById("historialLista");
+
+        // ------------------------------------------------
+        // IMPORTANTE:
+        // NO modificar window.vehiculosAutocompletado
+        // ------------------------------------------------
+        //
+        // El autocompletado utiliza la lista COMPLETA
+        // de vehículos obtenida desde la hoja.
+        //
+        // El historial continúa siendo independiente.
+        // ------------------------------------------------
+
+        if (!lista) {
+          return;
+        }
+
+        lista.innerHTML = "";
+
+        if (!historial || !historial.length) {
+          return;
+        }
+
+        // ------------------------------------------------
+        // ACTUALIZAR HISTORIAL
+        // ------------------------------------------------
+
+        historial.forEach(function (itemHistorial) {
+          crearItemHistorial(lista, itemHistorial);
+        });
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error guardando historial global:", error);
+      })
+
+      .guardarHistorialGlobal(vehiculo);
+  }
+
+  // =====================================================
+  // AUTOCOMPLETADO DE VEHÍCULOS
+  // =====================================================
+
+  function autocompletarVehiculo() {
+    if (!input) {
+      return;
+    }
+
+    const texto = input.value.trim().toUpperCase();
+
+    // ---------------------------------------------------
+    // SIN TEXTO
+    // ---------------------------------------------------
+
+    if (!texto) {
+      ocultarAutocompletado();
+
+      return;
+    }
+
+    const vehiculos = window.vehiculosAutocompletado || [];
+
+    // ---------------------------------------------------
+    // BUSCAR COINCIDENCIAS
+    // ---------------------------------------------------
+
+    const coincidencias = vehiculos.filter(function (vehiculo) {
+      return vehiculo.toString().toUpperCase().includes(texto);
+    });
+
+    // ---------------------------------------------------
+    // SIN COINCIDENCIAS
+    // ---------------------------------------------------
+
+    if (!coincidencias.length) {
+      ocultarAutocompletado();
+
+      return;
+    }
+
+    // ---------------------------------------------------
+    // CREAR CONTENEDOR
+    // ---------------------------------------------------
+
+    let contenedor = document.getElementById("autocompletadoVehiculos");
+
+    if (!contenedor) {
+      contenedor = document.createElement("div");
+
+      contenedor.id = "autocompletadoVehiculos";
+
+      contenedor.className = "autocompletado";
+
+      const padre = input.parentElement;
+
+      if (padre) {
+        padre.style.position = "relative";
+
+        padre.appendChild(contenedor);
+      } else {
+        return;
+      }
+    }
+
+    // ---------------------------------------------------
+    // LIMPIAR
+    // ---------------------------------------------------
+
+    contenedor.innerHTML = "";
+
+    // ---------------------------------------------------
+    // MOSTRAR SUGERENCIAS
+    // ---------------------------------------------------
+
+    coincidencias.forEach(function (vehiculo) {
+      const sugerencia = document.createElement("div");
+
+      sugerencia.className = "autocompletado-item";
+
+      sugerencia.innerHTML = `
+
+        <span class="autocompletado-icono">
+          🚗
+        </span>
+
+        <span class="autocompletado-texto">
+          ${escapeHtml(vehiculo)}
+        </span>
+
+      `;
+
+      // ------------------------------------------------
+      // CLICK EN SUGERENCIA
+      // ------------------------------------------------
+
+      sugerencia.addEventListener("mousedown", function (event) {
+        event.preventDefault();
+
+        input.value = vehiculo;
+
+        input.focus();
+
+        ocultarAutocompletado();
+      });
+
+      contenedor.appendChild(sugerencia);
+    });
+
+    // ---------------------------------------------------
+    // MOSTRAR
+    // ---------------------------------------------------
+
+    contenedor.classList.add("activo");
+  }
+
+  // =====================================================
+  // OCULTAR AUTOCOMPLETADO
+  // =====================================================
+
+  function ocultarAutocompletado() {
+    const contenedor = document.getElementById("autocompletadoVehiculos");
+
+    if (!contenedor) {
+      return;
+    }
+
+    contenedor.classList.remove("activo");
+
+    contenedor.innerHTML = "";
+  }
+
+  // =====================================================
+  // LOGIN
+  // =====================================================
+
+  function abrirLogin() {
+    const authModal = document.getElementById("authModal");
+
+    if (!authModal) return;
+
+    mostrarLogin();
+
+    authModal.style.display = "flex";
+    authModal.setAttribute("aria-hidden", "false");
+
+    document.body.style.overflow = "hidden";
+
+    setTimeout(() => {
+      const usuario = document.getElementById("loginUsuario");
+
+      if (usuario) {
+        usuario.focus();
+      }
+    }, 100);
+  }
+
+  function cerrarLogin() {
+    const authModal = document.getElementById("authModal");
+
+    if (!authModal) return;
+
+    authModal.style.display = "none";
+    authModal.setAttribute("aria-hidden", "true");
+
+    document.body.style.overflow = "";
+
+    limpiarMensajesAuth();
+  }
+
+  // =====================================================
+  // MOSTRAR LOGIN
+  // =====================================================
+
+  function mostrarLogin() {
+    ocultarVistasAuth();
+
+    const vista = document.getElementById("loginView");
+
+    if (vista) {
+      vista.style.display = "block";
+    }
+
+    limpiarMensajesAuth();
+  }
+
+  // =====================================================
+  // RECUPERACIÓN — CORREO
+  // =====================================================
+
+  function mostrarRecuperacion() {
+    ocultarVistasAuth();
+
+    const vista = document.getElementById("recuperacionEmailView");
+
+    if (vista) {
+      vista.style.display = "block";
+    }
+
+    limpiarMensajesAuth();
+
+    setTimeout(() => {
+      const email = document.getElementById("recuperacionEmail");
+
+      if (email) {
+        email.focus();
+      }
+    }, 100);
+  }
+
+  // =====================================================
+  // OCULTAR VISTAS DE AUTENTICACIÓN
+  // =====================================================
+
+  function ocultarVistasAuth() {
+    const vistas = [
+      "loginView",
+      "recuperacionEmailView",
+      "recuperacionCodigoView",
+      "recuperacionPasswordView",
+    ];
+
+    vistas.forEach((id) => {
+      const vista = document.getElementById(id);
+
+      if (vista) {
+        vista.style.display = "none";
+      }
+    });
+  }
+
+  // =====================================================
+  // MOSTRAR / OCULTAR CONTRASEÑA
+  // =====================================================
+
+  function alternarPassword(id, boton) {
+    const input = document.getElementById(id);
+
+    if (!input) return;
+
+    if (input.type === "password") {
+      input.type = "text";
+      boton.textContent = "🕶️";
+      boton.setAttribute("aria-label", "Ocultar contraseña");
+    } else {
+      input.type = "password";
+      boton.textContent = "👀";
+      boton.setAttribute("aria-label", "Mostrar contraseña");
+    }
+  }
+
+  // =====================================================
+  // INICIAR SESIÓN
+  // =====================================================
+
+  function iniciarSesion() {
+    const usuario = document.getElementById("loginUsuario").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const mensaje = document.getElementById("loginMensaje");
+    const boton = document.getElementById("btnIniciarSesion");
+
+    if (!usuario || !password) {
+      mostrarMensajeAuth(
+        mensaje,
+        "Completa el usuario y la contraseña.",
+        "error",
+      );
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Iniciando sesión...";
+    }
+
+    if (typeof mostrarLoading === "function") {
+      mostrarLoading();
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Iniciar sesión";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarMensajeAuth(
+            mensaje,
+            respuesta?.message || "No fue posible iniciar sesión.",
+            "error",
+          );
+
+          return;
+        }
+
+        tokenSesion = respuesta.token;
+
+        sessionStorage.setItem("tokenSesion", tokenSesion);
+
+        // Un inicio de sesión NUEVO siempre comienza
+        // desde el panel principal.
+        sessionStorage.removeItem("moduloPanelActivo");
+
+        cerrarLogin();
+
+        if (typeof abrirPanelAdministrativo === "function") {
+          abrirPanelAdministrativo(respuesta.usuario, false);
+        }
+      })
+      .withFailureHandler(function (error) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Iniciar sesión";
+        }
+
+        mostrarMensajeAuth(
+          mensaje,
+          "Ocurrió un error al iniciar sesión.",
+          "error",
+        );
+
+        console.error(error);
+      })
+      .iniciarSesion(usuario, password);
+  }
+
+  // =====================================================
+  // SOLICITAR RECUPERACIÓN
+  // =====================================================
+
+  function solicitarRecuperacion() {
+    const emailInput = document.getElementById("recuperacionEmail");
+    const mensaje = document.getElementById("recuperacionEmailMensaje");
+    const boton = document.getElementById("btnEnviarCodigo");
+
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      mostrarMensajeAuth(mensaje, "Ingresa tu correo electrónico.", "error");
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Enviando...";
+    }
+
+    if (typeof mostrarLoading === "function") {
+      mostrarLoading();
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Enviar código";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarMensajeAuth(
+            mensaje,
+            respuesta?.message || "No fue posible procesar la solicitud.",
+            "error",
+          );
+
+          return;
+        }
+
+        emailRecuperacion = email;
+
+        ocultarVistasAuth();
+
+        const vista = document.getElementById("recuperacionCodigoView");
+
+        if (vista) {
+          vista.style.display = "block";
+        }
+
+        const codigoInput = document.getElementById("recuperacionCodigo");
+
+        if (codigoInput) {
+          codigoInput.value = "";
+
+          setTimeout(() => {
+            codigoInput.focus();
+          }, 100);
+        }
+      })
+      .withFailureHandler(function (error) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Enviar código";
+        }
+
+        mostrarMensajeAuth(
+          mensaje,
+          "Ocurrió un error al solicitar la recuperación.",
+          "error",
+        );
+
+        console.error(error);
+      })
+      .solicitarRecuperacion(email);
+  }
+
+  // =====================================================
+  // VALIDAR CÓDIGO
+  // =====================================================
+
+  function validarCodigoRecuperacion() {
+    const codigoInput = document.getElementById("recuperacionCodigo");
+    const mensaje = document.getElementById("recuperacionCodigoMensaje");
+    const boton = document.getElementById("btnValidarCodigo");
+
+    const codigo = codigoInput.value.trim();
+
+    if (!codigo) {
+      mostrarMensajeAuth(mensaje, "Ingresa el código recibido.", "error");
+
+      return;
+    }
+
+    if (!/^\d{6}$/.test(codigo)) {
+      mostrarMensajeAuth(mensaje, "El código debe tener 6 dígitos.", "error");
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Verificando...";
+    }
+
+    if (typeof mostrarLoading === "function") {
+      mostrarLoading();
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Verificar código";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarMensajeAuth(
+            mensaje,
+            respuesta?.message || "Código incorrecto o vencido.",
+            "error",
+          );
+
+          return;
+        }
+
+        tokenRecuperacion = respuesta.token;
+
+        ocultarVistasAuth();
+
+        const vista = document.getElementById("recuperacionPasswordView");
+
+        if (vista) {
+          vista.style.display = "block";
+        }
+
+        setTimeout(() => {
+          const password = document.getElementById("nuevaPassword");
+
+          if (password) {
+            password.focus();
+          }
+        }, 100);
+      })
+      .withFailureHandler(function (error) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Verificar código";
+        }
+
+        mostrarMensajeAuth(
+          mensaje,
+          "Ocurrió un error al verificar el código.",
+          "error",
+        );
+
+        console.error(error);
+      })
+      .validarCodigoRecuperacion(emailRecuperacion, codigo);
+  }
+
+  // =====================================================
+  // CAMBIAR CONTRASEÑA DESDE RECUPERACIÓN
+  // =====================================================
+
+  function cambiarPasswordRecuperacion() {
+    const nuevaPassword = document.getElementById("nuevaPassword").value;
+
+    const confirmarPassword =
+      document.getElementById("confirmarPassword").value;
+
+    const mensaje = document.getElementById("recuperacionPasswordMensaje");
+
+    const boton = document.getElementById("btnCambiarPassword");
+
+    if (!nuevaPassword || !confirmarPassword) {
+      mostrarMensajeAuth(mensaje, "Completa ambos campos.", "error");
+
+      return;
+    }
+
+    if (nuevaPassword !== confirmarPassword) {
+      mostrarMensajeAuth(mensaje, "Las contraseñas no coinciden.", "error");
+
+      return;
+    }
+
+    if (nuevaPassword.length < 4) {
+      mostrarMensajeAuth(
+        mensaje,
+        "La contraseña debe tener al menos 4 caracteres.",
+        "error",
+      );
+
+      return;
+    }
+
+    if (!tokenRecuperacion) {
+      mostrarMensajeAuth(
+        mensaje,
+        "La sesión de recuperación no es válida.",
+        "error",
+      );
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Guardando...";
+    }
+
+    if (typeof mostrarLoading === "function") {
+      mostrarLoading();
+    }
+
+    google.script.run
+      .withSuccessHandler(function (respuesta) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Cambiar contraseña";
+        }
+
+        if (!respuesta || !respuesta.success) {
+          mostrarMensajeAuth(
+            mensaje,
+            respuesta?.message || "No fue posible cambiar la contraseña.",
+            "error",
+          );
+
+          return;
+        }
+
+        tokenRecuperacion = "";
+        emailRecuperacion = "";
+
+        mostrarAlerta(
+          "✅",
+          "Contraseña cambiada",
+          "<p>Tu contraseña fue cambiada correctamente.</p>",
+        );
+
+        mostrarLogin();
+
+        const usuario = document.getElementById("loginUsuario");
+
+        const password = document.getElementById("loginPassword");
+
+        if (password) {
+          password.value = "";
+        }
+
+        if (usuario) {
+          usuario.focus();
+        }
+      })
+      .withFailureHandler(function (error) {
+        if (typeof ocultarLoading === "function") {
+          ocultarLoading();
+        }
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "Cambiar contraseña";
+        }
+
+        mostrarMensajeAuth(
+          mensaje,
+          "Ocurrió un error al cambiar la contraseña.",
+          "error",
+        );
+
+        console.error(error);
+      })
+      .cambiarPasswordRecuperacion(tokenRecuperacion, nuevaPassword);
+  }
+
+  // =====================================================
+  // MENSAJES DE AUTENTICACIÓN
+  // =====================================================
+
+  function mostrarMensajeAuth(elemento, mensaje, tipo) {
+    if (!elemento) return;
+
+    elemento.textContent = mensaje;
+    elemento.className = "auth-mensaje auth-mensaje-" + tipo;
+  }
+
+  function limpiarMensajesAuth() {
+    const mensajes = [
+      "loginMensaje",
+      "recuperacionEmailMensaje",
+      "recuperacionCodigoMensaje",
+      "recuperacionPasswordMensaje",
+    ];
+
+    mensajes.forEach((id) => {
+      const elemento = document.getElementById(id);
+
+      if (!elemento) return;
+
+      elemento.textContent = "";
+      elemento.className = "auth-mensaje";
+    });
+  }
+
+  // =====================================================
+  // CITAS PÚBLICAS
+  // =====================================================
+
+  function abrirCitasPublicas() {
+    const publicApp = document.getElementById("publicApp");
+
+    const citasPublicas = document.getElementById("citasPublicas");
+
+    const historial = document.getElementById("historial");
+
+    const infoInferior = document.querySelector(".info-inferior");
+
+    if (publicApp) {
+      publicApp.style.display = "none";
+    }
+
+    if (historial) {
+      historial.style.display = "none";
+    }
+
+    if (infoInferior) {
+      infoInferior.style.display = "none";
+    }
+
+    if (citasPublicas) {
+      citasPublicas.style.display = "block";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cerrarCitasPublicas() {
+    const publicApp = document.getElementById("publicApp");
+
+    const citasPublicas = document.getElementById("citasPublicas");
+
+    const historial = document.getElementById("historial");
+
+    const infoInferior = document.querySelector(".info-inferior");
+
+    if (citasPublicas) {
+      citasPublicas.style.display = "none";
+    }
+
+    if (publicApp) {
+      publicApp.style.display = "";
+    }
+
+    if (historial) {
+      historial.style.display = "";
+    }
+
+    if (infoInferior) {
+      infoInferior.style.display = "";
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+</script>

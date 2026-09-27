@@ -1,0 +1,1135 @@
+<script>
+  /* =====================================================
+   GESTIÓN DE USUARIOS
+===================================================== */
+
+  let usuariosAdministracion = [];
+
+  let vistaGestionUsuarios = "menu";
+
+  /* =====================================================
+   CONTENEDOR INTERNO
+===================================================== */
+
+  function obtenerContenedorGestionUsuarios() {
+    const modulo = document.getElementById("gestionUsuarios");
+
+    if (!modulo) {
+      return null;
+    }
+
+    let contenedor = document.getElementById("gestionUsuariosContenido");
+
+    if (!contenedor) {
+      contenedor = document.createElement("div");
+
+      contenedor.id = "gestionUsuariosContenido";
+
+      const opciones = modulo.querySelector(".gestion-usuarios-opciones");
+
+      if (opciones) {
+        opciones.insertAdjacentElement("afterend", contenedor);
+      } else {
+        modulo.appendChild(contenedor);
+      }
+    }
+
+    return contenedor;
+  }
+
+  /* =====================================================
+   MOSTRAR MENÚ PRINCIPAL
+===================================================== */
+
+  function mostrarMenuGestionUsuarios() {
+    const modulo = document.getElementById("gestionUsuarios");
+
+    const contenedor = obtenerContenedorGestionUsuarios();
+
+    if (!modulo) {
+      return;
+    }
+
+    const opciones = modulo.querySelector(".gestion-usuarios-opciones");
+
+    if (opciones) {
+      opciones.style.display = "flex";
+    }
+
+    if (contenedor) {
+      contenedor.innerHTML = "";
+
+      contenedor.style.display = "none";
+    }
+
+    vistaGestionUsuarios = "menu";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   VER PERFIL DE SUPERVISOR
+===================================================== */
+
+  function verPerfilSupervisor() {
+    console.log("verPerfilSupervisor() ejecutada");
+
+    if (!tokenSesion) {
+      alert("La sesión ha expirado. Inicia sesión nuevamente.");
+
+      return;
+    }
+
+    const modulo = document.getElementById("gestionUsuarios");
+
+    const opciones = modulo
+      ? modulo.querySelector(".gestion-usuarios-opciones")
+      : null;
+
+    const contenedor = obtenerContenedorGestionUsuarios();
+
+    if (!contenedor) {
+      return;
+    }
+
+    if (opciones) {
+      opciones.style.display = "none";
+    }
+
+    contenedor.style.display = "block";
+
+    contenedor.innerHTML = `
+
+    <div class="gestion-usuarios-vista">
+
+      <button
+        type="button"
+        class="gestion-submodulo-volver"
+        onclick="mostrarMenuGestionUsuarios()"
+      >
+        ← Gestión de usuarios
+      </button>
+
+
+      <div class="gestion-usuarios-vista-encabezado">
+
+        <div class="gestion-usuarios-vista-icono">
+          👤
+        </div>
+
+        <div>
+
+          <h3>
+            Perfil del supervisor
+          </h3>
+
+          <p>
+            Información de los supervisores registrados.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="listaPerfilesSupervisor"
+        class="gestion-usuarios-lista"
+      >
+
+        <div class="gestion-usuarios-cargando">
+          Cargando información...
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        const lista = document.getElementById("listaPerfilesSupervisor");
+
+        if (!lista) {
+          return;
+        }
+
+        if (!respuesta || !respuesta.success) {
+          lista.innerHTML = `
+
+            <div class="gestion-usuarios-mensaje error">
+
+              ${
+                respuesta && respuesta.mensaje
+                  ? escapeHtml(respuesta.mensaje)
+                  : "No fue posible obtener la información."
+              }
+
+            </div>
+
+          `;
+
+          return;
+        }
+
+        const supervisores = Array.isArray(respuesta.usuarios)
+          ? respuesta.usuarios.filter(function (usuario) {
+              return (
+                String(usuario.rol || "")
+                  .trim()
+                  .toUpperCase() === "SUPERVISOR"
+              );
+            })
+          : [];
+
+        if (supervisores.length === 0) {
+          lista.innerHTML = `
+
+            <div class="gestion-usuarios-vacio">
+
+              <strong>
+                No hay supervisores registrados.
+              </strong>
+
+              <p>
+                Actualmente no existen usuarios con rol supervisor.
+              </p>
+
+            </div>
+
+          `;
+
+          return;
+        }
+
+        lista.innerHTML = "";
+
+        supervisores.forEach(function (supervisor) {
+          const tarjeta = document.createElement("div");
+
+          tarjeta.className = "gestion-usuario-perfil";
+
+          tarjeta.innerHTML = `
+
+              <div class="gestion-usuario-perfil-cabecera">
+
+                <div class="gestion-usuario-perfil-avatar">
+                  👤
+                </div>
+
+
+                <div class="gestion-usuario-perfil-nombre">
+
+                  <strong>
+                    ${escapeHtml(supervisor.nombre || "Sin nombre")}
+                  </strong>
+
+                  <span>
+                    SUPERVISOR
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="gestion-usuario-perfil-datos">
+
+
+                <div class="gestion-usuario-perfil-dato">
+
+                  <span>
+                    Usuario
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(supervisor.usuario || "-")}
+                  </strong>
+
+                </div>
+
+
+                <div class="gestion-usuario-perfil-dato">
+
+                  <span>
+                    Correo electrónico
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(supervisor.email || "-")}
+                  </strong>
+
+                </div>
+
+
+                <div class="gestion-usuario-perfil-dato">
+
+                  <span>
+                    Estado
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(supervisor.estado || "-")}
+                  </strong>
+
+                </div>
+
+              </div>
+
+            `;
+
+          lista.appendChild(tarjeta);
+        });
+      })
+
+      .withFailureHandler(function (error) {
+        const lista = document.getElementById("listaPerfilesSupervisor");
+
+        if (!lista) {
+          return;
+        }
+
+        console.error("Error al obtener supervisores:", error);
+
+        lista.innerHTML = `
+
+          <div class="gestion-usuarios-mensaje error">
+
+            Ocurrió un error al consultar los supervisores.
+
+          </div>
+
+        `;
+      })
+
+      .obtenerUsuariosAdministracion(tokenSesion);
+
+    vistaGestionUsuarios = "perfil";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   CREAR USUARIO
+===================================================== */
+
+  function crearUsuarioAdministracion() {
+    console.log("crearUsuarioAdministracion() ejecutada");
+
+    if (!tokenSesion) {
+      alert("La sesión ha expirado. Inicia sesión nuevamente.");
+
+      return;
+    }
+
+    const modulo = document.getElementById("gestionUsuarios");
+
+    const opciones = modulo
+      ? modulo.querySelector(".gestion-usuarios-opciones")
+      : null;
+
+    const contenedor = obtenerContenedorGestionUsuarios();
+
+    if (!contenedor) {
+      return;
+    }
+
+    if (opciones) {
+      opciones.style.display = "none";
+    }
+
+    contenedor.style.display = "block";
+
+    contenedor.innerHTML = `
+
+    <div class="gestion-usuarios-vista">
+
+
+      <button
+        type="button"
+        class="gestion-submodulo-volver"
+        onclick="mostrarMenuGestionUsuarios()"
+      >
+
+        ← Gestión de usuarios
+
+      </button>
+
+
+      <div class="gestion-usuarios-vista-encabezado">
+
+        <div class="gestion-usuarios-vista-icono">
+          ➕
+        </div>
+
+        <div>
+
+          <h3>
+            Crear usuario
+          </h3>
+
+          <p>
+            Registra un nuevo usuario en el sistema.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form
+        id="formCrearUsuarioAdministracion"
+        class="gestion-usuarios-form"
+        onsubmit="event.preventDefault(); guardarNuevoUsuarioAdministracion();"
+      >
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioNombre"
+          >
+            Nombre
+          </label>
+
+          <input
+            id="nuevoUsuarioNombre"
+            type="text"
+            autocomplete="off"
+            placeholder="Nombre completo"
+          >
+
+        </div>
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioUsuario"
+          >
+            Usuario
+          </label>
+
+          <input
+            id="nuevoUsuarioUsuario"
+            type="text"
+            autocomplete="off"
+            placeholder="Nombre de usuario"
+          >
+
+        </div>
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioEmail"
+          >
+            Correo electrónico
+          </label>
+
+          <input
+            id="nuevoUsuarioEmail"
+            type="email"
+            autocomplete="off"
+            placeholder="correo@ejemplo.com"
+          >
+
+        </div>
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioPassword"
+          >
+            Contraseña
+          </label>
+
+          <input
+            id="nuevoUsuarioPassword"
+            type="text"
+            autocomplete="new-password"
+            placeholder="Mínimo 4 caracteres"
+          >
+
+        </div>
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioRol"
+          >
+            Rol
+          </label>
+
+          <select
+            id="nuevoUsuarioRol"
+          >
+
+            <option value="USUARIO">
+              Usuario
+            </option>
+
+            <option value="SUPERVISOR">
+              Supervisor
+            </option>
+
+            <option value="ADMINISTRADOR">
+              Administrador
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="gestion-usuarios-campo">
+
+          <label
+            for="nuevoUsuarioEstado"
+          >
+            Estado
+          </label>
+
+          <select
+            id="nuevoUsuarioEstado"
+          >
+
+            <option value="ACTIVO">
+              Activo
+            </option>
+
+            <option value="INACTIVO">
+              Inactivo
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div
+          id="mensajeCrearUsuario"
+          class="gestion-usuarios-mensaje"
+          style="display:none;"
+        >
+        </div>
+
+
+        <button
+          type="submit"
+          id="btnCrearUsuario"
+          class="gestion-usuarios-boton-principal"
+        >
+          Crear usuario
+        </button>
+
+
+        <button
+          type="button"
+          class="gestion-usuarios-boton-secundario"
+          onclick="mostrarMenuGestionUsuarios()"
+        >
+          Cancelar
+        </button>
+
+
+      </form>
+
+
+    </div>
+
+  `;
+
+    vistaGestionUsuarios = "crear";
+
+    setTimeout(function () {
+      const input = document.getElementById("nuevoUsuarioNombre");
+
+      if (input) {
+        input.focus();
+      }
+    }, 100);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   GUARDAR NUEVO USUARIO
+===================================================== */
+
+  function guardarNuevoUsuarioAdministracion() {
+    const nombre = obtenerValorInput("nuevoUsuarioNombre");
+
+    const usuario = obtenerValorInput("nuevoUsuarioUsuario");
+
+    const email = obtenerValorInput("nuevoUsuarioEmail");
+
+    const contraseña = obtenerValorInput("nuevoUsuarioPassword");
+
+    const rol = obtenerValorInput("nuevoUsuarioRol");
+
+    const estado = obtenerValorInput("nuevoUsuarioEstado");
+
+    const mensaje = document.getElementById("mensajeCrearUsuario");
+
+    const boton = document.getElementById("btnCrearUsuario");
+
+    if (!nombre || !usuario || !email || !contraseña) {
+      mostrarMensajeGestionUsuarios(
+        mensaje,
+        "Completa todos los campos obligatorios.",
+        "error",
+      );
+
+      return;
+    }
+
+    if (!tokenSesion) {
+      mostrarMensajeGestionUsuarios(
+        mensaje,
+        "La sesión ha expirado. Inicia sesión nuevamente.",
+        "error",
+      );
+
+      return;
+    }
+
+    if (boton) {
+      boton.disabled = true;
+
+      boton.textContent = "Creando usuario...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+
+            boton.textContent = "Crear usuario";
+          }
+
+          mostrarMensajeGestionUsuarios(
+            mensaje,
+
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible crear el usuario.",
+
+            "error",
+          );
+
+          return;
+        }
+
+        mostrarMensajeGestionUsuarios(
+          mensaje,
+
+          respuesta.mensaje || "Usuario creado correctamente.",
+
+          "success",
+        );
+
+        if (boton) {
+          boton.disabled = true;
+
+          boton.textContent = "Usuario creado";
+        }
+
+        setTimeout(function () {
+          mostrarMenuGestionUsuarios();
+        }, 1000);
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al crear usuario:", error);
+
+        if (boton) {
+          boton.disabled = false;
+
+          boton.textContent = "Crear usuario";
+        }
+
+        mostrarMensajeGestionUsuarios(
+          mensaje,
+          "Ocurrió un error al crear el usuario.",
+          "error",
+        );
+      })
+
+      .crearUsuarioAdministracion(
+        tokenSesion,
+        nombre,
+        usuario,
+        email,
+        contraseña,
+        rol,
+        estado,
+      );
+  }
+
+  /* =====================================================
+   BORRAR USUARIO
+===================================================== */
+
+  function borrarUsuarioAdministracion() {
+    console.log("borrarUsuarioAdministracion() ejecutada");
+
+    if (!tokenSesion) {
+      alert("La sesión ha expirado. Inicia sesión nuevamente.");
+
+      return;
+    }
+
+    const modulo = document.getElementById("gestionUsuarios");
+
+    const opciones = modulo
+      ? modulo.querySelector(".gestion-usuarios-opciones")
+      : null;
+
+    const contenedor = obtenerContenedorGestionUsuarios();
+
+    if (!contenedor) {
+      return;
+    }
+
+    if (opciones) {
+      opciones.style.display = "none";
+    }
+
+    contenedor.style.display = "block";
+
+    contenedor.innerHTML = `
+
+    <div class="gestion-usuarios-vista">
+
+
+      <button
+        type="button"
+        class="gestion-submodulo-volver"
+        onclick="mostrarMenuGestionUsuarios()"
+      >
+
+        ← Gestión de usuarios
+
+      </button>
+
+
+      <div class="gestion-usuarios-vista-encabezado">
+
+        <div class="gestion-usuarios-vista-icono">
+          🗑️
+        </div>
+
+        <div>
+
+          <h3>
+            Borrar usuario
+          </h3>
+
+          <p>
+            Selecciona el usuario que deseas eliminar.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="listaUsuariosEliminar"
+        class="gestion-usuarios-lista"
+      >
+
+        <div class="gestion-usuarios-cargando">
+          Cargando usuarios...
+        </div>
+
+      </div>
+
+
+    </div>
+
+  `;
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        const lista = document.getElementById("listaUsuariosEliminar");
+
+        if (!lista) {
+          return;
+        }
+
+        if (!respuesta || !respuesta.success) {
+          lista.innerHTML = `
+
+            <div class="gestion-usuarios-mensaje error">
+
+              ${
+                respuesta && respuesta.mensaje
+                  ? escapeHtml(respuesta.mensaje)
+                  : "No fue posible cargar los usuarios."
+              }
+
+            </div>
+
+          `;
+
+          return;
+        }
+
+        usuariosAdministracion = Array.isArray(respuesta.usuarios)
+          ? respuesta.usuarios
+          : [];
+
+        if (usuariosAdministracion.length === 0) {
+          lista.innerHTML = `
+
+            <div class="gestion-usuarios-vacio">
+
+              <strong>
+                No hay usuarios registrados.
+              </strong>
+
+            </div>
+
+          `;
+
+          return;
+        }
+
+        lista.innerHTML = "";
+
+        usuariosAdministracion.forEach(function (usuario) {
+          const tarjeta = document.createElement("div");
+
+          tarjeta.className = "gestion-usuario-eliminar";
+
+          tarjeta.innerHTML = `
+
+              <div class="gestion-usuario-eliminar-info">
+
+
+                <div class="gestion-usuario-eliminar-avatar">
+
+                  ${usuario.rol === "SUPERVISOR" ? "👤" : "👥"}
+
+                </div>
+
+
+                <div class="gestion-usuario-eliminar-texto">
+
+                  <strong>
+                    ${escapeHtml(usuario.nombre || "Sin nombre")}
+                  </strong>
+
+
+                  <span>
+                    @${escapeHtml(usuario.usuario || "-")}
+                  </span>
+
+
+                  <small>
+
+                    ${escapeHtml(usuario.rol || "-")}
+
+                    ·
+
+                    ${escapeHtml(usuario.estado || "-")}
+
+                  </small>
+
+                </div>
+
+
+              </div>
+
+
+              <button
+                type="button"
+                class="gestion-usuario-eliminar-boton"
+
+                onclick="confirmarBorradoUsuarioAdministracion('${String(
+                  usuario.id || "",
+                ).replace(/'/g, "\\'")}')"
+              >
+
+                Eliminar
+
+              </button>
+
+            `;
+
+          lista.appendChild(tarjeta);
+        });
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al cargar usuarios:", error);
+
+        const lista = document.getElementById("listaUsuariosEliminar");
+
+        if (lista) {
+          lista.innerHTML = `
+
+            <div class="gestion-usuarios-mensaje error">
+
+              Ocurrió un error al consultar los usuarios.
+
+            </div>
+
+          `;
+        }
+      })
+
+      .obtenerUsuariosAdministracion(tokenSesion);
+
+    vistaGestionUsuarios = "borrar";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /* =====================================================
+   CONFIRMAR BORRADO
+===================================================== */
+
+  function confirmarBorradoUsuarioAdministracion(idUsuario) {
+    const usuario = usuariosAdministracion.find(function (item) {
+      return String(item.id) === String(idUsuario);
+    });
+
+    if (!usuario) {
+      alert("No se encontró el usuario seleccionado.");
+
+      return;
+    }
+
+    abrirConfirmacionEliminarUsuario(usuario, idUsuario);
+
+    return;
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          alert(
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible eliminar el usuario.",
+          );
+
+          return;
+        }
+
+        alert(respuesta.mensaje || "Usuario eliminado correctamente.");
+
+        borrarUsuarioAdministracion();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al eliminar usuario:", error);
+
+        alert("Ocurrió un error al eliminar el usuario.");
+      })
+
+      .borrarUsuarioAdministracion(tokenSesion, idUsuario);
+  }
+
+  function abrirConfirmacionEliminarUsuario(usuario, idUsuario) {
+    let modal = document.getElementById("modalConfirmarEliminarUsuario");
+
+    if (!modal) {
+      modal = document.createElement("div");
+
+      modal.id = "modalConfirmarEliminarUsuario";
+
+      modal.className = "modal-confirmar-eliminar-usuario";
+
+      modal.innerHTML = `
+      <div class="confirmar-eliminar-usuario-contenido">
+
+        <div class="confirmar-eliminar-usuario-icono">
+          🗑️
+        </div>
+
+        <h3>
+          ¿Eliminar este usuario?
+        </h3>
+
+        <p>
+          Estás a punto de eliminar al usuario
+        </p>
+
+        <div
+          id="nombreUsuarioEliminar"
+          class="confirmar-eliminar-usuario-nombre">
+        </div>
+
+        <p class="confirmar-eliminar-usuario-advertencia">
+          Esta acción no se puede deshacer.
+        </p>
+
+        <div class="confirmar-eliminar-usuario-botones">
+
+          <button
+            type="button"
+            class="btn-cancelar-eliminar-usuario"
+            onclick="cerrarConfirmacionEliminarUsuario()">
+
+            Cancelar
+
+          </button>
+
+          <button
+            type="button"
+            class="btn-confirmar-eliminar-usuario"
+            onclick="ejecutarEliminacionUsuario()">
+
+            🗑️ Eliminar usuario
+
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+      document.body.appendChild(modal);
+    }
+
+    const nombreElemento = document.getElementById("nombreUsuarioEliminar");
+
+    if (nombreElemento) {
+      nombreElemento.textContent =
+        usuario.nombre || usuario.usuario || "Usuario";
+    }
+
+    modal.dataset.usuarioId = idUsuario;
+
+    modal.style.display = "flex";
+  }
+
+  function cerrarConfirmacionEliminarUsuario() {
+    const modal = document.getElementById("modalConfirmarEliminarUsuario");
+
+    if (modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  function ejecutarEliminacionUsuario() {
+    const modal = document.getElementById("modalConfirmarEliminarUsuario");
+
+    if (!modal) {
+      return;
+    }
+
+    const idUsuario = modal.dataset.usuarioId;
+
+    if (!idUsuario) {
+      alert("No se encontró el usuario seleccionado.");
+      return;
+    }
+
+    const boton = modal.querySelector(".btn-confirmar-eliminar-usuario");
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Eliminando...";
+    }
+
+    google.script.run
+
+      .withSuccessHandler(function (respuesta) {
+        if (!respuesta || !respuesta.success) {
+          if (boton) {
+            boton.disabled = false;
+            boton.textContent = "🗑️ Eliminar usuario";
+          }
+
+          alert(
+            respuesta && respuesta.mensaje
+              ? respuesta.mensaje
+              : "No fue posible eliminar el usuario.",
+          );
+
+          return;
+        }
+
+        cerrarConfirmacionEliminarUsuario();
+
+        mostrarAlerta(
+          "✅",
+          "Usuario eliminado",
+          `
+              <div style="text-align:center;">
+                ${escaparHTML(
+                  respuesta.mensaje || "Usuario eliminado correctamente.",
+                )}
+              </div>
+            `,
+        );
+
+        borrarUsuarioAdministracion();
+      })
+
+      .withFailureHandler(function (error) {
+        console.error("Error al eliminar usuario:", error);
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = "🗑️ Eliminar usuario";
+        }
+
+        alert("Ocurrió un error al eliminar el usuario.");
+      })
+
+      .borrarUsuarioAdministracion(tokenSesion, idUsuario);
+  }
+
+  /* =====================================================
+   UTILIDADES
+===================================================== */
+
+  function obtenerValorInput(id) {
+    const elemento = document.getElementById(id);
+
+    if (!elemento) {
+      return "";
+    }
+
+    return elemento.value.toString().trim();
+  }
+
+  function mostrarMensajeGestionUsuarios(elemento, texto, tipo) {
+    if (!elemento) {
+      return;
+    }
+
+    elemento.textContent = texto;
+
+    elemento.className =
+      "gestion-usuarios-mensaje " + (tipo === "success" ? "success" : "error");
+
+    elemento.style.display = "block";
+  }
+</script>

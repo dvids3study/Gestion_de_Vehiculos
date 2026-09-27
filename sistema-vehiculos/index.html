@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Sistema de Vehículos</title>
+
+    <?!= include('css.html'); ?> <?!= include("gestionUsuariosCss.html"); ?>
+    <?!= include("panelCss.html"); ?> <?!= include("inventarioCss.html"); ?>
+    <?!= include("js.html"); ?> <?!= include("inventarioJs.html"); ?> <?!=
+    include("panelJs.html"); ?> <?!= include("gestionUsuariosJs.html"); ?>
+  </head>
+
+  <body>
+    <!-- =====================================================
+       PANEL ADMINISTRATIVO
+       Debe estar FUERA de .app
+       ===================================================== -->
+
+    <?!= include("panelHtml.html"); ?> <?!= include("inventarioHtml.html"); ?>
+    <?!= include("gestionUsuariosHtml.html"); ?>
+
+    <!-- =====================================================
+       PANTALLA PÚBLICA
+       ===================================================== -->
+
+    <main class="app" id="publicApp">
+      <header class="header">
+        <div class="logo-container">
+          <img
+            src="https://drive.google.com/thumbnail?id=1-RHh_ktoGRkxP_7_GJaqzRnW7SoSZYVh&sz=w1000"
+            alt="Sistema de Vehículos"
+            class="logo"
+          />
+        </div>
+
+        <div class="subtitulo">Consulta estado de vehículos</div>
+      </header>
+
+      <section class="panel">
+        <div class="input-wrapper">
+          <span class="input-icon">🔍</span>
+
+          <input
+            id="pregunta"
+            class="input"
+            type="text"
+            placeholder=" Ej: Onix 2017"
+            autocomplete="off"
+            autocapitalize="words"
+            spellcheck="false"
+            list="sugerenciasVehiculos"
+          />
+
+          <div id="sugerenciasVehiculos" class="sugerencias-vehiculos"></div>
+        </div>
+
+        <div class="opciones">
+          <button
+            id="btnCircular"
+            class="opcion opcion-circular"
+            type="button"
+            onclick="consultarCirculacion()"
+          >
+            <div class="opcion-icono">🚦</div>
+
+            <div class="opcion-contenido">
+              <div class="opcion-titulo">¿Me lo puedo llevar?</div>
+
+              <div class="opcion-descripcion">
+                Verifica restricciones, multas y estado legal del vehículo.
+              </div>
+            </div>
+
+            <div class="opcion-flecha">›</div>
+          </button>
+
+          <button
+            id="btnInfo"
+            class="opcion opcion-info"
+            type="button"
+            onclick="consultarInformacion()"
+          >
+            <div class="opcion-icono">📋</div>
+
+            <div class="opcion-contenido">
+              <div class="opcion-titulo">Información</div>
+
+              <div class="opcion-descripcion">
+                Consulta ficha técnica, especificaciones y más detalles.
+              </div>
+            </div>
+
+            <div class="opcion-flecha">›</div>
+
+            <!-- =====================================================
+       MODAL DE RESULTADOS
+       ===================================================== -->
+
+            <div id="modal" class="modal">
+              <div class="alerta" onclick="event.stopPropagation()">
+                <div id="alertaIcono" class="alerta-icono">🚗</div>
+
+                <div id="alertaTitulo" class="alerta-titulo">Información</div>
+
+                <div id="alertaContenido" class="alerta-contenido"></div>
+
+                <button
+                  id="btnCerrar"
+                  class="btn-cerrar"
+                  type="button"
+                  onclick="cerrarModal()"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+
+            <!-- =====================================================
+       HISTORIAL
+       ==================================================== -->
+
+            <section class="historial" id="historial">
+              <div class="historial-encabezado">
+                <div class="historial-titulo">Últimas búsquedas</div>
+
+                <div class="historial-subtitulo">Consultas recientes</div>
+              </div>
+
+              <div class="historial-lista" id="historialLista"></div>
+            </section>
+
+            <!-- =====================================================
+       INFORMACIÓN INFERIOR
+       ===================================================== -->
+
+            <div class="info-inferior">
+              <button
+                id="btnAccesoAdmin"
+                class="info-inferior-icono"
+                type="button"
+                onclick="abrirLogin()"
+                aria-label="Acceso administrativo"
+              >
+                <svg
+                  viewBox="0 0 32 32"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="#d8e1ef"
+                    d="M28,6C19.51,6,16.84,2.46,16.82,2.43A1,1,0,0,0,16,2a.94.94,0,0,0-.83.42S12.49,6,4,6A1,1,0,0,0,3,7v8.76c0,9.25,7.11,12,11.35,13.66l1.27.5a.94.94,0,0,0,.76,0l1.26-.5C21.89,27.77,29,25,29,15.76V7A1,1,0,0,0,28,6Z"
+                  />
+
+                  <path
+                    fill="#0e6ae0"
+                    d="M18,15H14a1,1,0,0,1-1-1V12a3,3,0,0,1,6,0v2A1,1,0,0,1,18,15Zm-3-2h2V12a1,1,0,0,0-2,0Z"
+                  />
+
+                  <rect
+                    fill="#0593ff"
+                    height="10"
+                    rx="3"
+                    ry="3"
+                    width="10"
+                    x="11"
+                    y="13"
+                  />
+
+                  <path
+                    fill="#0e6ae0"
+                    d="M16,20a2,2,0,1,1,2-2A2,2,0,0,1,16,20Zm0-2Z"
+                  />
+                </svg>
+              </button>
+
+              <div class="info-inferior-contenido">
+                <div class="info-inferior-titulo">
+                  INFORMACION CONFIABLE Y ACTUALIZADA
+                </div>
+
+                <div class="info-inferior-subtitulo">
+                  Todos los derechos reservados
+                </div>
+              </div>
+            </div>
+
+            <!-- =====================================================
+       MODAL DE AUTENTICACIÓN
+       ===================================================== -->
+
+            <div id="authModal" class="auth-modal" aria-hidden="true">
+              <div class="auth-card" onclick="event.stopPropagation()">
+                <!-- =================================================
+           LOGIN
+           ================================================= -->
+
+                <div id="loginView" class="auth-view">
+                  <div class="auth-icon">🔐</div>
+
+                  <div class="auth-title">Acceso administrativo</div>
+
+                  <div class="auth-subtitle">
+                    Ingresa tus credenciales para continuar.
+                  </div>
+
+                  <div class="auth-form">
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> 👤 </span>
+
+                      <input
+                        id="loginUsuario"
+                        class="auth-input"
+                        type="text"
+                        placeholder="Usuario"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </div>
+
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> 🔒 </span>
+
+                      <input
+                        id="loginPassword"
+                        class="auth-input"
+                        type="password"
+                        placeholder="Contraseña"
+                        autocomplete="current-password"
+                      />
+
+                      <button
+                        type="button"
+                        class="auth-password-toggle"
+                        onclick="alternarPassword('loginPassword', this)"
+                        aria-label="Mostrar contraseña"
+                      >
+                        👀
+                      </button>
+                    </div>
+
+                    <div id="loginMensaje" class="auth-mensaje"></div>
+
+                    <button
+                      id="btnIniciarSesion"
+                      class="auth-button"
+                      type="button"
+                      onclick="iniciarSesion()"
+                    >
+                      Iniciar sesión
+                    </button>
+
+                    <button
+                      id="btnOlvidePassword"
+                      class="auth-link"
+                      type="button"
+                      onclick="mostrarRecuperacion()"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+
+                    <button
+                      class="auth-back-button"
+                      type="button"
+                      onclick="cerrarLogin()"
+                    >
+                      Volver
+                    </button>
+                  </div>
+                </div>
+
+                <!-- =================================================
+           RECUPERACIÓN — CORREO
+           ================================================= -->
+
+                <div
+                  id="recuperacionEmailView"
+                  class="auth-view"
+                  style="display: none"
+                >
+                  <div class="auth-icon">📧</div>
+
+                  <div class="auth-title">Recuperar contraseña</div>
+
+                  <div class="auth-subtitle">
+                    Ingresa el correo asociado a tu cuenta.
+                  </div>
+
+                  <div class="auth-form">
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> ✉️ </span>
+
+                      <input
+                        id="recuperacionEmail"
+                        class="auth-input"
+                        type="email"
+                        placeholder="Correo electrónico"
+                        autocomplete="email"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </div>
+
+                    <div
+                      id="recuperacionEmailMensaje"
+                      class="auth-mensaje"
+                    ></div>
+
+                    <button
+                      id="btnEnviarCodigo"
+                      class="auth-button"
+                      type="button"
+                      onclick="solicitarRecuperacion()"
+                    >
+                      Enviar código
+                    </button>
+
+                    <button
+                      class="auth-back-button"
+                      type="button"
+                      onclick="mostrarLogin()"
+                    >
+                      Volver al inicio de sesión
+                    </button>
+                  </div>
+                </div>
+
+                <!-- =================================================
+           RECUPERACIÓN — CÓDIGO
+           ================================================= -->
+
+                <div
+                  id="recuperacionCodigoView"
+                  class="auth-view"
+                  style="display: none"
+                >
+                  <div class="auth-icon">🔢</div>
+
+                  <div class="auth-title">Verificación</div>
+
+                  <div class="auth-subtitle">
+                    Ingresa el código que enviamos a tu correo.
+                  </div>
+
+                  <div class="auth-form">
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> 🔑 </span>
+
+                      <input
+                        id="recuperacionCodigo"
+                        class="auth-input"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="6"
+                        placeholder="Código de 6 dígitos"
+                        autocomplete="one-time-code"
+                      />
+                    </div>
+
+                    <div
+                      id="recuperacionCodigoMensaje"
+                      class="auth-mensaje"
+                    ></div>
+
+                    <button
+                      id="btnValidarCodigo"
+                      class="auth-button"
+                      type="button"
+                      onclick="validarCodigoRecuperacion()"
+                    >
+                      Verificar código
+                    </button>
+
+                    <button
+                      class="auth-back-button"
+                      type="button"
+                      onclick="mostrarRecuperacion()"
+                    >
+                      Volver
+                    </button>
+                  </div>
+                </div>
+
+                <!-- =================================================
+           RECUPERACIÓN — NUEVA CONTRASEÑA
+           ================================================= -->
+
+                <div
+                  id="recuperacionPasswordView"
+                  class="auth-view"
+                  style="display: none"
+                >
+                  <div class="auth-icon">🔒</div>
+
+                  <div class="auth-title">Nueva contraseña</div>
+
+                  <div class="auth-subtitle">
+                    Crea una nueva contraseña para tu cuenta.
+                  </div>
+
+                  <div class="auth-form">
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> 🔒 </span>
+
+                      <input
+                        id="nuevaPassword"
+                        class="auth-input"
+                        type="text"
+                        placeholder="Nueva contraseña"
+                        autocomplete="new-password"
+                      />
+                    </div>
+
+                    <div class="auth-input-wrapper">
+                      <span class="auth-input-icon"> 🔐 </span>
+
+                      <input
+                        id="confirmarPassword"
+                        class="auth-input"
+                        type="text"
+                        placeholder="Confirmar contraseña"
+                        autocomplete="new-password"
+                      />
+                    </div>
+
+                    <div
+                      id="recuperacionPasswordMensaje"
+                      class="auth-mensaje"
+                    ></div>
+
+                    <button
+                      id="btnCambiarPassword"
+                      class="auth-button"
+                      type="button"
+                      onclick="cambiarPasswordRecuperacion()"
+                    >
+                      Cambiar contraseña
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- =====================================================
+       LOADING
+       ===================================================== -->
+
+            <div id="loading" class="loading">
+              <div class="spinner"></div>
+            </div>
+          </button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
